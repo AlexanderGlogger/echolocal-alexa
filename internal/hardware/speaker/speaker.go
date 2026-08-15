@@ -21,6 +21,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
+	"github.com/ygelfand/echolocal/internal/android/amazon"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/asp"
@@ -304,6 +305,9 @@ func (p *Player) apply(seq []kctl) {
 }
 
 func (p *Player) Run(ctx context.Context) error {
+	if amazon.Enabled() {
+		return p.runAndroid(ctx)
+	}
 	pb, _ := p.device()
 	if pb == nil {
 		return errors.New("speaker: the playback device is not held")
@@ -428,7 +432,7 @@ func (p *Player) fill(buf []byte) {
 func (p *Player) Play(samples []int16) { p.PlayStream(config.StreamMedia, samples) }
 
 func (p *Player) PlayStream(s config.Stream, samples []int16) {
-	if pb, _ := p.device(); pb == nil {
+	if !p.available() {
 		if n := p.deaf.Add(1); n == 1 || n%100 == 0 {
 			slog.Warn("audio dropped, no playback device", "times", n)
 		}
@@ -506,7 +510,7 @@ func (p *Player) Chime(s config.Stream, level float64, notes ...tone.Note) {
 }
 
 func (p *Player) Overlay(s config.Stream, samples []int16) {
-	if pb, _ := p.device(); pb == nil {
+	if !p.available() {
 		p.PlayStream(s, samples)
 		return
 	}
@@ -531,6 +535,9 @@ func (p *Player) Step() int { return int(p.step.Load()) }
 func (p *Player) Volume() float32 { return math.Float32frombits(p.volume.Load()) }
 
 func (p *Player) Close() error {
+	if amazon.Enabled() {
+		return closeAndroid()
+	}
 	p.apply(p.sequences().close)
 
 	p.devMu.Lock()
