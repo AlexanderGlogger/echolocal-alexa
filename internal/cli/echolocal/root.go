@@ -36,6 +36,7 @@ func newRoot() *cobra.Command {
 	root.AddCommand(newRestartCmd())
 	root.AddCommand(newKeyCmd())
 	root.AddCommand(newToolsCmd())
+	root.AddCommand(newPryonCmd())
 	return root
 }
 

@@ -1,6 +1,7 @@
 package wake
 
 import (
+	"log/slog"
 	"os"
 	"slices"
 
@@ -36,9 +37,13 @@ type Library struct {
 }
 
 // withPryon offers Pryon once the installer has recorded the companion's uid, which it does only
-// after Android has scanned the package.
+// after Android has scanned the package. The line it logs is what `echolocal pryon install` waits
+// for.
 func withPryon(l *sharedwake.Library) *Library {
 	_, err := os.Stat(layout.PryonUIDPath)
+	if err == nil {
+		slog.Info("wake word offered", "id", PryonID, "engine", KindPryon)
+	}
 	return &Library{Library: l, pryon: err == nil}
 }
 
