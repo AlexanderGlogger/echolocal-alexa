@@ -9,7 +9,7 @@ import (
 )
 
 var get = sync.OnceValue(
-	func() *sharedwake.Library { return sharedwake.NewLibrary(layout.ModelDir) },
+	func() *Library { return withPryon(sharedwake.NewLibrary(layout.ModelDir)) },
 )
 
-func Lib() *sharedwake.Library { return get() }
+func Lib() *Library { return get() }
