@@ -16,6 +16,7 @@ import (
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
+	"github.com/ygelfand/echolocal/internal/android/amazon"
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -161,6 +162,9 @@ func (s *Source) Start(context.Context) (err error) {
 		}
 		s.startup.Store(&state)
 	}()
+	if amazon.Enabled() {
+		return startAndroid()
+	}
 	err = s.open()
 	if err == nil || !errors.Is(err, alsa.ErrBusy) {
 		return err
@@ -309,6 +313,9 @@ func decode(raw []byte, first, n int) [][]int16 {
 
 // A stream left unread overruns: the hardware ring is 160 ms deep.
 func (s *Source) Run(ctx context.Context) error {
+	if amazon.Enabled() {
+		return s.runAndroid(ctx)
+	}
 	pcm := s.device()
 	if pcm == nil {
 		return errors.New("mic: the capture device is not held")
@@ -413,21 +420,7 @@ func (s *Source) broadcast(raw []byte) {
 
 	s.findFacing(mics)
 	s.followBeam(mics)
-
-	for _, l := range s.listeners {
-		if l.unleveled {
-			s.offer(l, append([]int16(nil), frame...))
-		}
-	}
-
-	s.Process(heard, frame)
-	s.Add(frame)
-
-	for _, l := range s.listeners {
-		if !l.unleveled {
-			s.offer(l, frame)
-		}
-	}
+	s.deliver(heard, frame)
 
 	if len(s.echoes) > 0 {
 		e := Echo{
@@ -458,6 +451,26 @@ func (s *Source) broadcast(raw []byte) {
 	}
 }
 
+// deliver levels a finished mono frame, remembers it and fans it out, whether it was mixed from the
+// array here or arrived already mixed. heard is the frame before echo cancellation, which the leveler
+// measures the room by. Called with mu held.
+func (s *Source) deliver(heard, frame []int16) {
+	for _, l := range s.listeners {
+		if l.unleveled {
+			s.offer(l, append([]int16(nil), frame...))
+		}
+	}
+
+	s.Process(heard, frame)
+	s.Add(frame)
+
+	for _, l := range s.listeners {
+		if !l.unleveled {
+			s.offer(l, frame)
+		}
+	}
+}
+
 func (s *Source) offer(l *listener, frame []int16) {
 	select {
 	case l.ch <- frame:
@@ -478,6 +491,9 @@ func SetGain(db int) error {
 }
 
 func (s *Source) Close() error {
+	if amazon.Enabled() {
+		return nil
+	}
 	s.devMu.Lock()
 	pcm := s.pcm
 	s.pcm = nil

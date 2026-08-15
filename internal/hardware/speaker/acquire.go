@@ -9,6 +9,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
 	"github.com/ygelfand/libcountertop/pkg/runtime/component"
 
+	"github.com/ygelfand/echolocal/internal/android/amazon"
 	"github.com/ygelfand/echolocal/internal/android/prop"
 )
 
@@ -29,6 +30,9 @@ func (p *Player) Start(context.Context) (err error) {
 		}
 		p.startup.Store(&state)
 	}()
+	if amazon.Enabled() {
+		return startAndroid()
+	}
 	err = p.open()
 	if err == nil || !errors.Is(err, alsa.ErrBusy) {
 		return err
