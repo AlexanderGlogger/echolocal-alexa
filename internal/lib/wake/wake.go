@@ -18,11 +18,11 @@ var (
 	google = sync.OnceValue(func() *gemini.Catalog {
 		return gemini.NewCatalog(layout.GeminiDir, func() bool { return config.Get().Wake.Gemini })
 	})
-	get = sync.OnceValue(func() *sharedwake.Library {
-		return sharedwake.NewLibrary(layout.ModelDir, catalog(), google())
+	get = sync.OnceValue(func() *Library {
+		return withPryon(sharedwake.NewLibrary(layout.ModelDir, catalog(), google()))
 	})
 )
 
-func Lib() *sharedwake.Library { return get() }
+func Lib() *Library { return get() }
 
 func Pryon() *pryon.Catalog { return catalog() }
