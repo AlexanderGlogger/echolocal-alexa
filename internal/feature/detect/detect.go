@@ -101,7 +101,7 @@ func (d *Detect) Restore(c config.Config)    { d.stop.Restore(c.Wake.Stop.Thresh
 
 func (d *Detect) load(ids []string) []string {
 	d.busy.begin()
-	accepted, loaded := detect.Choose(d.Engine, wake.Lib().Ensure(ids), ids, wakeword.Slots)
+	accepted, loaded := choose(d.Engine, wake.Lib().Ensure(ids), ids, wakeword.Slots)
 	d.busy.waitFor(loaded)
 	return accepted
 }
