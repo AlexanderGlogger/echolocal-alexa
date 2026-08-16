@@ -9,39 +9,60 @@ const (
 	WalkStep = 250 * time.Millisecond
 
 	SplashConfirm = 2 * time.Second
+
+	// SplashWait bounds the wait for Home Assistant. A ring still walking long after boot looks like
+	// recovery or a boot loop, so a device nobody has subscribed to fades out instead.
+	SplashWait = 60 * time.Second
 )
 
 func Splash(ctx context.Context, r *Ring, ready func() bool) error {
+	return splash(ctx, r, ready, SplashWait, SplashConfirm, 250*time.Millisecond)
+}
+
+func splash(
+	ctx context.Context,
+	r *Ring,
+	ready func() bool,
+	wait, confirm, fade time.Duration,
+) error {
+	confirmed := ready == nil
 	if ready != nil {
-		if err := until(ctx, r, walk(HomeAssistant), ready); err != nil {
+		waiting, cancel := context.WithTimeout(ctx, wait)
+		var err error
+		confirmed, err = until(waiting, r, walk(HomeAssistant), ready)
+		cancel()
+		if err != nil {
 			return err
 		}
 	}
-	if err := play(ctx, r, SplashConfirm, comet(Palette{HomeAssistant})); err != nil {
-		return err
+	if confirmed {
+		if err := play(ctx, r, confirm, comet(Palette{HomeAssistant})); err != nil {
+			return err
+		}
 	}
 
-	fade, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+	fading, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
 	defer cancel()
-	return fadeOut(fade, r, 250*time.Millisecond)
+	return fadeOut(fading, r, fade)
 }
 
-func until(ctx context.Context, r *Ring, frame Frame, ready func() bool) error {
+// until reports whether ready came true, so a timeout does not get the confirmation comet.
+func until(ctx context.Context, r *Ring, frame Frame, ready func() bool) (bool, error) {
 	t := time.NewTicker(FrameInterval)
 	defer t.Stop()
 
 	start := time.Now()
 	for !ready() {
 		if err := r.SetSegments(frame(time.Since(start))); err != nil {
-			return err
+			return false, err
 		}
 		select {
 		case <-ctx.Done():
-			return nil
+			return false, nil
 		case <-t.C:
 		}
 	}
-	return nil
+	return true, nil
 }
 
 func walk(base Color) Frame {
