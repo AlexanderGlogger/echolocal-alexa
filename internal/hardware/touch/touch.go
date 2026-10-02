@@ -124,12 +124,21 @@ func (t *Touch) Run(ctx context.Context) error {
 		return nil
 	}
 
+	failed := make(chan error, 1)
+	go func() { failed <- t.read(d) }()
+
+	// A read on the event node blocks until the next touch; only Close ends it.
+	select {
+	case <-ctx.Done():
+		return nil
+	case err := <-failed:
+		return err
+	}
+}
+
+func (t *Touch) read(d *input.Device) error {
 	dec := decoder{place: place}
 	for {
-		if err := ctx.Err(); err != nil {
-			return nil
-		}
-
 		e, err := d.Read()
 		if err != nil {
 			return fmt.Errorf("touch: reading %s: %w", d.Path, err)

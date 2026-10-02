@@ -103,6 +103,9 @@ func download(ctx context.Context, b Binary, to string, progress func(float32)) 
 	if got := hex.EncodeToString(sum.Sum(nil)); got != b.SHA256 {
 		return fmt.Errorf("update: hash %s, offered as %s", got, b.SHA256)
 	}
+	if progress != nil {
+		progress(1)
+	}
 	return nil
 }
 

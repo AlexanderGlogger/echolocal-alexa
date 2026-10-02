@@ -129,8 +129,8 @@ func TestProgressReachesTheEnd(t *testing.T) {
 	if calls == 0 {
 		t.Error("nothing was reported")
 	}
-	if last < 0.9 {
-		t.Errorf("finished at %v", last)
+	if last != 1 {
+		t.Errorf("finished at %v, want 1", last)
 	}
 }
 
