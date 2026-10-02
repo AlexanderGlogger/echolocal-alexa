@@ -52,16 +52,44 @@ func (r *run) patchInitRC(at string, edits ...rcEdit) (int, error) {
 
 // initRC lists every rc file init reads.
 func (r *run) initRC(at string) ([]string, error) {
-	globs := []string{at + "/system/etc/init/*.rc", at + "/vendor/etc/init/*.rc"}
+	link, code, err := r.d.ShellCode("readlink " + at + "/vendor")
+	if err != nil {
+		return nil, fmt.Errorf("reading the vendor link: %w", err)
+	}
+	if code != 0 {
+		link = ""
+	}
+
+	globs := []string{at + "/system/etc/init/*.rc", vendorUnder(at, strings.TrimSpace(link)) + "/etc/init/*.rc"}
 	if r.board().SystemAsRoot {
 		globs = append([]string{at + "/*.rc"}, globs...)
 	}
 
-	found, err := r.d.Shell("ls " + strings.Join(globs, " ") + " 2>/dev/null")
-	if err != nil {
-		return nil, fmt.Errorf("listing the init rc files: %w", err)
+	var found []string
+	for _, glob := range globs {
+		out, code, err := r.d.ShellCode("ls " + glob + " 2>/dev/null")
+		if err != nil {
+			return nil, fmt.Errorf("listing the init rc files: %w", err)
+		}
+		if code == 0 {
+			found = append(found, strings.Fields(out)...)
+		}
 	}
-	return strings.Fields(found), nil
+	if len(found) == 0 {
+		return nil, fmt.Errorf("no init rc files under %q", at+"/")
+	}
+	return found, nil
+}
+
+// An absolute vendor link names a path inside the image, not inside recovery.
+func vendorUnder(at, link string) string {
+	switch {
+	case link == "":
+		return at + "/vendor"
+	case strings.HasPrefix(link, "/"):
+		return at + link
+	}
+	return at + "/" + link
 }
 
 // A user build's init forces SELinux enforcing whatever the kernel command line asks for: the check is

@@ -1,3 +1,5 @@
+//go:build !board_checkers && !board_cronos && !board_rook
+
 // Package ble scans for Bluetooth Low Energy advertisements over the controller's HCI node.
 package ble
 

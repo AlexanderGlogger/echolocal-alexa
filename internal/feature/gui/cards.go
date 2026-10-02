@@ -6,6 +6,7 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/message"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
@@ -123,6 +124,14 @@ func assistantPanel(w *gogui.Window) gogui.View {
 	}
 	t := gogui.CurrentTheme()
 	vw, vh := w.WindowSize()
+	look := assistant.LookFor(show)
+	if !look.Custom() {
+		assistant.Unstage()
+	}
+	if look.Custom() && look.Place == config.LookFull {
+		assistant.Stage(ui.Rect{W: vw, H: vh}, assistant.BelowUI, look)
+		return captions(w, show)
+	}
 	deep := float32(vh) * 0.26
 	pad := t.Cfg.PaddingLarge.Left
 	bandW, bandH := float32(vw)-2*pad, deep*0.34
@@ -160,6 +169,21 @@ func assistantPanel(w *gogui.Window) gogui.View {
 		},
 	})
 
+	if look.Custom() {
+		share := float32(0.3)
+		if vw > vh {
+			share = 0.4
+		}
+		stageH := min(bandW/1.6, float32(vh)*share)
+		stage := gogui.Row(gogui.ContainerCfg{
+			ID: "assistant-stage", Width: stageH * 1.6, Height: stageH, Sizing: gogui.FixedFixed, Padding: gogui.NoPadding,
+			AmendLayout: func(e gogui.EventCtx) {
+				s := e.Layout.Shape
+				assistant.Stage(ui.Rect{X: int(s.X), Y: int(s.Y), W: int(s.Width), H: int(s.Height)}, assistant.AboveUI, look)
+			},
+		})
+		band = gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, HAlign: gogui.HAlignCenter, Content: []gogui.View{stage}})
+	}
 	content := []gogui.View{band}
 	if show.Said != "" {
 		content = append(content, gogui.Label(show.Said, secondary()))
@@ -172,7 +196,6 @@ func assistantPanel(w *gogui.Window) gogui.View {
 		Float:        true,
 		FloatOffsetY: deep * (float32(show.Down) - 1),
 		Width:        float32(vw),
-		MinHeight:    deep,
 		MaxHeight:    float32(vh) * 0.7,
 		Sizing:       gogui.FixedFit,
 		Color:        t.Cfg.ColorPanel,
@@ -182,6 +205,45 @@ func assistantPanel(w *gogui.Window) gogui.View {
 		Clip:         true,
 		Content:      content,
 	})
+}
+
+func captions(w *gogui.Window, show assistant.Showing) gogui.View {
+	t := gogui.CurrentTheme()
+	var lines []gogui.View
+	if show.Said != "" {
+		lines = append(lines, gogui.Text(gogui.TextCfg{Text: show.Said, TextStyle: secondary(), Mode: gogui.TextModeWrap}))
+	}
+	if show.Reply != "" {
+		lines = append(lines, gogui.Text(gogui.TextCfg{Text: assistant.Revealed(show.Reply, show.Reveal), TextStyle: t.TextStyleTitle, Mode: gogui.TextModeWrap}))
+	}
+	var content []gogui.View
+	if len(lines) > 0 {
+		content = append(content, gogui.Column(gogui.ContainerCfg{
+			ID:      "assistant-captions",
+			Sizing:  gogui.FillFit,
+			Color:   color(palette().Background).WithOpacity(0.6),
+			Radius:  gogui.RadiusLarge,
+			Padding: gogui.PaddingLarge,
+			Spacing: gogui.SpacingSmall,
+			Content: lines,
+		}))
+	}
+	return gogui.Column(gogui.ContainerCfg{
+		ID:      "assistant",
+		Sizing:  gogui.FillFill,
+		Padding: gogui.PaddingLarge,
+		VAlign:  gogui.VAlignBottom,
+		Content: content,
+	})
+}
+
+func fullLook() bool {
+	show, ok := assistant.Get().Now()
+	if !ok {
+		return false
+	}
+	l := assistant.LookFor(show)
+	return l.Custom() && l.Place == config.LookFull && assistant.Staged()
 }
 
 const priorityMarks = 100

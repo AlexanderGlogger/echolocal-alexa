@@ -199,7 +199,9 @@ func (a *App) Run(ctx context.Context) error {
 		if t.Phase == touch.Up {
 			w.QueueCommand(func(w *gogui.Window) {
 				lift(w)
-				w.ClearFocus()
+				if !typing(w) {
+					w.ClearFocus()
+				}
 			})
 		}
 	})
@@ -222,6 +224,13 @@ func (a *App) Run(ctx context.Context) error {
 
 	stopShell := shell.Get().Redrawn.Listen(func(struct{}) { redraw() })
 	defer stopShell()
+	stopMoved := shell.Get().Changed.Listen(func(shell.Change) {
+		w.QueueCommand(func(w *gogui.Window) {
+			kb = keys{}
+			w.ClearFocus()
+		})
+	})
+	defer stopMoved()
 	for _, o := range []*Overlay{{Priority: priorityAlert, Build: messageCard}, {Priority: priorityNotice, Build: timerCard}, {Priority: priorityNotice + 1, Build: assistantPanel}, {Priority: priorityMini, Build: a.mini}, {Priority: priorityMarks, Build: privacyMarks}} {
 		a.nav.Show(o)
 		defer a.nav.Hide(o)

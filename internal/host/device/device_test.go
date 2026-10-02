@@ -1,6 +1,7 @@
 package device
 
 import (
+	"fmt"
 	"os/exec"
 	"testing"
 )
@@ -18,6 +19,9 @@ func TestDroppedKnowsAdbLosingTheDevice(t *testing.T) {
 		if got := Dropped(err); got != want {
 			t.Errorf("%s: dropped %t, want %t", script, got, want)
 		}
+	}
+	if !Dropped(fmt.Errorf("device: running %q: %w", "chmod", errCutOff)) {
+		t.Error("a shell cut off before its exit status is not treated as dropped")
 	}
 }
 

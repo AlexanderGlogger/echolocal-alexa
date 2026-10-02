@@ -838,8 +838,13 @@ func (d *Driver) render() error {
 		if !forced {
 			return nil
 		}
-		panel.ClearRect(0, 0, panel.Width, panel.Height)
-		return panel.Flip()
+		for range 2 {
+			panel.ClearRect(0, 0, panel.Width, panel.Height)
+			if err := panel.Flip(); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	// Here rather than where the device was noticed turning: this is the only goroutine that

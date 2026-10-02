@@ -1,8 +1,6 @@
 package settings
 
 import (
-	"fmt"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/bluetooth"
 	"github.com/ygelfand/echolocal/internal/feature/sendspin"
@@ -60,21 +58,4 @@ func featuresPage() *shell.Page {
 			return rows, acts
 		},
 	}
-}
-
-// featuresOn is how many are on, for the row that leads here.
-func featuresOn() string {
-	var on, all int
-
-	cfg := config.Get()
-	for _, f := range features {
-		if f.on == nil {
-			continue
-		}
-		all++
-		if f.on(cfg) {
-			on++
-		}
-	}
-	return fmt.Sprintf("%d of %d", on, all)
 }

@@ -1,12 +1,12 @@
+//go:build !board_checkers && !board_cronos && !board_rook
+
 // Package bluetooth forwards what the BLE radio hears to Home Assistant, so a device out of range
 // of everything else is in range of this one.
 package bluetooth
 
 import (
 	"context"
-	"encoding/binary"
 	"log/slog"
-	"net"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -107,14 +107,6 @@ func build() *Proxy {
 	safe.Go("ble reports", b.deliver)
 	b.apply()
 	return b
-}
-
-func beaconMinor(mac string) int {
-	address, err := net.ParseMAC(mac)
-	if err != nil || len(address) != 6 {
-		return -1
-	}
-	return int(binary.BigEndian.Uint16(address[4:]))
 }
 
 func (b *Proxy) Name() string { return "bluetooth proxy" }

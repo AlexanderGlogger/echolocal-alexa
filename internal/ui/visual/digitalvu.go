@@ -28,14 +28,12 @@ func (v *digitalVU) advance(f frame) {
 	t, dt := f.t, f.dt
 	talk := f.state == listening || f.state == responding
 	for i := range dvuN {
-		var target float64
+		target := 0.0
 		if talk {
 			bi := float64(i) / (dvuN - 1) * 30
 			b0 := int(bi)
 			bv := f.bands[b0]*(1-(bi-float64(b0))) + f.bands[min(analysis.Bands-1, b0+1)]*(bi-float64(b0))
 			target = clamp01((bv - 0.28) / 0.72 * (0.9 + 0.35*float64(i)/(dvuN-1)) * (0.55 + 0.55*f.level))
-		} else {
-			target = 0.03 + 0.06*noise1(float64(i)*0.9+t*1.4)
 		}
 		if target > v.h[i] {
 			v.h[i] += (target - v.h[i]) * (1 - math.Pow(0.2, dt*30))

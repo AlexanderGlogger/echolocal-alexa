@@ -41,8 +41,9 @@ func (fr *framer) next(x Input) frame {
 	fr.level = follow(fr.level, f.voice, 0.45, 0.12, f.dt)
 	fr.slow = follow(fr.slow, f.voice, 0.06, 0.03, f.dt)
 	fr.peak = math.Max(loudFloor, follow(fr.peak, fr.level, 0.9, 0.05, f.dt))
-	f.level = math.Min(1, loudSpeech*fr.level/fr.peak) * smoothstep(0.012, 0.035, fr.level)
-	f.slow = math.Min(1, loudSpeech*fr.slow/fr.peak) * smoothstep(0.012, 0.035, fr.slow)
+	g := gateFor(x.Replying)
+	f.level = math.Min(1, loudSpeech*fr.level/fr.peak) * smoothstep(g.lo, g.hi, fr.level)
+	f.slow = math.Min(1, loudSpeech*fr.slow/fr.peak) * smoothstep(g.lo, g.hi, fr.slow)
 	f.onset = onset(&fr.onsets, a.Onsets)
 	for b := range f.bands {
 		f.bands[b] = float64(a.Bands[b])
@@ -51,7 +52,7 @@ func (fr *framer) next(x Input) frame {
 		f.wave[i] = float64(a.Wave[i])
 	}
 
-	if f.voice > 0.03 {
+	if f.voice > g.talk {
 		fr.quiet = 0
 	} else {
 		fr.quiet += f.dt

@@ -85,7 +85,9 @@ func (v *View) shade() {
 		}
 		now := time.Now()
 		in := visuals.From(x, g.source)
-		in.Dt = now.Sub(g.last)
+		if !g.last.IsZero() {
+			in.Dt = now.Sub(g.last)
+		}
 		g.last = now
 		if err := g.vis.Shade(g.layer, g.fresh, g.area, in); err != nil {
 			slog.Error("idle: GPU visual failed", "err", err)

@@ -2,7 +2,17 @@ package bluetooth
 
 import (
 	"encoding/binary"
+	"net"
 )
+
+// beaconMinor is the iBeacon minor for this device, from the last two bytes of its MAC.
+func beaconMinor(mac string) int {
+	address, err := net.ParseMAC(mac)
+	if err != nil || len(address) != 6 {
+		return -1
+	}
+	return int(binary.BigEndian.Uint16(address[4:]))
+}
 
 const (
 	flagsDataType        = 0x01

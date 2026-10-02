@@ -70,6 +70,7 @@ require (
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
+	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/tphakala/simd v1.9.0 // indirect
 	github.com/u-root/uio v0.0.0-20230220225925-ffce2a382923 // indirect
 	github.com/yuin/goldmark v1.8.5 // indirect

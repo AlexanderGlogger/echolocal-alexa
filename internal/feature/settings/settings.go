@@ -9,19 +9,22 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/ygelfand/echolocal/internal/lib/say"
+
 	gogui "github.com/go-gui-org/go-gui/gui"
 
+	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(36))
+	component.Register(component.Device, Get, component.Order(36), component.Needs(board.Panel))
 }
 
-// Settings holds nothing: every screen reads the config when it draws.
+// Settings is the feature. It holds nothing: every screen reads the config when it draws.
 type Settings struct{}
 
 var (
@@ -32,6 +35,10 @@ var (
 func Get() *Settings {
 	once.Do(func() {
 		shared = &Settings{}
+
+		// Before anything is labelled. The rail's names are resolved as it is built rather than as
+		// it is drawn, so a language applied after this would leave them in the last one.
+		say.Use(config.Get().Screen.Language)
 
 		drawer.Get().Add(drawer.Entry{
 			Name:  func() string { return say.T("settings.title") },

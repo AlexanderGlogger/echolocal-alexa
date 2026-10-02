@@ -120,17 +120,37 @@ type Input struct {
 	Label string
 }
 
+type gate struct{ lo, hi, talk float64 }
+
+var (
+	micGate     = gate{lo: 0.012, hi: 0.035, talk: 0.03}
+	speakerGate = gate{lo: 0.0002, hi: 0.001, talk: 0.0002}
+)
+
+func gateFor(replying bool) gate {
+	if replying {
+		return speakerGate
+	}
+	return micGate
+}
+
 func (x Input) Voice() analysis.Analysis {
 	if x.Mic == x.Speaker {
-		return x.Mic
+		return single(x.Mic, gateFor(x.Replying))
 	}
 	return merged(x.Mic, x.Speaker)
 }
 
+func single(a analysis.Analysis, g gate) analysis.Analysis {
+	out := analysis.Analysis{Level: a.Level, Peak: a.Peak, Onsets: a.Onsets}
+	out.Wave, out.Bands = scaled(a, g)
+	return out
+}
+
 func merged(a, b analysis.Analysis) analysis.Analysis {
 	out := analysis.Analysis{Level: max(a.Level, b.Level), Peak: max(a.Peak, b.Peak), Onsets: a.Onsets + b.Onsets}
-	aw, ab := scaled(a)
-	bw, bb := scaled(b)
+	aw, ab := scaled(a, micGate)
+	bw, bb := scaled(b, speakerGate)
 	for i := range out.Bands {
 		out.Bands[i] = max(ab[i], bb[i])
 	}
@@ -140,8 +160,8 @@ func merged(a, b analysis.Analysis) analysis.Analysis {
 	return out
 }
 
-func scaled(a analysis.Analysis) (wave [analysis.WavePoints]float32, bands [analysis.Bands]float32) {
-	gate := float32(smoothstep(0.012, 0.035, float64(a.Level)))
+func scaled(a analysis.Analysis, g gate) (wave [analysis.WavePoints]float32, bands [analysis.Bands]float32) {
+	gate := float32(smoothstep(g.lo, g.hi, float64(a.Level)))
 	if gate <= 0 {
 		return wave, bands
 	}

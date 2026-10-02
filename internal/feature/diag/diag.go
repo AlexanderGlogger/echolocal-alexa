@@ -268,6 +268,15 @@ func (d *Diag) remote() {
 	d.address()
 }
 
+func (d *Diag) RemoteADB() bool { return d.adb.Get() }
+
+func (d *Diag) SetRemoteADB(on bool) {
+	d.adb.Set(on)
+	d.adb.OnCommand(on)
+}
+
+func (d *Diag) SetInsecureTLS(on bool) { d.tls.OnCommand(on) }
+
 // insecureTLS applies to everything the device downloads: models, firmware and the audio Home
 // Assistant serves all go through the default transport.
 func insecureTLS(on bool) {

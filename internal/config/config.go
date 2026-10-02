@@ -49,6 +49,7 @@ type Config struct {
 	Poster     Poster     `json:"poster"`
 	Network    Network    `json:"network"`
 	API        API        `json:"api"`
+	Home       Home       `json:"home"`
 }
 
 // Defaults is a device nobody has set anything on.
@@ -77,6 +78,7 @@ func Defaults() Config {
 		Camera:     defaultCamera(),
 		RTSP:       defaultRTSP(),
 		Poster:     defaultPoster(),
+		Home:       defaultHome(),
 
 		// Only the stop word. The slots are absent until something chooses one, and Slot fills in the
 		// defaults for whichever have not been.
@@ -123,6 +125,7 @@ func (w Writer) RTSP() RTSPWriter             { return RTSPWriter(w) }
 func (w Writer) Poster() PosterWriter         { return PosterWriter(w) }
 func (w Writer) Network() NetworkWriter       { return NetworkWriter(w) }
 func (w Writer) API() APIWriter               { return APIWriter(w) }
+func (w Writer) Home() HomeWriter             { return HomeWriter(w) }
 
 // Wake names one slot, since every wake word setting belongs to one.
 func (w Writer) Wake(slot int) WakeWriter { return WakeWriter{st: w.st, slot: slot} }

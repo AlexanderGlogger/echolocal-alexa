@@ -5,6 +5,8 @@ type Screen struct {
 	// Theme is the palette by name, from internal/ui/theme.
 	Theme string `json:"theme"`
 
+	Keyboard KeyboardSize `json:"keyboard"`
+
 	// Drawer is the side of the picture the rail of icons is pulled in from.
 	Drawer Edge `json:"drawer"`
 
@@ -23,6 +25,9 @@ type Screen struct {
 
 	Style string `json:"style"`
 	Size  string `json:"size"`
+
+	// Language is the text the panel shows, as a language tag. Empty is English.
+	Language string `json:"language"`
 }
 
 const (
@@ -51,7 +56,7 @@ const (
 
 func defaultScreen() Screen {
 	return Screen{
-		Theme: DefaultTheme, Drawer: DefaultEdge, Volume: DefaultEdge, Marks: true, Hours: TwentyFourHour, Logo: true,
+		Theme: DefaultTheme, Keyboard: KeyboardCompact, Drawer: DefaultEdge, Volume: DefaultEdge, Marks: true, Hours: TwentyFourHour, Logo: true,
 		Backlight: DefaultBacklight, Mode: DefaultScreenMode,
 	}
 }
@@ -117,6 +122,14 @@ func (w ScreenWriter) Hours(v HourFormat) error {
 	return w.st.Update(func(c *Config) { c.Screen.Hours = v })
 }
 
+func (w ScreenWriter) Language(v string) error {
+	return w.st.Update(func(c *Config) { c.Screen.Language = v })
+}
+
+func (w ScreenWriter) Keyboard(v KeyboardSize) error {
+	return w.st.Update(func(c *Config) { c.Screen.Keyboard = v })
+}
+
 func (w ScreenWriter) Logo(v bool) error {
 	return w.st.Update(func(c *Config) { c.Screen.Logo = v })
 }
@@ -127,4 +140,28 @@ func (w ScreenWriter) Backlight(v int) error {
 
 func (w ScreenWriter) Mode(v ScreenMode) error {
 	return w.st.Update(func(c *Config) { c.Screen.Mode = v })
+}
+
+type KeyboardSize string
+
+const (
+	KeyboardCompact  KeyboardSize = "compact"
+	KeyboardStandard KeyboardSize = "standard"
+	KeyboardLarge    KeyboardSize = "large"
+)
+
+func (k KeyboardSize) Label() string {
+	switch k {
+	case KeyboardCompact:
+		return say.T("keyboard.compact")
+	case KeyboardStandard:
+		return say.T("keyboard.standard")
+	case KeyboardLarge:
+		return say.T("keyboard.large")
+	}
+	return string(k)
+}
+
+func KeyboardSizes() []KeyboardSize {
+	return []KeyboardSize{KeyboardCompact, KeyboardStandard, KeyboardLarge}
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard/face"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
+	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -34,6 +35,10 @@ func (a *App) screenFor(v shell.View) *Screen {
 		return a.videoScreen(t)
 	case *shell.Page:
 		return pageScreen(t)
+	case *homecontrol.Home:
+		return homeScreen(t)
+	case *homecontrol.Picker:
+		return pickerScreen(t)
 	}
 	switch v {
 	case media.Page():
@@ -243,7 +248,7 @@ func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.Vi
 		}
 		onClick = tapped(tap, 0)
 	}
-	return pressable(gogui.Row, gogui.ContainerCfg{
+	cfg := gogui.ContainerCfg{
 		ID:       id,
 		Sizing:   gogui.FillFit,
 		VAlign:   gogui.VAlignMiddle,
@@ -252,7 +257,23 @@ func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.Vi
 		Radius:   gogui.RadiusMedium,
 		Disabled: r.Dim,
 		Content:  content,
-	}, onClick)
+	}
+	if r.Kind == widget.Toggle && r.Chosen {
+		highlight(&cfg)
+	}
+	return pressable(gogui.Row, cfg, onClick)
+}
+
+func outline(cfg *gogui.ContainerCfg) {
+	cfg.ColorBorder = gogui.CurrentTheme().Cfg.ColorAccent.WithOpacity(0.7)
+	cfg.SizeBorder = gogui.BorderPx(2)
+}
+
+func highlight(cfg *gogui.ContainerCfg) {
+	accent := gogui.CurrentTheme().Cfg.ColorAccent
+	cfg.Color = accent.WithOpacity(0.18)
+	cfg.ColorBorder = accent
+	cfg.SizeBorder = gogui.BorderPx(2)
 }
 
 var gripped bool

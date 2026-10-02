@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-gui-org/go-gui/gui"
 	"github.com/go-gui-org/go-gui/gui/shader"
+	"github.com/go-gui-org/go-gui/gui/svg"
 )
 
 type Sink interface {
@@ -122,6 +123,7 @@ func New(sink Sink, w *gui.Window) (*Renderer, error) {
 	gui.LoadAppFonts(ts, "gogui")
 	r.textSys = ts
 	w.SetTextMeasurer(&measurer{ts: ts})
+	w.SetSvgParser(svg.New())
 	return r, nil
 }
 
@@ -157,6 +159,21 @@ func (r *Renderer) Touch(p Phase, id uint64, x, y float32) {
 	case r.events <- e:
 	case <-time.After(touchWait):
 	}
+}
+
+func (r *Renderer) Type(ch rune) { r.queue(gui.Event{Type: gui.EventChar, CharCode: uint32(ch)}) }
+
+func (r *Renderer) Press(k gui.KeyCode) {
+	r.queue(gui.Event{Type: gui.EventKeyDown, KeyCode: k})
+	r.queue(gui.Event{Type: gui.EventKeyUp, KeyCode: k})
+}
+
+func (r *Renderer) queue(e gui.Event) {
+	select {
+	case r.events <- e:
+	default:
+	}
+	r.poke()
 }
 
 func (r *Renderer) poke() {

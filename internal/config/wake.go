@@ -63,6 +63,8 @@ type WakeWord struct {
 
 	// Recordings is how many of this slot's turns to keep the audio of on disk. Zero keeps none.
 	Recordings int `json:"recordings"`
+
+	Look Look `json:"look"`
 }
 
 const (
@@ -93,6 +95,7 @@ func DefaultWakeWord() WakeWord {
 		Buffer:    DefaultBuffer,
 		MaxListen: DefaultMaxListen,
 		MaxThink:  DefaultMaxThink,
+		Look:      Look{Place: LookPanel},
 	}
 }
 
@@ -201,6 +204,8 @@ const (
 	// the chunks arrive at about the rate they play, so any hiccup splices silence into a word.
 	DeliveryStream Delivery = "stream"
 )
+
+func Deliveries() []Delivery { return []Delivery{DeliveryWhole, DeliveryStream} }
 
 // Label is how the setting is shown.
 func (d Delivery) Label() string {

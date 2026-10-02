@@ -710,8 +710,10 @@ static void *render(void *arg) {
 			pthread_mutex_lock(&g->mu);
 			g->compiled = ok;
 			g->compile_done = 1;
+			int reading = g->read_want;
 			pthread_cond_broadcast(&g->cv);
 			pthread_mutex_unlock(&g->mu);
+			if (!reading) continue;
 		}
 		if (!prog) {
 			pthread_mutex_lock(&g->mu);

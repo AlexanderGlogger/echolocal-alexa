@@ -9,8 +9,10 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard/face"
+	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -21,6 +23,16 @@ import (
 
 func (a *App) root(w *gogui.Window) gogui.View {
 	covering, above := a.nav.Showing(shell.Get().Views())
+	if fullLook() || assistant.StagedFull() {
+		a.seeThrough(true)
+		layers := []gogui.View{gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding})}
+		for _, o := range a.nav.Overlays() {
+			if v := o.Build(w); v != nil {
+				layers = append(layers, floating(o.Priority+1, v))
+			}
+		}
+		return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers})
+	}
 	a.seeThrough(covering != nil && covering.Clear)
 	base := a.dashboard(w)
 	if addr := web.Get().Offering(); addr != "" {
@@ -42,6 +54,11 @@ func (a *App) root(w *gogui.Window) gogui.View {
 			layers = append(layers, floating(o.Priority+1, v))
 		}
 	}
+	if typing(w) {
+		if v := a.keyboard(w); v != nil {
+			layers = append(layers, gogui.Column(gogui.ContainerCfg{Float: true, FloatZIndex: 1001, Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: []gogui.View{v}}))
+		}
+	}
 	return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers})
 }
 
@@ -59,6 +76,16 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 		r = r.Undated()
 	}
 	box := dashboard.Box(cfg.Clock.Position, cfg.Clock.Size, vw, vh)
+	board := homecontrol.Dash()
+	tabs := board.Tabs()
+	showing, tiled := board.Showing()
+	margin := int(reach() * 0.5)
+	strip := ui.Rect{X: margin, Y: margin, W: vw - 2*margin, H: int(reach() * 2)}
+	if len(tabs) > 0 && box.Y < strip.Y+strip.H {
+		shift := strip.Y + strip.H - box.Y
+		box.Y += shift
+		box.H = max(box.H-shift, 1)
+	}
 
 	var layers []gogui.View
 	if backdrop, behind := poster.Get().Backdrop(vw, vh, image.Rect(box.X, box.Y, box.X+box.W, box.Y+box.H), pal.Background); backdrop != nil {
@@ -68,8 +95,15 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 		layers = append(layers, logo(vw, vh, pal))
 	}
 
-	if build, ok := faces[cfg.Clock.Face]; ok {
+	switch build, ok := faces[cfg.Clock.Face]; {
+	case tiled:
+		below := strip.Y + strip.H + margin
+		layers = append(layers, tileBoard(ui.Rect{X: margin, Y: below, W: vw - 2*margin, H: vh - below - margin}, showing, pal))
+	case ok:
 		layers = append(layers, placed(box, build(w, box, r, ink)))
+	}
+	if len(tabs) > 0 {
+		layers = append(layers, tabStrip(strip, tabs, showing.Key, pal))
 	}
 
 	frame := gogui.ContainerCfg{

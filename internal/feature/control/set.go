@@ -15,6 +15,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
+	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
@@ -59,6 +60,8 @@ func screenSettings() []setting {
 		{"idle.visual2.source", func(c config.Config) string { return string(c.Idle.Second.Source) },
 			choose(config.Sources(), func(s config.Source) { i.SetSource(1, s) })},
 
+		{"screen.keyboard", func(c config.Config) string { return string(c.Screen.Keyboard) },
+			choose(config.KeyboardSizes(), pages.SetKeyboard)},
 		{"screen.theme", func(c config.Config) string { return c.Screen.Theme }, paint},
 		{"screen.style", func(c config.Config) string { return screen.Table().Row("style").Read(&c.Screen) },
 			func(v string) error { return screen.Get().Set("style", v) }},

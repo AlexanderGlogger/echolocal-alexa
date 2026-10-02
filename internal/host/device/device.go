@@ -333,7 +333,13 @@ func (d *Device) ShellCode(cmd string) (string, int, error) {
 // shell appends its own exit-status marker rather than trusting adb to propagate one, which older
 // adb does not.
 func (d *Device) shell(cmd string) (string, int, error) {
-	raw, err := d.withRetry(func() (string, error) { return d.rawShell(cmd) })
+	raw, err := d.withRetry(func() (string, error) {
+		raw, err := d.rawShell(cmd)
+		if err == nil && !strings.Contains(raw, rcMarker) {
+			return raw, errCutOff
+		}
+		return raw, err
+	})
 	if err != nil {
 		return "", 0, fmt.Errorf("device: running %q: %w", cmd, err)
 	}
@@ -508,9 +514,15 @@ func (d *Device) run(ctx context.Context, args ...string) (string, error) {
 	return output(d.command(ctx, args...))
 }
 
+// errCutOff is a shell that ended without printing its exit status, with adb still exiting 0.
+var errCutOff = errors.New("the shell ended before its exit status")
+
 // Dropped reports whether adb lost the device: exit 255 mid-command, or exit 1 with adb's own word
 // that the device is not there.
 func Dropped(err error) bool {
+	if errors.Is(err, errCutOff) {
+		return true
+	}
 	var exit *exec.ExitError
 	if !errors.As(err, &exit) {
 		return false
@@ -551,7 +563,7 @@ func (d *Device) back(ctx context.Context) error {
 	defer tick.Stop()
 
 	for {
-		if _, err := d.rawShell("true"); err == nil {
+		if raw, err := d.rawShell("true"); err == nil && strings.Contains(raw, rcMarker) {
 			return nil
 		}
 		select {

@@ -20,22 +20,25 @@ var ErrNoHelper = errors.New("gpu: the display helper is not connected")
 type Layer struct {
 	c    *surface.Client
 	id   uint32
+	z    int
 	W, H int
 }
 
-func Open(w, h int) (*Layer, error) {
+func Open(w, h int) (*Layer, error) { return OpenAt(w, h, z) }
+
+func OpenAt(w, h, depth int) (*Layer, error) {
 	c := display.Get().Helper()
 	if c == nil || c.Err() != nil {
 		return nil, ErrNoHelper
 	}
 	id := 2000 + ids.Add(1)
-	if err := c.GLOpen(id, w, h, z); err != nil {
+	if err := c.GLOpen(id, w, h, depth); err != nil {
 		if c.Err() != nil {
 			return nil, ErrNoHelper
 		}
 		return nil, err
 	}
-	return &Layer{c: c, id: id, W: w, H: h}, nil
+	return &Layer{c: c, id: id, z: depth, W: w, H: h}, nil
 }
 
 func OpenOffscreen(w, h int) (*Layer, error) {
@@ -136,7 +139,7 @@ func (l *Layer) Place(at ui.Rect) error {
 	d := display.Get()
 	fw, fh := d.Native()
 	x, y, m, _ := d.Orientation().Place(fw, fh, display.Rect{X: at.X, Y: at.Y, W: at.W, H: at.H}, l.W, l.H)
-	return l.c.VideoPlace(l.id, x, y, m, z, true)
+	return l.c.VideoPlace(l.id, x, y, m, l.z, true)
 }
 
 func (l *Layer) Close() error { return l.c.Destroy(l.id) }
