@@ -129,6 +129,9 @@ features.speaker: Bluetooth speaker
 features.speaker.hint: Play from a phone over Bluetooth
 
 keyboard.done: Done
+upgrade.line: Updating to {{.Version}} · {{.Status}}
+upgrade.installing: Installing…
+upgrade.percent: "{{.N}}%"
 look.title: Visuals
 look.place: Placement
 look.panel: In the panel

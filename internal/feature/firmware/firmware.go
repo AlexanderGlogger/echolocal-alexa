@@ -19,6 +19,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/feedback"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/layout"
+	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/update"
 )
@@ -34,15 +35,25 @@ const (
 	EventFailed     = "failed"
 )
 
+type Upgrade struct {
+	Version string
+	At      float32
+}
+
+func (up Upgrade) Active() bool { return up.Version != "" }
+
 type Firmware struct {
+	Upgrading hook.Hook[Upgrade]
+
 	entity  *esphome.Update
 	channel *esphome.Select
 	look    *esphome.Button
 	status  *esphome.TextSensor
 	events  *esphome.Event
 
-	mu    sync.Mutex
-	found update.Manifest
+	mu      sync.Mutex
+	found   update.Manifest
+	upgrade Upgrade
 
 	announced     sync.Once
 	rolledBack    string
@@ -267,6 +278,7 @@ func (u *Firmware) Install(ctx context.Context) {
 	// and on the ring for somebody standing in front of the device.
 	if err != nil {
 		slog.Error("installing an update failed", "version", found.Version, "err", err)
+		u.upgrading(Upgrade{})
 		u.publish(found)
 		u.Settled(EventFailed, "installing "+found.Version+" failed: "+err.Error())
 		feedback.Failure()
@@ -281,6 +293,20 @@ func (u *Firmware) progress(found update.Manifest, at float32) {
 	state := u.state(found)
 	state.InProgress, state.Progress = true, at*100
 	u.entity.Set(state)
+	u.upgrading(Upgrade{Version: found.Version, At: at})
+}
+
+func (u *Firmware) upgrading(up Upgrade) {
+	u.mu.Lock()
+	u.upgrade = up
+	u.mu.Unlock()
+	u.Upgrading.Emit(up)
+}
+
+func (u *Firmware) Upgrade() Upgrade {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	return u.upgrade
 }
 
 // publish is the state with nothing happening, which is also how a failed install stops looking like one
