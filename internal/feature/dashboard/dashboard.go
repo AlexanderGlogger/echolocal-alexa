@@ -13,6 +13,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -50,6 +51,11 @@ func Get() *Dashboard {
 		timesync.Get().Synced.Listen(func(s timesync.Sync) {
 			if s.Stepped() {
 				shared.Redraw()
+			}
+		})
+		shell.Get().Changed.Listen(func(c shell.Change) {
+			if _, ok := c.To.(*idle.View); ok {
+				Clock()
 			}
 		})
 	})

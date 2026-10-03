@@ -45,6 +45,7 @@ const (
 	frame    = time.Second / 60
 	traceBy  = 2000 * time.Millisecond
 	traceFor = 1400 * time.Millisecond
+	stepFor  = 350 * time.Millisecond
 	moveFor  = 700 * time.Millisecond
 	finish   = 1100 * time.Millisecond
 )
@@ -108,7 +109,8 @@ func (s *Splash) Run(ctx context.Context) error {
 	defer tick.Stop()
 
 	var m reveal.Moment
-	var listed, done, finishing time.Time
+	var listed, done, finishing, stepped time.Time
+	shown := 0
 	waited := false
 	said := "\x00"
 	fresh := true
@@ -123,11 +125,15 @@ func (s *Splash) Run(ctx context.Context) error {
 		m.At = now.Sub(began)
 		progress := component.Default().Progress()
 
-		want := share(progress)
-		if !finishing.IsZero() {
-			want = 1
-		}
 		if m.At > traceBy {
+			if shown < up(progress) && now.Sub(stepped) >= stepFor {
+				shown++
+				stepped = now
+			}
+			want := 1.0
+			if len(progress) > 0 && !skipped.Load() {
+				want = float64(shown) / float64(len(progress))
+			}
 			m.Trace = math.Min(want, m.Trace+frame.Seconds()/traceFor.Seconds())
 		}
 
@@ -149,7 +155,7 @@ func (s *Splash) Run(ctx context.Context) error {
 			}
 		}
 
-		if !listed.IsZero() && holding(progress) {
+		if !listed.IsZero() && !settled(progress) {
 			waited = true
 		}
 		if !handOver() {
@@ -200,27 +206,14 @@ func viewed(ctx context.Context) (int, int) {
 	return 0, 0
 }
 
-// share is the part of the components that have come up or given up.
-func share(progress []component.Progress) float64 {
-	if len(progress) == 0 {
-		return 1
-	}
+func up(progress []component.Progress) int {
 	n := 0
 	for _, p := range progress {
-		if p.Settled() || p.Background {
+		if p.Settled() {
 			n++
 		}
 	}
-	return float64(n) / float64(len(progress))
-}
-
-func holding(progress []component.Progress) bool {
-	for _, p := range progress {
-		if !p.Settled() && !p.Background {
-			return true
-		}
-	}
-	return false
+	return n
 }
 
 func handOver() bool { return component.Default().Ready() }

@@ -95,7 +95,7 @@ func box(r image.Rectangle) ui.Rect {
 func rows(s ui.Surface, in ui.Rect, t uitheme.Theme, progress []component.Progress) {
 	row := int(float64(min(in.W, in.H)) * rowShare)
 	cols := 1
-	if len(progress)*row > in.H {
+	if len(progress)*row > in.H*3/4 {
 		cols = 2
 	}
 	per := (len(progress) + cols - 1) / cols
@@ -123,11 +123,13 @@ func rows(s ui.Surface, in ui.Rect, t uitheme.Theme, progress []component.Progre
 		ui.FillRounded(s, ui.Rect{X: left, Y: y + (row-dot)/2, W: dot, H: dot}, dot/2, mark)
 
 		x := left + dot + row/3
-		saying := at.Doing != ""
+		room := in.X + (i/per+1)*colW - row/2 - x
+		label, says := ui.Fit(name, at.Name, room), ui.Fit(doing, at.Doing, room)
+		saying := says != ""
 
 		// Both lines are placed as one block, so the second never lands on the first's descenders.
-		_, nameH := name.Measure(at.Name)
-		_, doingH := doing.Measure(at.Doing)
+		_, nameH := name.Measure(label)
+		_, doingH := doing.Measure(says)
 
 		tall := nameH
 		if saying {
@@ -135,9 +137,9 @@ func rows(s ui.Surface, in ui.Rect, t uitheme.Theme, progress []component.Progre
 		}
 		up := y + (row-tall)/2
 
-		ui.DrawText(s, name, x, up, t.Text, t.Background, at.Name)
+		ui.DrawText(s, name, x, up, t.Text, t.Background, label)
 		if saying {
-			ui.DrawText(s, doing, x, up+nameH+gap, t.Muted, t.Background, at.Doing)
+			ui.DrawText(s, doing, x, up+nameH+gap, t.Muted, t.Background, says)
 		}
 	}
 }

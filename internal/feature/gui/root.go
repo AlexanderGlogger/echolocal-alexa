@@ -12,7 +12,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard/face"
-	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -76,9 +75,9 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 		r = r.Undated()
 	}
 	box := dashboard.Box(cfg.Clock.Position, cfg.Clock.Size, vw, vh)
-	board := homecontrol.Dash()
-	tabs := board.Tabs()
-	showing, tiled := board.Showing()
+	tabs := dashboard.Tabs()
+	showing, tabbed := dashboard.Showing()
+	kind, drawn := tabKinds[showing.Kind]
 	margin := int(reach() * 0.5)
 	strip := ui.Rect{X: margin, Y: margin, W: vw - 2*margin, H: int(reach() * 2)}
 	if len(tabs) > 0 && box.Y < strip.Y+strip.H {
@@ -96,9 +95,9 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 	}
 
 	switch build, ok := faces[cfg.Clock.Face]; {
-	case tiled:
+	case tabbed && drawn:
 		below := strip.Y + strip.H + margin
-		layers = append(layers, tileBoard(ui.Rect{X: margin, Y: below, W: vw - 2*margin, H: vh - below - margin}, showing, pal))
+		layers = append(layers, kind.board(ui.Rect{X: margin, Y: below, W: vw - 2*margin, H: vh - below - margin}, showing, pal))
 	case ok:
 		layers = append(layers, placed(box, build(w, box, r, ink)))
 	}
