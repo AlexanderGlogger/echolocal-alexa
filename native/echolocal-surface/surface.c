@@ -402,9 +402,14 @@ static float as_float(uint32_t bits) {
 	return f;
 }
 
-static int video_new(int conn, const uint32_t *a) {
-	uint32_t id = a[0], codec = a[1], w = a[2], h = a[3], session = a[5];
+static int video_new(int conn, const uint32_t *a, uint32_t len) {
+	uint32_t id = a[0], codec = a[1], w = a[2], h = a[3], session = a[5], n = a[6];
 	int32_t z = (int32_t)a[4];
+	if (!wire_bytes(len, 28, n)) return -1;
+	char decoder[128];
+	if (n >= sizeof decoder) return reply(conn, OP_VIDEO_OPEN, (uint32_t[]){id, ERR_ARGS}, 2, -1);
+	memcpy(decoder, a + 7, n);
+	decoder[n] = 0;
 	if (find(id) || w == 0 || h == 0 || w > 4096 || h > 4096) return reply(conn, OP_VIDEO_OPEN, (uint32_t[]){id, ERR_ARGS}, 2, -1);
 	AMediaCrypto *crypto = NULL;
 	if (session && !(crypto = drm_crypto(session))) return reply(conn, OP_VIDEO_OPEN, (uint32_t[]){id, ERR_ARGS}, 2, -1);
@@ -412,7 +417,7 @@ static int video_new(int conn, const uint32_t *a) {
 	if (!l) return reply(conn, OP_VIDEO_OPEN, (uint32_t[]){id, ERR_FULL}, 2, -1);
 	int st = surface_for(l, id, w, h, 0, 0, z, crypto ? FLAG_SECURE : 0);
 	if (st == OK) {
-		st = video_open(&l->vid, l->win, codec, w, h, crypto);
+		st = video_open(&l->vid, l->win, codec, w, h, crypto, decoder);
 		if (st == OK) l->is_video = 1;
 		else drop(l);
 	}
@@ -446,6 +451,43 @@ static int drm_new(int conn, const uint32_t *a, uint32_t len) {
 	if (!wire_bytes(len, 28, n)) return -1;
 	int st = drm_open(id, (const uint8_t *)(a + 3), (int)(flags & 1), (const uint8_t *)(a + 7), n);
 	return reply(conn, OP_DRM_OPEN, (uint32_t[]){id, (uint32_t)st}, 2, -1);
+}
+
+static int drm_prov(int conn, const uint32_t *a) {
+	const uint8_t *req = NULL;
+	size_t req_len = 0;
+	const char *url = NULL;
+	int st = drm_provision((const uint8_t *)a, &req, &req_len, &url);
+	size_t url_len = st == OK && url ? strlen(url) : 0;
+	uint8_t *body = malloc(req_len + url_len + 1);
+	if (!body) return reply(conn, OP_DRM_PROVISION, (uint32_t[]){ERR_MEMORY, 0, 0}, 3, -1);
+	if (req_len) memcpy(body, req, req_len);
+	if (url_len) memcpy(body + req_len, url, url_len);
+	int r = reply_data(conn, OP_DRM_PROVISION, (uint32_t[]){(uint32_t)st, (uint32_t)req_len, (uint32_t)(req_len + url_len)}, 3, body, req_len + url_len);
+	free(body);
+	return r;
+}
+
+static int drm_prop(int conn, const uint32_t *a, uint32_t len) {
+	uint32_t id = a[0], n = a[1];
+	if (!wire_bytes(len, 8, n)) return -1;
+	char name[64];
+	const char *value = NULL;
+	int st = ERR_ARGS;
+	if (n < sizeof name) {
+		memcpy(name, a + 2, n);
+		name[n] = 0;
+		st = drm_property(id, name, &value);
+	}
+	size_t vl = st == OK ? strlen(value) : 0;
+	return reply_data(conn, OP_DRM_PROPERTY, (uint32_t[]){id, (uint32_t)st, (uint32_t)vl}, 3, value, vl);
+}
+
+static int drm_cert(int conn, const uint32_t *a, uint32_t len) {
+	uint32_t n = a[0];
+	if (!wire_bytes(len, 4, n)) return -1;
+	int st = drm_provisioned((const uint8_t *)(a + 1), n);
+	return reply(conn, OP_DRM_PROVISIONED, (uint32_t[]){(uint32_t)st}, 1, -1);
 }
 
 static int drm_ask(int conn, const uint32_t *a, uint32_t len) {
@@ -847,13 +889,22 @@ static void serve(int conn) {
 			else err = -1;
 			break;
 		case OP_VIDEO_OPEN:
-			err = hdr[1] == 24 ? video_new(conn, buf) : -1;
+			err = hdr[1] >= 28 ? video_new(conn, buf, hdr[1]) : -1;
 			break;
 		case OP_VIDEO_CRYPT:
 			err = hdr[1] >= 20 + CRYPT_WORDS * 4 ? video_crypt(conn, buf, hdr[1]) : -1;
 			break;
 		case OP_DRM_OPEN:
 			err = hdr[1] >= 28 ? drm_new(conn, buf, hdr[1]) : -1;
+			break;
+		case OP_DRM_PROVISION:
+			err = hdr[1] == 16 ? drm_prov(conn, buf) : -1;
+			break;
+		case OP_DRM_PROPERTY:
+			err = hdr[1] >= 8 ? drm_prop(conn, buf, hdr[1]) : -1;
+			break;
+		case OP_DRM_PROVISIONED:
+			err = hdr[1] >= 4 ? drm_cert(conn, buf, hdr[1]) : -1;
 			break;
 		case OP_DRM_REQUEST:
 			err = hdr[1] >= 8 ? drm_ask(conn, buf, hdr[1]) : -1;

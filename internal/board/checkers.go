@@ -11,6 +11,10 @@ var Checkers = Board{
 	Caps:          Panel | Wifi | Shutter | Camera,
 	PanelRotation: 270,
 	UISize:        "compact",
+	SecureDecoders: map[string]string{
+		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
+		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",
+	},
 
 	CameraWidth: 1280, CameraHeight: 720,
 

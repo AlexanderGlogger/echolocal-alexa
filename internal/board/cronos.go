@@ -11,8 +11,12 @@ var Cronos = Board{
 	Caps:          Panel | Wifi | Shutter | Camera,
 	PanelRotation: 270,
 	UISize:        "compact",
-	Keys:          map[uint16]Key{116: Mute},
-	MuteDir:       "/sys/devices/platform/gpio-privacy",
+	SecureDecoders: map[string]string{
+		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
+		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",
+	},
+	Keys:    map[uint16]Key{116: Mute},
+	MuteDir: "/sys/devices/platform/gpio-privacy",
 
 	CameraWidth: 1280, CameraHeight: 720,
 

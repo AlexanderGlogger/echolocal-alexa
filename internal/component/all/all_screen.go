@@ -10,6 +10,7 @@ import (
 	_ "github.com/ygelfand/echolocal/internal/feature/brightness"
 	_ "github.com/ygelfand/echolocal/internal/feature/dashboard"
 	_ "github.com/ygelfand/echolocal/internal/feature/drawer"
+	_ "github.com/ygelfand/echolocal/internal/feature/drm"
 	_ "github.com/ygelfand/echolocal/internal/feature/gui"
 	_ "github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	_ "github.com/ygelfand/echolocal/internal/feature/idle"

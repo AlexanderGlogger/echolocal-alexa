@@ -93,6 +93,9 @@ type Board struct {
 	// UISize is how big the screen's text and controls are drawn by default: large or compact.
 	UISize string
 
+	// SecureDecoders names the decoder for protected video, by MIME type, as media_codecs lists it.
+	SecureDecoders map[string]string
+
 	// CameraWidth and CameraHeight are a preview size the camera lists.
 	CameraWidth, CameraHeight int
 
