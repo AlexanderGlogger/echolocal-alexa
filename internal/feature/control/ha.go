@@ -5,6 +5,7 @@ package control
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -105,6 +106,10 @@ func homeRows() []setting {
 			name: "home.control." + s.Key,
 			says: func(c config.Config) string { return onOff(c.Home.Control[s.Key]) },
 			use:  toggle(s.SetControlled),
+		}, setting{
+			name: "home.group." + s.Key,
+			says: func(c config.Config) string { return strconv.Itoa(c.Home.Grouped(s.Key)) },
+			use:  number(0, config.HomeGroupMost, s.SetGroupFrom),
 		})
 	}
 	return append(rows, setting{
