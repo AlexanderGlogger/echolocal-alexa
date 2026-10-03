@@ -4,6 +4,7 @@ package gui
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/echolocal/internal/feature/videoplayer"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
@@ -124,7 +126,7 @@ func playerBody(w *gogui.Window) gogui.View {
 	}
 	if now.Length > 0 {
 		sk, _ := media.Transport().(media.Seeker)
-		words = append(words, progress(now, sk, secondary()))
+		words = append(words, progress(w, now, sk, secondary(), nil))
 	}
 	words = append(words, transport(now), loudness())
 
@@ -143,10 +145,29 @@ func playerBody(w *gogui.Window) gogui.View {
 	})
 }
 
-func progress(now media.Now, sk media.Seeker, st gogui.TextStyle) gogui.View {
+func clockWidth(w *gogui.Window, length time.Duration, st gogui.TextStyle) float32 {
+	shape := clockText(length)
+	var widest float32
+	for d := '0'; d <= '9'; d++ {
+		text := strings.Map(func(r rune) rune {
+			if r >= '0' && r <= '9' {
+				return d
+			}
+			return r
+		}, shape)
+		widest = max(widest, w.TextWidth(text, st))
+	}
+	return widest
+}
+
+func clockLabel(text string, width float32, st gogui.TextStyle, align gogui.HorizontalAlign) gogui.View {
+	return gogui.Row(gogui.ContainerCfg{Width: width, Sizing: gogui.FixedFit, Padding: gogui.NoPadding, HAlign: align, Content: []gogui.View{gogui.Label(text, st)}})
+}
+
+func progress(w *gogui.Window, now media.Now, sk media.Seeker, st gogui.TextStyle, marks []videoplayer.Mark) gogui.View {
 	at := seeking.shown(now.Elapsed)
 	canSeek := sk != nil && sk.CanSeek()
-	bar := grip(gogui.Slider(gogui.SliderCfg{
+	cfg := gogui.SliderCfg{
 		ID:       "seek",
 		Height:   reach(),
 		Sizing:   gogui.FillFit,
@@ -157,10 +178,15 @@ func progress(now media.Now, sk media.Seeker, st gogui.TextStyle) gogui.View {
 			seeking.move(sk, time.Duration(v*float32(time.Second)))
 			e.Window.InvalidateLayout()
 		},
-	}))
+	}
+	if now.Length > 0 {
+		cfg.Look = markedLook(marks, now.Length)
+	}
+	bar := grip(gogui.Slider(cfg))
 	content := []gogui.View{bar}
 	if now.LiveWithin == 0 {
-		content = []gogui.View{gogui.Label(clockText(at), st), bar, gogui.Label(clockText(now.Length), st)}
+		wide := clockWidth(w, now.Length, st)
+		content = []gogui.View{clockLabel(clockText(at), wide, st, gogui.HAlignRight), bar, clockLabel(clockText(now.Length), wide, st, gogui.HAlignLeft)}
 	}
 	return gogui.Row(gogui.ContainerCfg{
 		Sizing:  gogui.FillFit,
@@ -168,6 +194,52 @@ func progress(now media.Now, sk media.Seeker, st gogui.TextStyle) gogui.View {
 		Spacing: gogui.SpacingMedium,
 		Content: content,
 	})
+}
+
+func markedLook(marks []videoplayer.Mark, length time.Duration) func(gogui.SliderLookState) gogui.SliderParts {
+	t := gogui.CurrentTheme().Cfg
+	size, thumb := t.SizeSlider, t.SizeSliderThumb
+	played := t.ColorSelect
+	if !played.IsSet() {
+		played = t.ColorAccent
+	}
+	return func(s gogui.SliderLookState) gogui.SliderParts {
+		track := gogui.DrawCanvas(gogui.DrawCanvasCfg{
+			Sizing:  gogui.FillFixed,
+			Height:  size,
+			Version: uint64(s.Pct*1e6) + uint64(len(marks))<<32,
+			OnDraw: func(dc *gogui.DrawContext) {
+				half, span := thumb/2, max(dc.Width-thumb, 1)
+				at := func(d time.Duration) float32 { return half + span*float32(d)/float32(length) }
+				dc.FilledRoundedRect(0, 0, dc.Width, size, size/2, t.ColorInterior)
+				head := half + span*s.Pct
+				dc.FilledRoundedRect(0, 0, head, size, size/2, played)
+				if head > size {
+					dc.FilledRect(head-size/2, 0, size/2, size, played)
+				}
+				for _, m := range marks {
+					x0 := at(m.From)
+					x1 := max(at(m.To), x0+1)
+					dc.FilledRect(x0, 0, x1-x0, size, color(m.Color))
+				}
+			},
+		})
+		return gogui.SliderParts{
+			Track: track,
+			Fill:  gogui.Row(gogui.ContainerCfg{Height: size, Sizing: gogui.FixedFixed, Padding: gogui.NoPadding}),
+			Handle: gogui.DrawCanvas(gogui.DrawCanvasCfg{
+				Sizing: gogui.FixedFixed,
+				Width:  thumb,
+				Height: thumb,
+				OnDraw: func(dc *gogui.DrawContext) {
+					w, edge := max(thumb/6, 4), max(thumb/24, 1.5)
+					x := (thumb - w) / 2
+					dc.FilledRoundedRect(x-edge, 0, w+2*edge, thumb, (w+2*edge)/2, t.ColorBackground)
+					dc.FilledRoundedRect(x, edge, w, thumb-2*edge, w/2, t.TextStyleDef.Color)
+				},
+			}),
+		}
+	}
 }
 
 type control struct {

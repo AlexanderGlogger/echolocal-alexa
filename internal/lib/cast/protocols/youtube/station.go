@@ -89,7 +89,11 @@ func (s *station) quiet(d time.Duration) bool {
 func newStation(ctx context.Context, theme string, env cast.Env) *station {
 	r := NewResolver(env.HTTP)
 	r.Resample = env.Resample
-	return &station{theme: theme, env: env, resolve: r, ctx: ctx}
+	s := &station{theme: theme, env: env, resolve: r, ctx: ctx}
+	if env.VolumeChanged != nil {
+		context.AfterFunc(ctx, env.VolumeChanged(s.volume))
+	}
+	return s
 }
 
 func (s *station) bind(sess *Session) {
@@ -183,12 +187,8 @@ func (s *station) handle(m Message) {
 	case "remoteDisconnected":
 		s.mu.Lock()
 		s.phones = slices.DeleteFunc(s.phones, func(id string) bool { return id == f["id"] })
-		alone := len(s.phones) == 0
 		s.mu.Unlock()
 		s.attend()
-		if t := s.current(); alone && t != nil && s.paused(t) {
-			s.stop()
-		}
 	case "loungeStatus":
 		s.send(
 			Out{Name: "onHasPreviousNextChanged", Fields: s.navigation()},
@@ -321,9 +321,10 @@ func (s *station) open(pos Position, at time.Duration, held bool) {
 				s.env.Output.Pause(t)
 			}
 		}
-		if held {
+		switch {
+		case held:
 			s.report(statePaused)
-		} else {
+		case !t.Pictured() || s.env.Output == nil:
 			s.report(statePlaying)
 		}
 		s.lookAround(ctx, t, pos)
@@ -584,6 +585,7 @@ func (s *station) reportLoading(id string, at time.Duration) {
 			"state": strconv.Itoa(stateLoading), "currentTime": secs(at), "playabilityStatus": "OK",
 		}},
 	)
+	s.publish(id, nil, stateLoading)
 }
 
 // report tells the phone what is playing and where it has got to.
@@ -593,6 +595,7 @@ func (s *station) report(state int) {
 		s.send(Out{Name: "nowPlaying"}, Out{Name: "onStateChange", Fields: map[string]string{
 			"state": strconv.Itoa(stateStopped), "playabilityStatus": "OK",
 		}})
+		s.publish("", nil, stateStopped)
 		return
 	}
 	s.mu.Lock()
@@ -621,6 +624,7 @@ func (s *station) report(state int) {
 		}},
 		Out{Name: "onHasPreviousNextChanged", Fields: s.navigation()},
 	)
+	s.publish(t.info.ID, t, state)
 }
 
 func (s *station) volume() {

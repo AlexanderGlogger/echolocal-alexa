@@ -40,6 +40,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/fetch"
 	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
+	"github.com/ygelfand/echolocal/internal/ui"
 )
 
 func init() {
@@ -396,7 +397,7 @@ func (r *Receiver) up() error {
 	service.Receiver.Launched = func(app string) {
 		unspoken = map[string]bool{}
 		slog.Info("a cast app launched", "app", cast.AppName(app), "id", app)
-		advert.Playing(true, "")
+		advert.Playing(true, cast.AppName(app))
 	}
 	service.Receiver.Stopped = func(string) { advert.Playing(false, "") }
 	service.Receiver.Loaded = func(m cast.Media) {
@@ -423,7 +424,22 @@ func (r *Receiver) up() error {
 			Long:      fetch.Client(0),
 			Volume:    func() int { return volume.Get().Level(config.StreamMain) },
 			SetVolume: func(level int) { volume.Get().Set(config.StreamMain, level) },
-			Output:    r.output(),
+			VolumeChanged: func(do func()) func() {
+				return volume.Get().Changed.Listen(func(c volume.Change) {
+					if c.Stream == config.StreamMain {
+						do()
+					}
+				})
+			},
+			Publish: func(control cast.Playing, p *cast.Published) {
+				r.mu.Lock()
+				s := r.service
+				r.mu.Unlock()
+				if s != nil {
+					s.Publish(control, p)
+				}
+			},
+			Output: r.output(),
 			Resample: func(from int) func([]int16) []int16 {
 				return speaker.NewRational(from, speaker.Rate, speaker.Channels).Run
 			},
@@ -459,7 +475,7 @@ func (r *Receiver) up() error {
 	r.setup = &http.Server{
 		Addr:              fmt.Sprintf(":%d", cast.SetupPort),
 		ReadHeaderTimeout: 5 * time.Second,
-		Handler: cast.SetupHandler(service.Receiver.Eureka, func(req *http.Request, status int) {
+		Handler: cast.SetupHandler(service.Receiver.Eureka, ui.LogoPNG, func(req *http.Request, status int) {
 			slog.Info("a cast sender asked the setup endpoint", "peer", req.RemoteAddr, "method", req.Method,
 				"url", req.URL.String(), "status", status)
 		}),

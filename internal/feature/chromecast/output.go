@@ -258,9 +258,13 @@ func (o *output) pictureOnce(ctx context.Context, p *playing, pics playback.Pict
 	}
 	defer closer.Close()
 	s.Clock = func() (time.Duration, bool) { return o.clock(p) }
+	waiter, _ := p.src.(playback.Waiter)
 	s.Started = func() {
 		began.Store(true)
 		p.shown()
+		if waiter != nil {
+			waiter.Waiting(false)
+		}
 		if view != nil {
 			view.SetFrame(int(s.Width), int(s.Height))
 			view.SetPicture(true)
@@ -268,6 +272,9 @@ func (o *output) pictureOnce(ctx context.Context, p *playing, pics playback.Pict
 	}
 	s.Waiting = func(w bool) {
 		o.waiting(p, w)
+		if waiter != nil {
+			waiter.Waiting(w)
+		}
 		if view != nil {
 			view.SetLoading(w)
 		}

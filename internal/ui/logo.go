@@ -31,6 +31,8 @@ var (
 // Logo is the mark for a light background, decoded once.
 func Logo() image.Image { return decode(&lightOnce, &light, lightPNG) }
 
+func LogoPNG() []byte { return lightPNG }
+
 // Night is the mark for a dark background.
 func Night() image.Image { return decode(&darkOnce, &dark, darkPNG) }
 
