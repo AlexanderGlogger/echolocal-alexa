@@ -96,6 +96,8 @@ type Board struct {
 	// SecureDecoders names the decoder for protected video, by MIME type, as media_codecs lists it.
 	SecureDecoders map[string]string
 
+	MaxFPS int
+
 	// CameraWidth and CameraHeight are a preview size the camera lists.
 	CameraWidth, CameraHeight int
 

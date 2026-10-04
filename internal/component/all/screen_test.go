@@ -44,6 +44,8 @@ var castOnly = []string{
 	"github.com/ygelfand/echolocal/internal/lib/hls",
 	"github.com/ygelfand/echolocal/internal/lib/cenc",
 	"github.com/ygelfand/echolocal/internal/lib/cast",
+	"github.com/ygelfand/echolocal/internal/lib/cast/protocols/primevideo",
+	"github.com/ygelfand/echolocal/internal/lib/cast/sealed",
 }
 
 var cameraOnly = []string{

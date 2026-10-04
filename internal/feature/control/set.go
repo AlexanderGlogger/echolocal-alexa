@@ -13,6 +13,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
+	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
@@ -49,6 +50,7 @@ func screenSettings() []setting {
 		{"clock.hours", func(c config.Config) string { return string(c.Screen.Hours) }, choose(config.HourFormats(), c.SetHours)},
 
 		{"idle.after", func(c config.Config) string { return string(c.Idle.After) }, choose(config.Delays(), i.SetAfter)},
+		{"idle.media", func(c config.Config) string { return string(c.Idle.Media) }, choose(config.MediaDelays(), media.Get().SetIdle)},
 		{"idle.face", func(c config.Config) string { return string(c.Idle.Face) }, choose(config.IdleFaces(), i.SetFace)},
 		{"idle.position", func(c config.Config) string { return string(c.Idle.Position) }, choose(config.Positions(), i.SetPosition)},
 		{"idle.align", func(c config.Config) string { return string(c.Idle.Align) }, choose(config.Aligns(), i.SetAlign)},

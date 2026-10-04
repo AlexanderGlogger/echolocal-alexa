@@ -15,7 +15,6 @@ const cancelTaps = 1024
 // speexFrame is the speex block, which divides FrameSamples.
 const speexFrame = 64
 
-// LANovo's.
 const echoSuppressActive = -40
 
 func newSuppressor(c *canceller) *aec.Preprocessor {

@@ -49,7 +49,7 @@ func advertising(t *testing.T) (*Advertiser, *published) {
 	t.Helper()
 
 	on := &published{}
-	d := Identify("00:f4:8d:47:69:21", "Kitchen", "Lenovo Smart Display 10")
+	d := Identify("00:f4:8d:47:69:21", "Kitchen", "Echo Show 5")
 
 	return Announcing(on, d), on
 }

@@ -36,16 +36,6 @@ const (
 	CapabilityMultizone = 1 << 5
 )
 
-// SmartDisplay is the ca a stock Lenovo Smart Display 10 and a Google Nest Hub both advertise, read off the network.
-//
-//	bit  value   meaning
-//	0    1       video out
-//	2    4       audio out
-//	9    512     unknown
-//	11   2048    unknown
-//	15   32768   unknown, absent on audio-only devices
-//	16   65536   unknown
-//	17   131072  unknown
 const SmartDisplay = 231941
 
 // Version is the protocol version in the record. 05 is what current devices say.

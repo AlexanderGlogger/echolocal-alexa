@@ -15,6 +15,7 @@ import (
 
 	yt "github.com/kkdai/youtube/v2"
 
+	"github.com/ygelfand/echolocal/internal/lib/cast/playback"
 	"github.com/ygelfand/echolocal/internal/lib/fetch"
 	"github.com/ygelfand/echolocal/internal/lib/hls"
 )
@@ -65,6 +66,7 @@ type Resolver struct {
 	client   yt.Client
 	http     *http.Client
 	Resample func(from int) func(stereo []int16) []int16
+	target   func() playback.Target
 }
 
 type Live struct {
@@ -74,9 +76,9 @@ type Live struct {
 
 func (l *Live) Error() string { return fmt.Sprintf("youtube: %s is a live stream", l.Track.ID) }
 
-func NewResolver(c *http.Client) *Resolver {
+func NewResolver(c *http.Client, target func() playback.Target) *Resolver {
 	useClient.Do(func() { yt.DefaultClient = visionOS })
-	return &Resolver{client: yt.Client{HTTPClient: c}, http: c}
+	return &Resolver{client: yt.Client{HTTPClient: c}, http: c, target: target}
 }
 
 // Info is a video's title, author, length and thumbnail, without opening anything.
@@ -110,7 +112,7 @@ func (r *Resolver) Formats(ctx context.Context, id string) (string, error) {
 		return strconv.Itoa(f.ItagNo)
 	}
 	fmt.Fprintf(&b, "audio     %s\n", chosen(bestOpus(v.Formats)))
-	fmt.Fprintf(&b, "video     %s\n", chosen(bestVP9(v.Formats)))
+	fmt.Fprintf(&b, "video     %s\n", chosen(bestVP9(v.Formats, r.limits())))
 	for _, f := range v.Formats {
 		track := ""
 		if f.AudioTrack != nil {
@@ -120,7 +122,7 @@ func (r *Resolver) Formats(ctx context.Context, id string) (string, error) {
 			f.ItagNo, f.MimeType, f.Height, f.FPS, f.Bitrate, f.ContentLength, track)
 	}
 	if live(v) {
-		d, err := hls.Describe(ctx, v.HLSManifestURL, hls.Options{HTTP: r.http, Ask: ask, Tallest: tallest, Fastest: fastest})
+		d, err := hls.Describe(ctx, v.HLSManifestURL, hls.Options{HTTP: r.http, Ask: ask, Tallest: r.limits().Tallest, Fastest: r.limits().Fastest})
 		if err != nil {
 			fmt.Fprintf(&b, "hls: %v\n", err)
 		}
@@ -140,7 +142,7 @@ func (r *Resolver) Audio(ctx context.Context, id string) (Track, io.ReadCloser, 
 
 // Video opens a video's best VP9 picture stream, which carries no sound.
 func (r *Resolver) Video(ctx context.Context, id string) (Track, io.ReadCloser, error) {
-	t, stream, err := r.open(ctx, id, "vp9 video", bestVP9, 4)
+	t, stream, err := r.open(ctx, id, "vp9 video", func(f yt.FormatList) *yt.Format { return bestVP9(f, r.limits()) }, 4)
 	t.Codec = "vp9"
 	return t, stream, err
 }
@@ -209,16 +211,18 @@ func ask(req *http.Request) {
 	req.Header.Set("Origin", "https://youtube.com")
 }
 
-const (
-	tallest = 1080
-	fastest = 60
-)
+func (r *Resolver) limits() playback.Target {
+	if r.target == nil {
+		return playback.Target{}
+	}
+	return r.target()
+}
 
-func bestVP9(formats yt.FormatList) *yt.Format {
+func bestVP9(formats yt.FormatList, limits playback.Target) *yt.Format {
 	var found []*yt.Format
 	for i := range formats {
 		f := &formats[i]
-		if strings.HasPrefix(f.MimeType, "video/webm") && strings.Contains(f.MimeType, "vp9") && f.Height <= tallest {
+		if strings.HasPrefix(f.MimeType, "video/webm") && strings.Contains(f.MimeType, "vp9") && within(f.Height, limits.Tallest) {
 			found = append(found, f)
 		}
 	}
@@ -227,8 +231,8 @@ func bestVP9(formats yt.FormatList) *yt.Format {
 	}
 	sort.Slice(found, func(i, j int) bool {
 		a, b := found[i], found[j]
-		if (a.FPS <= fastest) != (b.FPS <= fastest) {
-			return a.FPS <= fastest
+		if within(a.FPS, limits.Fastest) != within(b.FPS, limits.Fastest) {
+			return within(a.FPS, limits.Fastest)
 		}
 		if a.Height != b.Height {
 			return a.Height > b.Height

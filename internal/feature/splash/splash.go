@@ -40,7 +40,6 @@ const (
 	settle = 500 * time.Millisecond
 )
 
-// The reveal's pace, from LANovo.
 const (
 	frame    = time.Second / 60
 	traceBy  = 2000 * time.Millisecond

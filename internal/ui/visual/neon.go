@@ -59,7 +59,7 @@ func (v *neon) tubes(text string) (*image.RGBA, int) {
 	font, _ := cv.LoadFont(gomonobold.TTF)
 	words := strings.Fields(text)
 	if len(words) == 0 {
-		words = []string{"LANOVO"}
+		words = []string{"ECHOLOCAL"}
 	}
 	lines := []string{strings.Join(words, " ")}
 	if len(words) > 1 && H > W {
@@ -201,7 +201,7 @@ func (v *neon) Shade(g GL, fresh bool, in ui.Rect, x Input) error {
 	}
 	label := x.Label
 	if strings.TrimSpace(label) == "" {
-		label = "LANOVO"
+		label = "ECHOLOCAL"
 	}
 	if fresh || v.w != v.st.w || v.h != v.st.h {
 		if err := g.Texture(0, v.wall()); err != nil {

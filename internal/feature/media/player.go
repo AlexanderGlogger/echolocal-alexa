@@ -398,6 +398,12 @@ func (p *Player) External(s Source) {
 // Changed is how an external source says it is doing something different now.
 func (p *Player) Changed() { p.refresh() }
 
+func (p *Player) SetIdle(v config.Delay) {
+	if err := config.Set().Idle().Media(v); err != nil {
+		slog.Warn("saving the media idle timeout", "err", err)
+	}
+}
+
 func (p *Player) source() Source {
 	if s := p.external.Load(); s != nil {
 		return *s

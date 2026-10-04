@@ -60,7 +60,6 @@ var biscuit = Set{
 
 func show5() Set {
 	s := biscuit
-	// Quiet speech pegged the classic VU at LANovo's 18.
 	s.VisualizerLift = 0
 	return s
 }

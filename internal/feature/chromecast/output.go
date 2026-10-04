@@ -100,6 +100,7 @@ type playing struct {
 	artURL  string
 	mark    picture
 	markURL string
+	thumbs  map[string]picture
 
 	seen     chan struct{}
 	seenOnce sync.Once
@@ -789,6 +790,19 @@ func fetchImage(url, what string) picture {
 	return pic
 }
 
+func (o *output) fetchThumb(p *playing, url string) {
+	pic := fetchImage(url, "cast queue art")
+	if pic.raw == nil {
+		return
+	}
+	o.mu.Lock()
+	if o.cur == p {
+		p.thumbs[url] = pic
+	}
+	o.mu.Unlock()
+	media.Get().Changed()
+}
+
 func (o *output) fetchArt(p *playing, url string) {
 	pic := fetchImage(url, "cast art")
 	if pic.raw == nil {
@@ -827,8 +841,22 @@ func (c *card) Now() media.Now {
 		can |= media.CanPrevious
 	}
 	queue := make([]media.Track, 0, len(s.Upcoming))
+	var wanted []string
+	c.o.mu.Lock()
+	if c.p.thumbs == nil {
+		c.p.thumbs = map[string]picture{}
+	}
 	for _, u := range s.Upcoming {
-		queue = append(queue, media.Track{Title: u.Title, Artist: u.Artist, Length: u.Length, Play: u.Play})
+		pic, seen := c.p.thumbs[u.Art]
+		if u.Art != "" && !seen {
+			c.p.thumbs[u.Art] = picture{}
+			wanted = append(wanted, u.Art)
+		}
+		queue = append(queue, media.Track{Title: u.Title, Artist: u.Artist, Length: u.Length, Art: pic.raw, ArtID: pic.id, Play: u.Play})
+	}
+	c.o.mu.Unlock()
+	for _, url := range wanted {
+		safe.Go("cast queue art", func() { c.o.fetchThumb(c.p, url) })
 	}
 	return media.Now{
 		Queue:   queue,
@@ -935,6 +963,12 @@ func (b *standby) Open() bool {
 		view.SetLogo(img)
 	}
 	return true
+}
+
+func (b *standby) Wakes() bool {
+	b.o.mu.Lock()
+	defer b.o.mu.Unlock()
+	return b.o.sess != nil && b.o.sess.Pictured
 }
 
 func (b *standby) Seek(time.Duration) {}

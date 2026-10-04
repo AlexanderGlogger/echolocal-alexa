@@ -5,6 +5,12 @@ type Cast struct {
 	Receiver bool    `json:"receiver"`
 	Oracle   string  `json:"oracle,omitempty"`
 	YouTube  YouTube `json:"youtube,omitzero"`
+	Prime    Prime   `json:"prime,omitzero"`
+}
+
+type Prime struct {
+	Persist   bool `json:"persist,omitempty"`
+	SkipIntro bool `json:"skipIntro,omitempty"`
 }
 
 type YouTube struct {
@@ -42,6 +48,14 @@ func (w CastWriter) Screens(device, music, video string) error {
 	return w.st.Update(func(c *Config) {
 		c.Cast.YouTube.Device, c.Cast.YouTube.Music, c.Cast.YouTube.Video = device, music, video
 	})
+}
+
+func (w CastWriter) PrimeSkipIntro(v bool) error {
+	return w.st.Update(func(c *Config) { c.Cast.Prime.SkipIntro = v })
+}
+
+func (w CastWriter) PrimePersist(v bool) error {
+	return w.st.Update(func(c *Config) { c.Cast.Prime.Persist = v })
 }
 
 func (w CastWriter) Skip(categories []string) error {

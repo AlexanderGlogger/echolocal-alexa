@@ -19,12 +19,16 @@ type Env struct {
 	HTTP *http.Client
 	Long *http.Client
 
+	Video func() playback.Target
+
 	// Volume is the media volume, 0 to 100, and SetVolume moves it.
 	Volume        func() int
 	SetVolume     func(level int)
 	VolumeChanged func(do func()) (stop func())
 
 	Publish func(control Playing, p *Published)
+	Send    func(m Message)
+	Keep    func(app string) Kept
 
 	// Output plays what a protocol hands it.
 	Output playback.Output
@@ -32,6 +36,12 @@ type Env struct {
 	Resample func(from int) func(stereo []int16) []int16
 
 	Surface func() *surface.Client
+}
+
+type Kept interface {
+	Load(v any) bool
+	Save(v any) error
+	Clear() error
 }
 
 var (

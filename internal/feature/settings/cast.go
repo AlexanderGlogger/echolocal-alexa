@@ -19,15 +19,62 @@ func init() {
 		feature{
 			label: func() string { return say.T("features.cast") },
 			hint:  func() string { return say.T("features.cast.hint") },
-			on:    func(c config.Config) bool { return c.Cast.Receiver },
-			set:   func(on bool) { chromecast.Get().SetReceiver(on) },
-		},
-		feature{
-			label: func() string { return say.T("features.youtube") },
-			hint:  func() string { return say.T("features.youtube.hint") },
-			page:  youtubePage,
+			page:  castPage,
 		},
 	)
+}
+
+func castPage() *shell.Page {
+	return &shell.Page{
+		Title: say.T("features.cast"),
+		Build: func() ([]widget.Row, []func(int)) {
+			on := config.Get().Cast.Receiver
+			return []widget.Row{
+					{Label: say.T("cast.enable"), Kind: widget.Toggle, On: on},
+					{Label: say.T("cast.apps"), Kind: widget.Chevron},
+				}, []func(int){
+					func(int) { chromecast.Get().SetReceiver(!on) },
+					open(castAppsPage()),
+				}
+		},
+	}
+}
+
+func castAppsPage() *shell.Page {
+	return &shell.Page{
+		Title: say.T("cast.apps"),
+		Build: func() ([]widget.Row, []func(int)) {
+			return []widget.Row{
+					{Label: say.T("youtube.title"), Kind: widget.Chevron},
+					{Label: say.T("cast.prime"), Kind: widget.Chevron},
+				}, []func(int){
+					open(youtubePage()),
+					open(primePage()),
+				}
+		},
+	}
+}
+
+func primePage() *shell.Page {
+	return &shell.Page{
+		Title: say.T("cast.prime"),
+		Build: func() ([]widget.Row, []func(int)) {
+			persist, skip := config.Get().Cast.Prime.Persist, config.Get().Cast.Prime.SkipIntro
+			state := say.T("cast.prime.unregistered")
+			if chromecast.Get().PrimeRegistered() {
+				state = say.T("cast.prime.registered")
+			}
+			return []widget.Row{
+					{Label: say.T("cast.prime.persist"), Hint: say.T("cast.prime.persist.hint"), Kind: widget.Toggle, On: persist},
+					{Label: say.T("cast.prime.reset"), Kind: widget.Plain, Value: state},
+					{Label: say.T("cast.prime.skipintro"), Hint: say.T("cast.prime.skipintro.hint"), Kind: widget.Toggle, On: skip},
+				}, []func(int){
+					func(int) { chromecast.Get().SetPrimePersist(!persist) },
+					func(int) { chromecast.Get().ResetPrime() },
+					func(int) { chromecast.Get().SetPrimeSkipIntro(!skip) },
+				}
+		},
+	}
 }
 
 func youtubePage() *shell.Page {

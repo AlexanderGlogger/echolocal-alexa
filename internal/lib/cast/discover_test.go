@@ -28,7 +28,7 @@ func txt(t *testing.T, d Device) map[string]string {
 // A sender reads these before it connects at all, so a record that is missing is a device that is
 // discovered and then not offered.
 func TestTheRecordSaysEverythingASenderReads(t *testing.T) {
-	d := Identify("00:f4:8d:47:69:21", "Kitchen", "Lenovo Smart Display 10")
+	d := Identify("00:f4:8d:47:69:21", "Kitchen", "Echo Show 5")
 
 	got := txt(t, d)
 	for _, want := range []string{"id", "cd", "ve", "md", "fn", "ca", "st", "bs", "nf", "rs"} {
@@ -40,7 +40,7 @@ func TestTheRecordSaysEverythingASenderReads(t *testing.T) {
 	if got["fn"] != "Kitchen" {
 		t.Errorf("the name is %q", got["fn"])
 	}
-	if got["md"] != "Lenovo Smart Display 10" {
+	if got["md"] != "Echo Show 5" {
 		t.Errorf("the model is %q", got["md"])
 	}
 	if got["ca"] != "231941" {

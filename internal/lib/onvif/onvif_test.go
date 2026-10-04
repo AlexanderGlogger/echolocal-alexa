@@ -113,7 +113,7 @@ func TestServeForAClient(t *testing.T) {
 
 func TestTheServicesDescribeTheCamera(t *testing.T) {
 	s := &Service{
-		Device: Device{Manufacturer: "Lenovo", Model: "SD-X701B", Firmware: "1.0", Serial: "HUA03RW0", Name: "display", MAC: "aa:bb:cc:dd:ee:ff", RTSPPort: 8554,
+		Device: Device{Manufacturer: "Amazon", Model: "AEOCN", Firmware: "1.0", Serial: "G0000000000000", Name: "display", MAC: "aa:bb:cc:dd:ee:ff", RTSPPort: 8554,
 			Profiles: func() []Profile {
 				return []Profile{{Token: "main", Name: "Main", Width: 2592, Height: 1944, FPS: 30, Bitrate: 6_000_000, Path: "main"},
 					{Token: "sub", Name: "Sub", Width: 1280, Height: 720, FPS: 10, Bitrate: 921_600, Path: "sub"}}
@@ -134,7 +134,7 @@ func TestTheServicesDescribeTheCamera(t *testing.T) {
 		want           []string
 	}{
 		{dev, "tds:GetSystemDateAndTime", "", []string{"<tt:Year>2026</tt:Year>", "<tt:Hour>13</tt:Hour>"}},
-		{dev, "tds:GetDeviceInformation", "", []string{"<tds:Manufacturer>Lenovo</tds:Manufacturer>", "<tds:SerialNumber>HUA03RW0</tds:SerialNumber>"}},
+		{dev, "tds:GetDeviceInformation", "", []string{"<tds:Manufacturer>Amazon</tds:Manufacturer>", "<tds:SerialNumber>G0000000000000</tds:SerialNumber>"}},
 		{dev, "tds:GetCapabilities", "", []string{srv.URL + MediaPath, "<tt:RTP_RTSP_TCP>true</tt:RTP_RTSP_TCP>"}},
 		{dev, "tds:GetServices", "<tds:IncludeCapability>false</tds:IncludeCapability>", []string{"http://www.onvif.org/ver10/media/wsdl"}},
 		{dev, "tds:GetNetworkInterfaces", "", []string{"aa:bb:cc:dd:ee:ff"}},

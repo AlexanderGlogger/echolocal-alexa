@@ -119,14 +119,14 @@ func TestEntitiesSendsTheFilter(t *testing.T) {
 	})
 	h.access = Allowed
 
-	got, err := h.Entities(context.Background(), Filter{Domains: []string{"light"}, Labels: []string{"lanovo"}})
+	got, err := h.Entities(context.Background(), Filter{Domains: []string{"light"}, Labels: []string{"echolocal"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(got) != 1 || got[0].ID != "light.a" {
 		t.Errorf("got %+v", got)
 	}
-	for _, want := range []string{`selectattr('domain', 'in', ["light"])`, `select('in', ["lanovo"])`, `in []`} {
+	for _, want := range []string{`selectattr('domain', 'in', ["light"])`, `select('in', ["echolocal"])`, `in []`} {
 		if !strings.Contains(sent, want) {
 			t.Errorf("the template lacks %q:\n%s", want, sent)
 		}

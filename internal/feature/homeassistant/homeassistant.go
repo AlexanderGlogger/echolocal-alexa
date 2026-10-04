@@ -226,7 +226,7 @@ const carrier = "recorder.get_statistics"
 
 func carrierData() map[string]string {
 	return map[string]string{
-		"statistic_ids": "lanovo.none",
+		"statistic_ids": "echolocal.none",
 		"start_time":    time.Now().UTC().Format(time.RFC3339),
 		"period":        "hour",
 		"types":         "state",

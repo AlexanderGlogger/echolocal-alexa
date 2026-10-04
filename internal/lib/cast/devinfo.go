@@ -13,8 +13,6 @@ const (
 	TypeDeviceInfo    = "DEVICE_INFO"
 )
 
-// InfoCapabilities is what a stock Lenovo Smart Display 10 reports in DEVICE_INFO, which is not its
-// ca record.
 const InfoCapabilities = 231429
 
 type deviceInfo struct {

@@ -68,6 +68,7 @@ func playerScreen(v shell.View) *Screen {
 	return &Screen{
 		Title: say.T("player.now"),
 		View:  v,
+		Fixed: true,
 		Build: playerBody,
 	}
 }
@@ -79,6 +80,24 @@ func still(img *ui.Image) string {
 		return "mem:" + key
 	}
 	return gogui.UseImage(key, w, h, nrgba(img))
+}
+
+func squared(img *ui.Image) string {
+	w, h := img.Size()
+	side := min(w, h)
+	x0, y0 := (w-side)/2, (h-side)/2
+	key := fmt.Sprintf("cover/%p/%dx%d", img, w, h)
+	if gogui.HasImage(key) {
+		return "mem:" + key
+	}
+	pix := make([]byte, 0, side*side*4)
+	for y := range side {
+		for x := range side {
+			c := img.At(x0+x, y0+y)
+			pix = append(pix, c.R, c.G, c.B, 255)
+		}
+	}
+	return gogui.UseImage(key, side, side, pix)
 }
 
 func clockText(d time.Duration) string {
@@ -102,7 +121,7 @@ func playerBody(w *gogui.Window) gogui.View {
 
 	var cover gogui.View
 	if art := ui.Picture(now.Art, now.ArtID); art != nil {
-		cover = gogui.Image(gogui.ImageCfg{Src: still(art), Width: side, Height: side})
+		cover = gogui.Image(gogui.ImageCfg{Src: squared(art), Width: side, Height: side})
 	} else {
 		st := t.TextStyleIconXLarge
 		st.Color = t.Cfg.ColorTextSecondary
@@ -136,11 +155,12 @@ func playerBody(w *gogui.Window) gogui.View {
 		main = gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, HAlign: gogui.HAlignCenter, Spacing: gogui.SpacingLarge, Content: []gogui.View{cover, text}})
 	}
 	if len(now.Queue) == 0 {
-		return main
+		return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Scrollable: true, Padding: gogui.NoPadding, Content: []gogui.View{main}})
 	}
 	return gogui.Column(gogui.ContainerCfg{
-		Sizing:  gogui.FillFit,
+		Sizing:  gogui.FillFill,
 		Spacing: gogui.SpacingLarge,
+		Padding: gogui.NoPadding,
 		Content: []gogui.View{main, queue(now)},
 	})
 }
@@ -311,7 +331,12 @@ func queue(now media.Now) gogui.View {
 		if play != nil {
 			onClick = func(gogui.EventCtx) { play() }
 		}
-		content := []gogui.View{gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: line})}
+		var content []gogui.View
+		if art := ui.Picture(tr.Art, tr.ArtID); art != nil {
+			side := reach()
+			content = append(content, gogui.Image(gogui.ImageCfg{Src: squared(art), Width: side, Height: side}))
+		}
+		content = append(content, gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: line}))
 		if tr.Length > 0 {
 			content = append(content, gogui.Label(clockText(tr.Length), secondary()))
 		}
@@ -325,7 +350,7 @@ func queue(now media.Now) gogui.View {
 			Content: content,
 		}, onClick))
 	}
-	return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Spacing: gogui.SpacingSmall, Content: rows})
+	return gogui.Column(gogui.ContainerCfg{ID: "queue", Sizing: gogui.FillFill, Scrollable: true, OnGesture: holdStill, Spacing: gogui.SpacingSmall, Content: rows})
 }
 
 const priorityMini = 5
@@ -341,7 +366,7 @@ func (a *App) mini(w *gogui.Window) gogui.View {
 
 	var art gogui.View
 	if pic := ui.Picture(now.Art, now.ArtID); pic != nil {
-		art = gogui.Image(gogui.ImageCfg{Src: still(pic), Width: side, Height: side})
+		art = gogui.Image(gogui.ImageCfg{Src: squared(pic), Width: side, Height: side})
 	} else {
 		st := t.TextStyleIconLarge
 		st.Color = t.Cfg.ColorTextSecondary

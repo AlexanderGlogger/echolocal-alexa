@@ -93,6 +93,8 @@ debug.seed.value: "#{{.N}}"
 idle.title: Idle screen
 idle.after: Comes up after
 idle.after.title: Idle after
+idle.media: Close paused player after
+idle.media.hint: Audio and video players
 idle.visual1: Visual 1
 idle.visual2: Visual 2
 idle.source1: Visual 1 listens to
@@ -122,8 +124,16 @@ features.proxy: Bluetooth proxy
 features.proxy.hint: Bluetooth LE proxy for Home Assistant
 features.cast: Cast receiver
 features.cast.hint: Cast from a phone or an app
-features.youtube: YouTube
-features.youtube.hint: When something is cast from YouTube
+cast.enable: Enable
+cast.apps: Apps
+cast.prime: Prime Video
+cast.prime.persist: Persistent registration
+cast.prime.persist.hint: Every cast plays as the account that registered first
+cast.prime.reset: Reset registration
+cast.prime.skipintro: Skip intro
+cast.prime.skipintro.hint: Start after Amazon's opening bumper
+cast.prime.registered: Registered
+cast.prime.unregistered: Not registered
 features.rtsp.hint: RTSP on port 8554
 features.speaker: Bluetooth speaker
 features.speaker.hint: Play from a phone over Bluetooth
@@ -271,7 +281,9 @@ delay.never: Never
 delay.30s: 30 seconds
 delay.1m: 1 minute
 delay.2m: 2 minutes
+delay.3m: 3 minutes
 delay.5m: 5 minutes
+delay.10m: 10 minutes
 delay.15m: 15 minutes
 
 visual.lens-flares: Lens Flares

@@ -12,7 +12,6 @@ const NSSetup = "urn:x-cast:com.google.cast.setup"
 // TypeEurekaInfo asks for the device description.
 const TypeEurekaInfo = "eureka_info"
 
-// What a stock Lenovo Smart Display 10 on 1.56.285116 reports.
 const (
 	EurekaVersion = 12
 	CastBuild     = "1.56.285116"

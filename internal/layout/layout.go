@@ -23,6 +23,8 @@ const (
 	CastCredentialsPath = StateDir + "/cast-credentials.json"
 	CastAuthorityPath   = StateDir + "/cast-authority.json"
 
+	CastAppDir = StateDir + "/cast"
+
 	// Service is echod's own init service, on a board that has one rather than taking over Amazon's.
 	FBDevice = "/dev/graphics/fb0"
 

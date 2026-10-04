@@ -34,6 +34,7 @@ type Card struct {
 	mu      sync.Mutex
 	held    *shell.Hold
 	sounded time.Time
+	stalled time.Time
 	begun   Source
 }
 
@@ -89,12 +90,20 @@ func (c *Card) follow() {
 	playing := now.Playing || now.Hold
 	src := Get().Holder()
 
+	idle := !now.Playing && (now.Paused || now.Hold)
 	c.mu.Lock()
 	begun := c.begun
 	c.begun = nil
 	if playing {
 		c.sounded = time.Now()
 	}
+	switch {
+	case !idle:
+		c.stalled = time.Time{}
+	case c.stalled.IsZero():
+		c.stalled = time.Now()
+	}
+	stalled := time.Since(c.stalled)
 	held, quiet := c.held, time.Since(c.sounded)
 	c.mu.Unlock()
 
@@ -106,6 +115,14 @@ func (c *Card) follow() {
 	case !playing && held.Held() && quiet > gap:
 		slog.Info("the player is done", "quiet", quiet.Round(time.Second))
 		held.Keep(false)
+	}
+
+	if limit := config.Get().Idle.Media.After(); idle && src != nil && limit > 0 && stalled > limit {
+		slog.Info("the player was left idle", "for", stalled.Round(time.Second), "by", fmt.Sprintf("%T", src))
+		c.mu.Lock()
+		c.stalled = time.Time{}
+		c.mu.Unlock()
+		src.Stop()
 	}
 }
 

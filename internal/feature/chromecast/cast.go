@@ -33,6 +33,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	"github.com/ygelfand/echolocal/internal/hardware/video"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/cast"
 	_ "github.com/ygelfand/echolocal/internal/lib/cast/protocols/all"
@@ -312,6 +313,58 @@ func (r *Receiver) Close() error {
 }
 
 // SetReceiver turns it on or off. Home Assistant's switch and the harness both come here.
+type registrar interface {
+	ForgetRegistration()
+	Unsave()
+	Registered() bool
+}
+
+func (r *Receiver) registrars() []registrar {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var out []registrar
+	for _, p := range r.protocols {
+		if g, ok := p.(registrar); ok {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+func (r *Receiver) PrimeRegistered() bool {
+	for _, g := range r.registrars() {
+		if g.Registered() {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Receiver) ResetPrime() {
+	for _, g := range r.registrars() {
+		g.ForgetRegistration()
+	}
+	slog.Info("prime video registration reset")
+}
+
+func (r *Receiver) SetPrimeSkipIntro(on bool) {
+	if err := config.Set().Cast().PrimeSkipIntro(on); err != nil {
+		slog.Error("saving the prime video skip intro setting failed", "err", err)
+	}
+}
+
+func (r *Receiver) SetPrimePersist(on bool) {
+	if err := config.Set().Cast().PrimePersist(on); err != nil {
+		slog.Error("saving the prime video registration setting failed", "err", err)
+		return
+	}
+	if !on {
+		for _, g := range r.registrars() {
+			g.Unsave()
+		}
+	}
+}
+
 func (r *Receiver) SetReceiver(on bool) {
 	r.enable.Set(on)
 
@@ -422,6 +475,7 @@ func (r *Receiver) up() error {
 			Device:    device,
 			HTTP:      fetch.Client(30 * time.Second),
 			Long:      fetch.Client(0),
+			Video:     video.Target,
 			Volume:    func() int { return volume.Get().Level(config.StreamMain) },
 			SetVolume: func(level int) { volume.Get().Set(config.StreamMain, level) },
 			VolumeChanged: func(do func()) func() {
@@ -437,6 +491,15 @@ func (r *Receiver) up() error {
 				r.mu.Unlock()
 				if s != nil {
 					s.Publish(control, p)
+				}
+			},
+			Keep: keep,
+			Send: func(m cast.Message) {
+				r.mu.Lock()
+				s := r.service
+				r.mu.Unlock()
+				if s != nil {
+					s.Send(m)
 				}
 			},
 			Output: r.output(),

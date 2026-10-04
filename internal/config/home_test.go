@@ -8,7 +8,7 @@ import (
 func TestHomePicksSurviveARestart(t *testing.T) {
 	path := fresh(t)
 
-	want := HomePick{Labels: []string{"lanovo"}, Areas: []string{"kitchen"}, Entities: []string{"light.a"}}
+	want := HomePick{Labels: []string{"echolocal"}, Areas: []string{"kitchen"}, Entities: []string{"light.a"}}
 	if err := Set().Home().Pick("lights", want); err != nil {
 		t.Fatal(err)
 	}
