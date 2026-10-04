@@ -88,7 +88,7 @@ func newCanceller() *canceller {
 func (c *canceller) idle() {
 	if c.active.Swap(false) {
 		// ERLE cannot exceed how far the echo stood above the rest of the microphone.
-		slog.Info("echo cancellation idle",
+		slog.Debug("echo cancellation idle",
 			"best_db", float64(c.best.Load())/1000, "last_db", float64(c.erle.Load())/1000,
 			"ref_dbfs", meanDBFS(c.refE, c.blocks), "mic_dbfs", meanDBFS(c.micE, c.blocks),
 			"seconds", math.Round(float64(c.blocks)*float64(FrameSamples)/Rate*10)/10)
@@ -102,7 +102,7 @@ func (c *canceller) idle() {
 // playback in.
 func (c *canceller) apply(ref []int16, mics [][]int16, after func(block []int16)) []int16 {
 	if !c.active.Swap(true) {
-		slog.Info("echo cancellation running", "engine", "speex", "taps", cancelTaps)
+		slog.Debug("echo cancellation running", "engine", "speex", "taps", cancelTaps)
 	}
 	mic := mics[CenterMic]
 	c.refE += power(ref)

@@ -77,7 +77,22 @@ func telling() []*cobra.Command {
 		},
 	}
 
-	return []*cobra.Command{version, state}
+	logs := &cobra.Command{
+		Use:       "log [debug|info|warn|error]",
+		Short:     "Read or change how much goes to logcat, until echod restarts",
+		Args:      cobra.MaximumNArgs(1),
+		ValidArgs: []string{"debug", "info", "warn", "error"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			level, err := logLevel(args)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), level)
+			return nil
+		},
+	}
+
+	return []*cobra.Command{version, state, logs}
 }
 
 func waiting() *cobra.Command {

@@ -95,7 +95,7 @@ func (s *Sink) looked(records []sdp.Record) {
 		art.mu.Unlock()
 
 		if first {
-			slog.Info("bluetooth images are served", "psm", fmt.Sprintf("%#04x", psm))
+			slog.Debug("bluetooth images are served", "psm", fmt.Sprintf("%#04x", psm))
 		}
 
 		if !s.imaging() {
@@ -305,7 +305,7 @@ func (s *Sink) imaged(packet []byte) {
 		art.connection, art.open, art.asked = id, true, ""
 		art.mu.Unlock()
 
-		slog.Info("bluetooth image session", "connection", fmt.Sprintf("%#08x", id), "mtu", p.MTU)
+		slog.Debug("bluetooth image session", "connection", fmt.Sprintf("%#08x", id), "mtu", p.MTU)
 		s.pump()
 		return
 	}
@@ -334,7 +334,7 @@ func (s *Sink) imaged(packet []byte) {
 	}
 
 	w, h := img.Size()
-	slog.Info("bluetooth image", "handle", handle, "bytes", len(whole),
+	slog.Debug("bluetooth image", "handle", handle, "bytes", len(whole),
 		"size", fmt.Sprintf("%dx%d", w, h))
 
 	s.fetched(handle, whole)

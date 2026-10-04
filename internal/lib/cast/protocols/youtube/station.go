@@ -182,7 +182,7 @@ type queued struct {
 	index int
 }
 
-const queueShown = 5
+const queueShown = 10
 
 func (s *station) coming() []playback.Upcoming {
 	s.mu.Lock()
@@ -215,7 +215,7 @@ func (s *station) describe(ctx context.Context, ids []string, from, to int) []qu
 			defer wg.Done()
 			info, err := s.resolve.Info(ctx, id)
 			if err != nil {
-				slog.Info("youtube queue", "theme", s.theme, "video", id, "err", err)
+				slog.Debug("youtube queue", "theme", s.theme, "video", id, "err", err)
 				return
 			}
 			found[k] = &info
@@ -290,7 +290,7 @@ func (s *station) handle(m Message) {
 		s.commanded = true
 		s.mu.Unlock()
 		if first {
-			slog.Info("youtube first command", "theme", s.theme, "since asked", s.sinceAsked())
+			slog.Debug("youtube first command", "theme", s.theme, "since asked", s.sinceAsked())
 		}
 		s.setPlaylist(f)
 	case "updatePlaylist":
@@ -442,7 +442,7 @@ func (s *station) lookAround(ctx context.Context, t *track, pos Position) {
 		var err error
 		prev, next, err = neighbours(ctx, s.env.HTTP, pos, phones)
 		if err != nil {
-			slog.Info("youtube queue", "theme", s.theme, "list", pos.List, "index", pos.Index, "err", err)
+			slog.Debug("youtube queue", "theme", s.theme, "list", pos.List, "index", pos.Index, "err", err)
 			return
 		}
 		if next != nil {

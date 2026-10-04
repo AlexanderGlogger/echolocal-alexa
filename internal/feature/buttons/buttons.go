@@ -71,7 +71,7 @@ func (e *Events) report(ev buttons.Event) {
 	if ev.Kind == buttons.Repeat {
 		return
 	}
-	slog.Info("button", "button", ev.Name, "kind", ev.Kind)
+	slog.Debug("button", "button", ev.Name, "kind", ev.Kind)
 
 	entity, ok := e.events[ev.Name]
 	if !ok {

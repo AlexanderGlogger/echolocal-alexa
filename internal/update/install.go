@@ -133,7 +133,7 @@ func swap(staged, version string) error {
 		}
 		return fmt.Errorf("update: installing: %w", err)
 	}
-	slog.Warn("update installed, restarting into it", "version", version, "previous", prev)
+	slog.Info("update installed, restarting into it", "version", version, "previous", prev)
 	return nil
 }
 

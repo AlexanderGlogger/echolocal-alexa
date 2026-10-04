@@ -323,7 +323,7 @@ func (e *Engine) Run(ctx context.Context) error {
 				}
 				e.mu.Unlock()
 
-				slog.Info("wake frames", append([]any{
+				slog.Debug("wake frames", append([]any{
 					"per_second", float64(got) / elapsed.Seconds(),
 					"mean_us", took.Microseconds() / int64(max(got, 1)),
 					"worst_ms", worst.Milliseconds(),
@@ -417,7 +417,7 @@ func (e *Engine) judge(n int, s *slot, score float64, now time.Time, source *mic
 		}
 		// The utterance peaked and fell away without firing.
 		if s.peak >= NearMiss && now.Sub(s.peakAt) > NearMissSettle {
-			slog.Info("wake near miss", "slot", n+1, "id", s.model.ID, "peak", s.peak,
+			slog.Debug("wake near miss", "slot", n+1, "id", s.model.ID, "peak", s.peak,
 				"cutoff", cutoff, "dropped", source.Dropped())
 			s.peak = 0
 		}
