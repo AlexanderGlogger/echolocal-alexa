@@ -105,6 +105,7 @@ func (a *API) Start(context.Context) error {
 			Manufacturer:      layout.Manufacturer,
 			Model:             device.Board.Model,
 			Version:           layout.Version,
+			ProjectName:       layout.Manufacturer + "." + device.Board.Codename,
 			VoiceFeatures:     voice.Features,
 			BluetoothFeatures: bluetooth.Get().Features(),
 
