@@ -6,10 +6,18 @@ type API struct {
 	// been added stays added through a restart, a move to another network, or Home Assistant being
 	// down.
 	Adopted bool `json:"adopted"`
+
+	CheckActions bool `json:"check_actions"`
 }
+
+func defaultAPI() API { return API{CheckActions: true} }
 
 type APIWriter struct{ st *Store }
 
 func (w APIWriter) Adopted(v bool) error {
 	return w.st.Update(func(c *Config) { c.API.Adopted = v })
+}
+
+func (w APIWriter) CheckActions(v bool) error {
+	return w.st.Update(func(c *Config) { c.API.CheckActions = v })
 }

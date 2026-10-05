@@ -18,6 +18,7 @@ const (
 	FPS    = 30
 	Wait   = 2 * time.Second
 	Settle = 2 * time.Second
+	linger = 30 * time.Second
 	depth  = 64
 )
 
@@ -56,6 +57,7 @@ type Session struct {
 	done   chan struct{}
 	opened time.Time
 	shape  string
+	idle   *time.Timer
 }
 
 // Done closes when the session ends; Err says why.
@@ -149,6 +151,10 @@ func Still(within time.Duration) (Picture, error) {
 }
 
 func (h *helperHub) session() (*Session, error) {
+	if h.cur != nil && h.cur.idle != nil {
+		h.cur.idle.Stop()
+		h.cur.idle = nil
+	}
 	if h.cur == nil {
 		s, err := open()
 		if err != nil {
@@ -162,10 +168,22 @@ func (h *helperHub) session() (*Session, error) {
 
 func (h *helperHub) release(s *Session) {
 	s.users--
-	if s.users == 0 && h.cur == s {
+	if s.users > 0 || h.cur != s {
+		return
+	}
+	if muted() {
 		h.cur = nil
 		s.stream.Close()
+		return
 	}
+	s.idle = time.AfterFunc(linger, func() {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		if h.cur == s && s.users == 0 {
+			h.cur = nil
+			s.stream.Close()
+		}
+	})
 }
 
 func open() (*Session, error) {

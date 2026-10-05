@@ -73,6 +73,16 @@ var Actions = []Action{
 		Do: func() error { return prop.Set("log.tag.AmazonUsageStatsService", "S") },
 	},
 	{
+		Name:   "silence the video encoder",
+		Reason: "MediaTek's encoder logs every frame it encodes",
+		Do:     func() error { return prop.Set("log.tag.VDO_LOG", "S") },
+	},
+	{
+		Name:   "quiet the image processor",
+		Reason: "MediaTek's MDP warns on every camera frame that it could not raise its thread priority",
+		Do:     func() error { return prop.Set("log.tag.MDP", "E") },
+	},
+	{
 		Name:   "size the runtime to the cores that are present",
 		Reason: "the kernel hotplugs them, so Go sees however many were online when it started",
 		// GOMAXPROCS is read once at start-up. Pinning cores against the governor is the answer we

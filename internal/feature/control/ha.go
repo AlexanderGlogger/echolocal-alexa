@@ -112,6 +112,11 @@ func homeRows() []setting {
 			use:  number(0, config.HomeGroupMost, s.SetGroupFrom),
 		})
 	}
+	rows = append(rows, setting{
+		name: "home.check.actions",
+		says: func(c config.Config) string { return onOff(c.API.CheckActions) },
+		use:  toggle(homeassistant.Get().SetCheckActions),
+	})
 	return append(rows, setting{
 		name: "home.combine",
 		says: func(c config.Config) string { return onOff(c.Home.Combine) },

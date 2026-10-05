@@ -79,6 +79,7 @@ func Defaults() Config {
 		RTSP:       defaultRTSP(),
 		Poster:     defaultPoster(),
 		Home:       defaultHome(),
+		API:        defaultAPI(),
 
 		// Only the stop word. The slots are absent until something chooses one, and Slot fills in the
 		// defaults for whichever have not been.
