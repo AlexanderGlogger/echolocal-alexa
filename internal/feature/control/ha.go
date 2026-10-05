@@ -113,9 +113,9 @@ func homeRows() []setting {
 		})
 	}
 	rows = append(rows, setting{
-		name: "home.check.actions",
-		says: func(c config.Config) string { return onOff(c.API.CheckActions) },
-		use:  toggle(homeassistant.Get().SetCheckActions),
+		name: "home.enabled",
+		says: func(c config.Config) string { return onOff(c.Home.Enabled) },
+		use:  toggle(homecontrol.SetEnabled),
 	})
 	return append(rows, setting{
 		name: "home.combine",
