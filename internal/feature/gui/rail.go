@@ -4,6 +4,7 @@ package gui
 
 import (
 	"fmt"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
@@ -28,11 +29,7 @@ func (a *App) rail(w *gogui.Window, v shell.View) gogui.View {
 	var buttons []gogui.View
 	for i, e := range drawer.Get().Entries() {
 		open := e.Open
-		face := gogui.Label(e.Label(), gogui.TextStyle{})
-		if e.Glyph != nil {
-			face = gogui.Label(e.Glyph(), mark)
-		}
-		buttons = append(buttons, pressable(gogui.Row, gogui.ContainerCfg{
+		cfg := gogui.ContainerCfg{
 			ID:      fmt.Sprintf("rail-%d", i),
 			Width:   cell,
 			Height:  cell,
@@ -41,8 +38,18 @@ func (a *App) rail(w *gogui.Window, v shell.View) gogui.View {
 			HAlign:  gogui.HAlignCenter,
 			VAlign:  gogui.VAlignMiddle,
 			Radius:  gogui.RadiusMedium,
-			Content: []gogui.View{face},
-		}, func(gogui.EventCtx) {
+		}
+		st := t.Cfg.TextStyleDef
+		if e.Glyph != nil {
+			st = mark
+		}
+		controls().Key(&cfg, &st, style.Rest)
+		face := gogui.Label(e.Label(), st)
+		if e.Glyph != nil {
+			face = gogui.Label(e.Glyph(), st)
+		}
+		cfg.Content = []gogui.View{face}
+		buttons = append(buttons, pressable(gogui.Row, cfg, func(gogui.EventCtx) {
 			close()
 			open()
 		}))
@@ -50,16 +57,14 @@ func (a *App) rail(w *gogui.Window, v shell.View) gogui.View {
 
 	edge := config.Get().Screen.Drawer
 	across := edge == config.EdgeTop || edge == config.EdgeBottom
-	strip := gogui.ContainerCfg{
+	strip := panel(gogui.ContainerCfg{
 		ID:      "rail",
-		Color:   t.Cfg.ColorPanel,
-		Radius:  gogui.RadiusLarge,
 		Padding: gogui.PaddingSmall,
 		Spacing: gogui.SpacingSmall,
 		Shadow:  &gogui.BoxShadow{Color: gogui.Black.WithOpacity(0.55), OffsetY: 6, BlurRadius: 24},
 		OnClick: func(e gogui.EventCtx) { e.Consume() },
 		Content: buttons,
-	}
+	})
 	bar := gogui.Column(strip)
 	if across {
 		bar = gogui.Row(strip)

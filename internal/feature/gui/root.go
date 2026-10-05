@@ -17,6 +17,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
@@ -130,6 +131,8 @@ func placed(at ui.Rect, v gogui.View) gogui.View {
 
 func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
 	t := gogui.CurrentTheme()
+	back := iconStyle(t.TextStyleDisplay.Color)
+	back.Size = t.TextStyleDisplay.Size * 0.6
 	return gogui.Column(gogui.ContainerCfg{
 		Sizing:  gogui.FillFill,
 		Padding: gogui.PaddingLarge,
@@ -140,10 +143,10 @@ func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
 				VAlign:  gogui.VAlignMiddle,
 				Spacing: gogui.SpacingMedium,
 				Content: []gogui.View{
-					gogui.Button(gogui.ButtonCfg{ID: "back", Content: []gogui.View{icon(gogui.IconArrowLeft, t.TextStyleDisplay.Color)}, OnClick: func(e gogui.EventCtx) {
+					keyButton("back", gogui.IconArrowLeft, back, style.Rest, func(e gogui.EventCtx) {
 						shell.Get().Pop()
 						e.Window.InvalidateLayout()
-					}}),
+					}),
 					gogui.Label(p.Title, t.TextStyleDisplay),
 				},
 			}),

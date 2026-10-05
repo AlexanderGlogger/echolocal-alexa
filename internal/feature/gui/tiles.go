@@ -11,6 +11,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
@@ -133,7 +134,7 @@ func chip(id string, glyph, name, status string, on, available bool, pal theme.T
 		Padding: gogui.NoPadding,
 		Content: []gogui.View{gogui.Label(glyph, mark)},
 	})
-	return pressable(gogui.Row, gogui.ContainerCfg{
+	cfg := gogui.ContainerCfg{
 		ID:       id,
 		Sizing:   gogui.FillFit,
 		Padding:  gogui.PaddingSmall,
@@ -149,7 +150,9 @@ func chip(id string, glyph, name, status string, on, available bool, pal theme.T
 				gogui.Label(status, note),
 			}}),
 		},
-	}, tap)
+	}
+	controls().Tile(&cfg, chosen(on))
+	return pressable(gogui.Row, cfg, tap)
 }
 
 func glyphFor(s homecontrol.Selection) string {
@@ -171,7 +174,7 @@ func chevron(id string, s homecontrol.Selection, a homecontrol.AreaTiles, pal th
 	if a.Open {
 		glyph = gogui.IconArrowUp
 	}
-	return pressable(gogui.Row, gogui.ContainerCfg{
+	return iconKey(gogui.ContainerCfg{
 		ID:      id + "-chevron",
 		Width:   reach(),
 		Height:  reach(),
@@ -181,8 +184,7 @@ func chevron(id string, s homecontrol.Selection, a homecontrol.AreaTiles, pal th
 		HAlign:  gogui.HAlignCenter,
 		VAlign:  gogui.VAlignMiddle,
 		Padding: gogui.NoPadding,
-		Content: []gogui.View{icon(glyph, color(pal.Text))},
-	}, func(gogui.EventCtx) { homecontrol.Dash().Expand(s, a.ID) })
+	}, glyph, iconStyle(color(pal.Text)), style.Partial, func(gogui.EventCtx) { homecontrol.Dash().Expand(s, a.ID) })
 }
 
 func tile(id string, side float32, glyph, name, status string, on, available bool, pal theme.Theme, corner gogui.View, more []gogui.View, tap func(gogui.EventCtx)) gogui.View {
@@ -204,7 +206,7 @@ func tile(id string, side float32, glyph, name, status string, on, available boo
 		top = append(top, corner)
 	}
 	title := t.TextStyleDef
-	return pressable(gogui.Column, gogui.ContainerCfg{
+	cfg := gogui.ContainerCfg{
 		ID:       id,
 		Width:    side,
 		Sizing:   gogui.FixedFit,
@@ -218,5 +220,7 @@ func tile(id string, side float32, glyph, name, status string, on, available boo
 			gogui.Label(name, title),
 			gogui.Label(status, secondary()),
 		}, more...),
-	}, tap)
+	}
+	controls().Tile(&cfg, chosen(on))
+	return pressable(gogui.Column, cfg, tap)
 }

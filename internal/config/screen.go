@@ -31,13 +31,9 @@ type Screen struct {
 }
 
 const (
-	StyleStandard = "standard"
-
 	UISizeLarge   = "large"
 	UISizeCompact = "compact"
 )
-
-func ScreenStyles() []string { return []string{StyleStandard} }
 
 func ScreenSizes() []string { return []string{UISizeLarge, UISizeCompact} }
 

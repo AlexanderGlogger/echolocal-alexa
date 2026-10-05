@@ -3,19 +3,12 @@
 package gui
 
 import (
-	"slices"
-
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
-
-type Style struct {
-	Name     string
-	Palettes []string
-	Shape    func(cfg *gogui.ThemeCfg)
-}
 
 type Size struct {
 	Name string
@@ -23,23 +16,9 @@ type Size struct {
 }
 
 const (
-	StyleStandard = config.StyleStandard
-
 	SizeLarge   = config.UISizeLarge
 	SizeCompact = config.UISizeCompact
 )
-
-func paletteNames() []string {
-	names := make([]string, 0, len(theme.All))
-	for _, t := range theme.All {
-		names = append(names, t.Name)
-	}
-	return names
-}
-
-var styles = []Style{
-	{Name: StyleStandard, Palettes: paletteNames(), Shape: func(*gogui.ThemeCfg) {}},
-}
 
 var sizes = []Size{
 	{Name: SizeLarge, Set: func(c *gogui.ThemeCfg) {
@@ -72,29 +51,12 @@ var sizes = []Size{
 	}},
 }
 
-func Styles() []string {
-	out := make([]string, 0, len(styles))
-	for _, s := range styles {
-		out = append(out, s.Name)
-	}
-	return out
-}
-
 func Sizes() []string {
 	out := make([]string, 0, len(sizes))
 	for _, s := range sizes {
 		out = append(out, s.Name)
 	}
 	return out
-}
-
-func styleNamed(name string) Style {
-	for _, s := range styles {
-		if s.Name == name {
-			return s
-		}
-	}
-	return styles[0]
 }
 
 func sizeNamed(name string) Size {
@@ -106,16 +68,11 @@ func sizeNamed(name string) Size {
 	return sizes[0]
 }
 
-func PalettesFor(style string) []string { return styleNamed(style).Palettes }
-
 func color(c theme.Color) gogui.Color { return gogui.RGB(c.R, c.G, c.B) }
 
-func Look(style, palette, size, family string) gogui.Theme {
-	st := styleNamed(style)
-	if !slices.Contains(st.Palettes, palette) && len(st.Palettes) > 0 {
-		palette = st.Palettes[0]
-	}
-	p, ok := theme.ByName(palette)
+func Look(name, palette, size string) gogui.Theme {
+	st := style.ByName(name)
+	p, ok := theme.ByName(style.Theme(name, palette))
 	if !ok {
 		p = theme.Default()
 	}
@@ -134,7 +91,7 @@ func Look(style, palette, size, family string) gogui.Theme {
 	cfg.ColorError = color(p.Danger)
 	cfg.ColorTextSecondary = color(p.Muted)
 	cfg.TextStyleDef.Color = color(p.Text)
-	cfg.TextStyleDef.Family = family
+	cfg.TextStyleDef.Family = st.Family
 	cfg.ScrollMultiplier = 1
 	cfg.FocusRing = nil
 	cfg.ColorFocus = cfg.ColorInterior

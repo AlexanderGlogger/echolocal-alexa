@@ -42,7 +42,19 @@ display.idle: Screen saver
 display.marks: Privacy indicators
 display.poster: Wallpaper
 display.theme: Theme
+display.style: Style
+style.title: Style
+style.standard: Standard
+style.material: Material You
+style.glass: Glass
+style.eink: E-ink
+style.metro: Metro
+style.terminal: Terminal
+style.hifi: Hi-fi
+style.neon: Neon
+style.skeuo: Skeuo
 theme.title: Theme
+theme.default: Default
 controls.dock: Dock position
 controls.logo: Show logo
 controls.volume: Volume panel position

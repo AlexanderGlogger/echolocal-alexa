@@ -9,13 +9,15 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
 type paint func(s ui.Surface, at ui.Rect, palette theme.Theme)
 
 func palette() theme.Theme {
-	if p, ok := theme.ByName(config.Get().Screen.Theme); ok {
+	s := config.Get().Screen
+	if p, ok := theme.ByName(style.Theme(s.Style, s.Theme)); ok {
 		return p
 	}
 	return theme.Default()

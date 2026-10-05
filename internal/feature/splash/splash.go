@@ -19,6 +19,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/reveal"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
@@ -218,7 +219,8 @@ func up(progress []component.Progress) int {
 func handOver() bool { return component.Default().Ready() }
 
 func chosen() theme.Theme {
-	t, ok := theme.ByName(config.Get().Screen.Theme)
+	s := config.Get().Screen
+	t, ok := theme.ByName(style.Theme(s.Style, s.Theme))
 	if !ok {
 		return theme.Default()
 	}

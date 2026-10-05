@@ -14,6 +14,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/setting"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
@@ -85,7 +86,7 @@ func (s *Screen) Theme() theme.Theme {
 
 // Use takes a theme by name, keeping what is shown when the name is not one we have.
 func (s *Screen) Use(name string) {
-	t, ok := theme.ByName(name)
+	t, ok := theme.ByName(style.Theme(config.Get().Screen.Style, name))
 	if !ok {
 		slog.Warn("no such theme", "theme", name)
 		return

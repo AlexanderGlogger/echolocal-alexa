@@ -18,6 +18,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
+	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
 )
@@ -203,6 +204,13 @@ func fpsStep(s string) error {
 }
 
 func paint(s string) error {
+	if strings.EqualFold(s, style.ThemeDefault) {
+		if err := config.Set().Screen().Theme(style.ThemeDefault); err != nil {
+			return err
+		}
+		screen.Get().Use(style.ThemeDefault)
+		return nil
+	}
 	for _, t := range theme.All {
 		if strings.EqualFold(t.Name, s) {
 			if err := config.Set().Screen().Theme(t.Name); err != nil {
