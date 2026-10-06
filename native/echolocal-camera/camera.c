@@ -56,6 +56,7 @@ extern void cam_unrecord(void *cam) __asm__("_ZN7android6Camera13stopRecordingEv
 extern void cam_disconnect(void *cam) __asm__("_ZN7android10CameraBaseINS_6CameraENS_12CameraTraitsIS1_EEE10disconnectEv");
 extern void surface_gbp(void **sret, const void *surface) __asm__("_ZNK7android7Surface25getIGraphicBufferProducerEv");
 extern int codec_input(void *codec, void **gbp) __asm__("_ZN7android10MediaCodec18createInputSurfaceEPNS_2spINS_22IGraphicBufferProducerEEE");
+extern int codec_idr(void *codec) __asm__("_ZN7android10MediaCodec15requestIDRFrameEv");
 
 typedef struct {
 	AMediaCodec *codec[2];
@@ -372,6 +373,14 @@ static int open_camera(session *s, uint32_t w, uint32_t h, uint32_t fps, uint32_
 	return OK;
 }
 
+static void request_key(session *s) {
+	for (int i = 0; i < 2; i++) {
+		if (!s->codec[i]) continue;
+		int st = codec_idr(*(void **)s->codec[i]);
+		if (st != 0) logw("requestIDRFrame on stream %d: %d", i, st);
+	}
+}
+
 static int gone(int conn, session *s) {
 	struct pollfd p = {.fd = conn, .events = POLLIN};
 	if (poll(&p, 1, 0) <= 0) return 0;
@@ -398,6 +407,7 @@ static int gone(int conn, session *s) {
 		return 0;
 	}
 	if (c == ASK_STILL) s->still = 1;
+	if (c == ASK_KEY) request_key(s);
 	return 0;
 }
 

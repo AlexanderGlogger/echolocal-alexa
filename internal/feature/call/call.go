@@ -341,8 +341,10 @@ func (c *Calls) Camera(on bool) {
 	c.changed(s)
 }
 
+func cameraBlocked() bool { return privacy.Get().CameraCovered() || livecam.Muted() }
+
 func (c *Calls) apply(s *session) {
-	covered := privacy.Get().CameraCovered()
+	covered := cameraBlocked()
 	silenced := privacy.Get().MicMuted()
 	c.mu.Lock()
 	s.Covered = covered
@@ -365,7 +367,7 @@ func (c *Calls) media(s *session) (rtc.Media, livecam.Size) {
 	if !video {
 		return m, livecam.Size{}
 	}
-	pics := c.newPictures(remote)
+	pics := c.newPictures(s, remote)
 	m.Screen = pics.remote
 	at, own, ok := cameraStream()
 	c.mu.Lock()
@@ -373,7 +375,7 @@ func (c *Calls) media(s *session) (rtc.Media, livecam.Size) {
 	c.mu.Unlock()
 	if ok {
 		m.Camera = camera{at: at}
-		pics.start(s.ctx, c, s, at, own, !off && !privacy.Get().CameraCovered())
+		pics.start(s.ctx, c, s, at, own, !off && !cameraBlocked())
 	}
 	return m, own
 }
@@ -381,7 +383,7 @@ func (c *Calls) media(s *session) (rtc.Media, livecam.Size) {
 func (c *Calls) open(call Call, addr string) *session {
 	ctx, stop := context.WithCancel(context.Background())
 	s := &session{Call: call, addr: addr, ctx: ctx, stop: stop, quiet: func() {}}
-	s.Covered = privacy.Get().CameraCovered()
+	s.Covered = cameraBlocked()
 	s.unhook = privacy.Get().Changed.Listen(func(privacy.Marks) {
 		c.apply(s)
 		c.changed(s)
@@ -496,7 +498,9 @@ func (c *Calls) changed(s *session) {
 		c.mu.Lock()
 		s.hold = h
 	}
+	pics := s.pics
 	c.mu.Unlock()
+	pics.replace()
 	c.publish(s)
 	shell.Get().Redraw()
 }

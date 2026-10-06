@@ -104,6 +104,12 @@ type camera struct {
 	sized func(livecam.Size)
 }
 
+func (camera) Key() {
+	if err := livecam.RequestKey(); err != nil {
+		slog.Debug("call keyframe not requested", "err", err)
+	}
+}
+
 func (c camera) Frames() (<-chan rtc.Frame, func()) {
 	out := make(chan rtc.Frame, 8)
 	ctx, stop := context.WithCancel(context.Background())
@@ -113,7 +119,9 @@ func (c camera) Frames() (<-chan rtc.Frame, func()) {
 		for ctx.Err() == nil {
 			s, frames, err := livecam.Join(c.at)
 			if err != nil {
-				slog.Warn("call camera", "err", err)
+				if !errors.Is(err, livecam.ErrMuted) {
+					slog.Warn("call camera", "err", err)
+				}
 			} else {
 				if sizes := livecam.Sizes(); c.at < len(sizes) && sizes[c.at] != size {
 					size = sizes[c.at]
@@ -159,10 +167,11 @@ func pump(ctx context.Context, s *livecam.Session, frames <-chan mtkcamera.Frame
 }
 
 type layer struct {
-	id   uint32
-	z    int
-	size livecam.Size
-	box  func(vw, vh int) display.Rect
+	id     uint32
+	z      int
+	size   livecam.Size
+	box    func(vw, vh int) display.Rect
+	broken func()
 
 	mu     sync.Mutex
 	open   bool
@@ -209,8 +218,17 @@ func (l *layer) Show(f rtc.Frame) {
 		l.open, l.failed = true, nil
 	}
 	if err := feed(c, l.id, f); err != nil {
-		slog.Debug("call video feed", "layer", l.id, "err", err)
 		l.failed = err
+		if errors.Is(err, surface.Broken) {
+			slog.Warn("call video decoder broke, reopening", "layer", l.id)
+			c.VideoClose(l.id)
+			l.open, l.shown = false, false
+			if l.broken != nil {
+				go l.broken()
+			}
+			return
+		}
+		slog.Debug("call video feed", "layer", l.id, "err", err)
 		return
 	}
 	l.frames++
@@ -320,8 +338,20 @@ type pictures struct {
 	stop   func()
 }
 
-func (c *Calls) newPictures(remote livecam.Size) *pictures {
-	return &pictures{remote: &layer{id: remoteLayer, z: remoteZ, size: remote, box: func(vw, vh int) display.Rect { return c.layout(vw, vh).Remote }}}
+func (c *Calls) newPictures(s *session, remote livecam.Size) *pictures {
+	return &pictures{remote: &layer{id: remoteLayer, z: remoteZ, size: remote,
+		box:    func(vw, vh int) display.Rect { return c.layout(vw, vh).Remote },
+		broken: func() { c.requestKey(s) },
+	}}
+}
+
+func (c *Calls) requestKey(s *session) {
+	c.mu.Lock()
+	link := s.link
+	c.mu.Unlock()
+	if link != nil {
+		link.RequestKey()
+	}
 }
 
 func (p *pictures) start(ctx context.Context, c *Calls, s *session, at int, own livecam.Size, visible bool) {
