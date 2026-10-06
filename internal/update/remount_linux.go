@@ -62,7 +62,12 @@ func allowWrites() error {
 	defer f.Close()
 
 	off := int32(0)
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), blkroset, uintptr(unsafe.Pointer(&off))); errno != 0 {
+	if _, _, errno := syscall.Syscall(
+		syscall.SYS_IOCTL,
+		f.Fd(),
+		blkroset,
+		uintptr(unsafe.Pointer(&off)),
+	); errno != 0 {
 		return fmt.Errorf("update: clearing the read-only flag on %s: %w", dev, errno)
 	}
 	return nil

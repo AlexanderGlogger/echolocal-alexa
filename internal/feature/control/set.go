@@ -19,9 +19,9 @@ import (
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
 	"github.com/ygelfand/echolocal/internal/feature/weather"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 type setting struct {
@@ -44,50 +44,180 @@ func screenSettings() []setting {
 	c, i, v := dashboard.Get(), idle.Get(), visuals.Get()
 
 	return []setting{
-		{"clock.face", func(c config.Config) string { return string(c.Clock.Face) }, choose(config.Faces(), c.SetFace)},
-		{"clock.position", func(c config.Config) string { return string(c.Clock.Position) }, choose(config.Positions(), c.SetPosition)},
-		{"clock.size", func(c config.Config) string { return string(c.Clock.Size) }, choose(config.Sizes(), c.SetSize)},
-		{"clock.color", func(c config.Config) string { return string(c.Clock.Ink) }, choose(config.Inks(), c.SetInk)},
-		{"clock.date", func(c config.Config) string { return onOff(c.Clock.Date) }, toggle(c.SetDate)},
-		{"clock.hours", func(c config.Config) string { return string(c.Screen.Hours) }, choose(config.HourFormats(), c.SetHours)},
+		{
+			"clock.face",
+			func(c config.Config) string { return string(c.Clock.Face) },
+			choose(config.Faces(), c.SetFace),
+		},
+		{
+			"clock.position",
+			func(c config.Config) string { return string(c.Clock.Position) },
+			choose(config.Positions(), c.SetPosition),
+		},
+		{
+			"clock.size",
+			func(c config.Config) string { return string(c.Clock.Size) },
+			choose(config.Sizes(), c.SetSize),
+		},
+		{
+			"clock.color",
+			func(c config.Config) string { return string(c.Clock.Ink) },
+			choose(config.Inks(), c.SetInk),
+		},
+		{
+			"clock.date",
+			func(c config.Config) string { return onOff(c.Clock.Date) },
+			toggle(c.SetDate),
+		},
+		{
+			"clock.hours",
+			func(c config.Config) string { return string(c.Screen.Hours) },
+			choose(config.HourFormats(), c.SetHours),
+		},
 
-		{"idle.after", func(c config.Config) string { return string(c.Idle.After) }, choose(config.Delays(), i.SetAfter)},
-		{"idle.media", func(c config.Config) string { return string(c.Idle.Media) }, choose(config.MediaDelays(), media.Get().SetIdle)},
-		{"idle.face", func(c config.Config) string { return string(c.Idle.Face) }, choose(config.IdleFaces(), i.SetFace)},
-		{"idle.position", func(c config.Config) string { return string(c.Idle.Position) }, choose(config.Positions(), i.SetPosition)},
-		{"idle.align", func(c config.Config) string { return string(c.Idle.Align) }, choose(config.Aligns(), i.SetAlign)},
-		{"idle.size", func(c config.Config) string { return string(c.Idle.Size) }, choose(config.Sizes(), i.SetSize)},
-		{"idle.visual1", func(c config.Config) string { return orNone(c.Idle.First.Kind) }, idleKind(0)},
+		{
+			"idle.after",
+			func(c config.Config) string { return string(c.Idle.After) },
+			choose(config.Delays(), i.SetAfter),
+		},
+		{
+			"idle.media",
+			func(c config.Config) string { return string(c.Idle.Media) },
+			choose(config.MediaDelays(), media.Get().SetIdle),
+		},
+		{
+			"idle.face",
+			func(c config.Config) string { return string(c.Idle.Face) },
+			choose(config.IdleFaces(), i.SetFace),
+		},
+		{
+			"idle.position",
+			func(c config.Config) string { return string(c.Idle.Position) },
+			choose(config.Positions(), i.SetPosition),
+		},
+		{
+			"idle.align",
+			func(c config.Config) string { return string(c.Idle.Align) },
+			choose(config.Aligns(), i.SetAlign),
+		},
+		{
+			"idle.size",
+			func(c config.Config) string { return string(c.Idle.Size) },
+			choose(config.Sizes(), i.SetSize),
+		},
+		{
+			"idle.visual1",
+			func(c config.Config) string { return orNone(c.Idle.First.Kind) },
+			idleKind(0),
+		},
 		{"idle.visual1.source", func(c config.Config) string { return string(c.Idle.First.Source) },
 			choose(config.Sources(), func(s config.Source) { i.SetSource(0, s) })},
-		{"idle.visual2", func(c config.Config) string { return orNone(c.Idle.Second.Kind) }, idleKind(1)},
-		{"idle.visual2.source", func(c config.Config) string { return string(c.Idle.Second.Source) },
-			choose(config.Sources(), func(s config.Source) { i.SetSource(1, s) })},
+		{
+			"idle.visual2",
+			func(c config.Config) string { return orNone(c.Idle.Second.Kind) },
+			idleKind(1),
+		},
+		{
+			"idle.visual2.source",
+			func(c config.Config) string { return string(c.Idle.Second.Source) },
+			choose(config.Sources(), func(s config.Source) { i.SetSource(1, s) }),
+		},
 
 		{"screen.keyboard", func(c config.Config) string { return string(c.Screen.Keyboard) },
 			choose(config.KeyboardSizes(), pages.SetKeyboard)},
 		{"screen.theme", func(c config.Config) string { return c.Screen.Theme }, paint},
-		{"screen.style", func(c config.Config) string { return screen.Table().Row("style").Read(&c.Screen) },
-			func(v string) error { return screen.Get().Set("style", v) }},
-		{"screen.size", func(c config.Config) string { return screen.Table().Row("size").Read(&c.Screen) },
-			func(v string) error { return screen.Get().Set("size", v) }},
-		{"screen.marks", func(c config.Config) string { return onOff(c.Screen.Marks) }, toggle(privacy.Get().SetMarks)},
-		{"screen.logo", func(c config.Config) string { return onOff(c.Screen.Logo) }, toggle(c.SetLogo)},
-		{"screen.visual", func(c config.Config) string { return c.Visual.Kind }, choose(visual.Built(), v.SetKind)},
-		{"screen.visual.fps", func(c config.Config) string { return strconv.Itoa(c.Visual.MaxFPS) }, fpsStep},
-		{"screen.visual.seed", func(c config.Config) string { return strconv.Itoa(c.Visual.Seed) }, number(0, visual.SeedMost, v.SetSeed)},
-		{"screen.visual.label", func(c config.Config) string { return orNone(c.Visual.Label) }, words(v.SetLabel)},
-		{"screen.visual.lift", func(c config.Config) string { return strconv.Itoa(c.Microphone.VisualizerLift) }, number(0, visuals.LiftMax, v.SetLift)},
+		{
+			"screen.style",
+			func(c config.Config) string { return screen.Table().Row("style").Read(&c.Screen) },
+			func(v string) error { return screen.Get().Set("style", v) },
+		},
+		{
+			"screen.size",
+			func(c config.Config) string { return screen.Table().Row("size").Read(&c.Screen) },
+			func(v string) error { return screen.Get().Set("size", v) },
+		},
+		{
+			"screen.marks",
+			func(c config.Config) string { return onOff(c.Screen.Marks) },
+			toggle(privacy.Get().SetMarks),
+		},
+		{
+			"screen.logo",
+			func(c config.Config) string { return onOff(c.Screen.Logo) },
+			toggle(c.SetLogo),
+		},
+		{
+			"screen.visual",
+			func(c config.Config) string { return c.Visual.Kind },
+			choose(visual.Built(), v.SetKind),
+		},
+		{
+			"screen.visual.fps",
+			func(c config.Config) string { return strconv.Itoa(c.Visual.MaxFPS) },
+			fpsStep,
+		},
+		{
+			"screen.visual.seed",
+			func(c config.Config) string { return strconv.Itoa(c.Visual.Seed) },
+			number(0, visual.SeedMost, v.SetSeed),
+		},
+		{
+			"screen.visual.label",
+			func(c config.Config) string { return orNone(c.Visual.Label) },
+			words(v.SetLabel),
+		},
+		{
+			"screen.visual.lift",
+			func(c config.Config) string { return strconv.Itoa(c.Microphone.VisualizerLift) },
+			number(0, visuals.LiftMax, v.SetLift),
+		},
 
-		{"weather.entity", func(c config.Config) string { return orNone(c.Weather.Entity) }, words(weather.SetEntity)},
-		{"weather.look", func(c config.Config) string { return string(c.Weather.Look) }, choose(config.WeatherLooks(), weather.SetLook)},
-		{"weather.dashboard", func(c config.Config) string { return onOff(c.Weather.Dashboard) }, toggle(weather.SetDashboard)},
-		{"weather.idle", func(c config.Config) string { return onOff(c.Weather.Idle) }, toggle(weather.SetIdle)},
-		{"weather.animate", func(c config.Config) string { return onOff(c.Weather.Animate) }, toggle(weather.SetAnimate)},
-		{"weather.themed", func(c config.Config) string { return onOff(c.Weather.Themed) }, toggle(weather.SetThemed)},
-		{"weather.position", func(c config.Config) string { return string(c.Weather.Position) }, choose(config.Positions(), weather.SetPosition)},
-		{"weather.align", func(c config.Config) string { return string(c.Weather.Align) }, choose(config.Aligns(), weather.SetAlign)},
-		{"weather.size", func(c config.Config) string { return string(c.Weather.Size) }, choose(config.Sizes(), weather.SetSize)},	}
+		{
+			"weather.entity",
+			func(c config.Config) string { return orNone(c.Weather.Entity) },
+			words(weather.SetEntity),
+		},
+		{
+			"weather.look",
+			func(c config.Config) string { return string(c.Weather.Look) },
+			choose(config.WeatherLooks(), weather.SetLook),
+		},
+		{
+			"weather.dashboard",
+			func(c config.Config) string { return onOff(c.Weather.Dashboard) },
+			toggle(weather.SetDashboard),
+		},
+		{
+			"weather.idle",
+			func(c config.Config) string { return onOff(c.Weather.Idle) },
+			toggle(weather.SetIdle),
+		},
+		{
+			"weather.animate",
+			func(c config.Config) string { return onOff(c.Weather.Animate) },
+			toggle(weather.SetAnimate),
+		},
+		{
+			"weather.themed",
+			func(c config.Config) string { return onOff(c.Weather.Themed) },
+			toggle(weather.SetThemed),
+		},
+		{
+			"weather.position",
+			func(c config.Config) string { return string(c.Weather.Position) },
+			choose(config.Positions(), weather.SetPosition),
+		},
+		{
+			"weather.align",
+			func(c config.Config) string { return string(c.Weather.Align) },
+			choose(config.Aligns(), weather.SetAlign),
+		},
+		{
+			"weather.size",
+			func(c config.Config) string { return string(c.Weather.Size) },
+			choose(config.Sizes(), weather.SetSize),
+		},
+	}
 }
 
 func setCommand() *cobra.Command {
@@ -142,7 +272,10 @@ func idleKind(slot int) func(string) error {
 				return nil
 			}
 		}
-		return fmt.Errorf("want none or one of %s", strings.Join(config.Labels(visual.Built()), ", "))
+		return fmt.Errorf(
+			"want none or one of %s",
+			strings.Join(config.Labels(visual.Built()), ", "),
+		)
 	}
 }
 

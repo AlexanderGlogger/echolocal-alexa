@@ -14,10 +14,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/lib/aec"
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/audio/aec"
 )
 
 const (
@@ -49,8 +49,9 @@ const (
 type Source struct {
 	// The hardware, taken by Start and let go by Close. Nil in between: the handle outlives the
 	// device so that a restart can take it again without every listener being rebuilt.
-	devMu sync.Mutex
-	pcm   *alsa.Capture
+	startup atomic.Pointer[component.Progress]
+	devMu   sync.Mutex
+	pcm     *alsa.Capture
 
 	mu        sync.Mutex
 	listeners map[int]*listener
@@ -163,8 +164,16 @@ func Get() *Source {
 func (s *Source) Name() string { return "capture" }
 
 // Start takes the capture device, off Android if it got there first, the same way the speaker does.
-func (s *Source) Start(context.Context) error {
-	err := s.open()
+func (s *Source) Start(context.Context) (err error) {
+	defer func() {
+		state := component.Progress{Done: err == nil}
+		if err != nil {
+			state.Failed = true
+			state.Doing = err.Error()
+		}
+		s.startup.Store(&state)
+	}()
+	err = s.open()
 	if err == nil || !errors.Is(err, alsa.ErrBusy) {
 		return err
 	}
@@ -245,7 +254,11 @@ type listener struct {
 func (s *Source) Listen(name string) (<-chan []int16, func()) { return s.listen(name, false) }
 
 // ListenUnleveled is Listen before leveling, for something that shows how loud the room is.
-func (s *Source) ListenUnleveled(name string) (<-chan []int16, func()) { return s.listen(name, true) }
+func (s *Source) ListenUnleveled(
+	name string,
+) (<-chan []int16, func()) {
+	return s.listen(name, true)
+}
 
 func (s *Source) listen(name string, unleveled bool) (<-chan []int16, func()) {
 	l := &listener{name: name, ch: make(chan []int16, 8), unleveled: unleveled}
@@ -469,7 +482,12 @@ func (s *Source) broadcast(raw []byte) {
 	}
 
 	if len(s.echoes) > 0 {
-		e := Echo{Mic: mics[CenterMic], Ref: append([]int16(nil), s.ref...), Out: frame, Sounding: sounding}
+		e := Echo{
+			Mic:      mics[CenterMic],
+			Ref:      append([]int16(nil), s.ref...),
+			Out:      frame,
+			Sounding: sounding,
+		}
 		for _, ch := range s.echoes {
 			select {
 			case ch <- e:

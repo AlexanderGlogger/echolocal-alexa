@@ -67,7 +67,11 @@ func TestTrackEmpty(t *testing.T) {
 }
 
 func TestTrackProgress(t *testing.T) {
-	got := track{Title: "Rez"}.merge(decode(t, `{"progress":{"track_progress":1000,"track_duration":5000}}`))
+	got := track{
+		Title: "Rez",
+	}.merge(
+		decode(t, `{"progress":{"track_progress":1000,"track_duration":5000}}`),
+	)
 
 	if got.Elapsed != time.Second || got.Length != 5*time.Second {
 		t.Errorf("merge progress = %v of %v, want 1s of 5s", got.Elapsed, got.Length)
@@ -83,7 +87,11 @@ func TestTrackProgress(t *testing.T) {
 // A bar drawn from the last report alone steps every few seconds, and one that runs on past the
 // end of the track reads as a track that has not finished.
 func TestTrackRunsOn(t *testing.T) {
-	was := track{Elapsed: time.Second, Length: 2 * time.Second, At: time.Now().Add(-10 * time.Second)}
+	was := track{
+		Elapsed: time.Second,
+		Length:  2 * time.Second,
+		At:      time.Now().Add(-10 * time.Second),
+	}
 
 	if at := was.at(false); at != time.Second {
 		t.Errorf("paused at %v, want 1s", at)

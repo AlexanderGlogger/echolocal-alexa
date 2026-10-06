@@ -14,9 +14,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/lib/input"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

@@ -85,16 +85,24 @@ func newEchoCmd() *cobra.Command {
 				if err := os.WriteFile(save, frames, 0o644); err != nil {
 					return err
 				}
-				fmt.Fprintf(out, "\nwrote %d bytes of interleaved capture to %s\n", len(frames), save)
+				fmt.Fprintf(
+					out,
+					"\nwrote %d bytes of interleaved capture to %s\n",
+					len(frames),
+					save,
+				)
 			}
 			return nil
 		},
 	}
 
 	c.Flags().Float64Var(&secs, "secs", 4, "how long to capture")
-	c.Flags().Float64Var(&level, "level", 0.25, "scales the sweep, 1 being the half-scale one the speaker uses")
-	c.Flags().StringVar(&save, "save", "", "write the raw interleaved capture here, for sizing a filter off the device")
-	c.Flags().BoolVar(&white, "noise", false, "play white noise for the whole capture instead of the 1.5s sweep")
+	c.Flags().
+		Float64Var(&level, "level", 0.25, "scales the sweep, 1 being the half-scale one the speaker uses")
+	c.Flags().
+		StringVar(&save, "save", "", "write the raw interleaved capture here, for sizing a filter off the device")
+	c.Flags().
+		BoolVar(&white, "noise", false, "play white noise for the whole capture instead of the 1.5s sweep")
 	return c
 }
 
@@ -158,7 +166,16 @@ func report(w io.Writer, frames []byte) {
 		fmt.Fprintln(w, "the loopback is silent, so the lag and erle columns mean nothing")
 	}
 
-	fmt.Fprintf(w, "\n%4s %10s %8s %8s %10s %8s\n", "mic", "level", "lag", "lag ms", "residual", "erle")
+	fmt.Fprintf(
+		w,
+		"\n%4s %10s %8s %8s %10s %8s\n",
+		"mic",
+		"level",
+		"lag",
+		"lag ms",
+		"residual",
+		"erle",
+	)
 	for c, m := range mics {
 		got := make([]float64, len(m))
 		for i, v := range m {

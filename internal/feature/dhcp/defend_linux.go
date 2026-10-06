@@ -77,7 +77,8 @@ func watching(ctx context.Context, iface string, ip net.IP, lost func()) error {
 		if err != nil {
 			// The poll expiring is how this loop breathes; anything else is the socket going wrong
 			// and is worth saying, because a watch that has quietly stopped defends nothing.
-			if errors.Is(err, unix.EAGAIN) || errors.Is(err, unix.EWOULDBLOCK) || errors.Is(err, unix.EINTR) {
+			if errors.Is(err, unix.EAGAIN) || errors.Is(err, unix.EWOULDBLOCK) ||
+				errors.Is(err, unix.EINTR) {
 				continue
 			}
 			return fmt.Errorf("dhcp: watching %s: %w", ip, err)

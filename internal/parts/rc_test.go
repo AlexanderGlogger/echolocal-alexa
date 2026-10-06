@@ -39,7 +39,8 @@ func TestServiceNamesFitAndroid7(t *testing.T) {
 // Android 7's init reads /system/etc/init during mount_all, after these triggers have run.
 func TestNoTriggerFiresBeforeSystemIsRead(t *testing.T) {
 	for _, f := range rcLines() {
-		if f[0] == "on" && len(f) > 1 && slices.Contains([]string{"early-init", "init", "late-init", "early-fs", "fs"}, f[1]) {
+		if f[0] == "on" && len(f) > 1 &&
+			slices.Contains([]string{"early-init", "init", "late-init", "early-fs", "fs"}, f[1]) {
 			t.Errorf("on %s never runs from /system/etc/init", f[1])
 		}
 	}

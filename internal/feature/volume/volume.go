@@ -13,7 +13,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

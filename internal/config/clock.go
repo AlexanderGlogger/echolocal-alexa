@@ -135,7 +135,16 @@ func (f Face) Label() string {
 }
 
 func Faces() []Face {
-	return []Face{FacePlain, FaceStack, FaceCards, FaceAnalog, FaceAnalogSeconds, FaceSegments, FaceWords, FaceOverlap}
+	return []Face{
+		FacePlain,
+		FaceStack,
+		FaceCards,
+		FaceAnalog,
+		FaceAnalogSeconds,
+		FaceSegments,
+		FaceWords,
+		FaceOverlap,
+	}
 }
 
 type ClockWriter struct{ st *Store }

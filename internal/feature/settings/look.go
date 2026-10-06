@@ -17,10 +17,19 @@ func lookPage(slot int) *shell.Page {
 		Title: say.T("look.title"),
 		Build: func() ([]widget.Row, []func(int)) {
 			look := config.Get().Wake.Slot(slot).Look
-			rows := []widget.Row{{Label: say.T("look.place"), Kind: widget.Chevron, Value: look.Place.Label()}}
+			rows := []widget.Row{
+				{Label: say.T("look.place"), Kind: widget.Chevron, Value: look.Place.Label()},
+			}
 			taps := []func(int){open(placePage(slot))}
 			for _, st := range config.Stages() {
-				rows = append(rows, widget.Row{Label: st.Label(), Kind: widget.Chevron, Value: lookName(look.Kind(st))})
+				rows = append(
+					rows,
+					widget.Row{
+						Label: st.Label(),
+						Kind:  widget.Chevron,
+						Value: lookName(look.Kind(st)),
+					},
+				)
 				taps = append(taps, open(stagePage(slot, st)))
 			}
 			return rows, taps
@@ -46,7 +55,13 @@ func placePage(slot int) *shell.Page {
 				rows = append(rows, widget.Row{Label: p.Label(), Chosen: p == now})
 				taps = append(taps, func(int) {
 					if err := config.Set().Wake(slot).Place(p); err != nil {
-						slog.Error("saving the assistant visual placement failed", "slot", slot+1, "err", err)
+						slog.Error(
+							"saving the assistant visual placement failed",
+							"slot",
+							slot+1,
+							"err",
+							err,
+						)
 					}
 				})
 			}
@@ -58,7 +73,15 @@ func placePage(slot int) *shell.Page {
 func stagePage(slot int, st config.Stage) *shell.Page {
 	use := func(kind string) {
 		if err := config.Set().Wake(slot).Visual(st, kind); err != nil {
-			slog.Error("saving the assistant visual failed", "slot", slot+1, "stage", st, "err", err)
+			slog.Error(
+				"saving the assistant visual failed",
+				"slot",
+				slot+1,
+				"stage",
+				st,
+				"err",
+				err,
+			)
 		}
 		shell.Get().Pop()
 	}

@@ -42,7 +42,16 @@ const (
 
 var (
 	scenes   = []string{"auto", "portrait", "landscape", "night"}
-	balances = []string{"auto", "incandescent", "fluorescent", "warm-fluorescent", "daylight", "cloudy-daylight", "twilight", "shade"}
+	balances = []string{
+		"auto",
+		"incandescent",
+		"fluorescent",
+		"warm-fluorescent",
+		"daylight",
+		"cloudy-daylight",
+		"twilight",
+		"shade",
+	}
 	effects  = []string{"none", "mono", "negative", "sepia", "aqua", "whiteboard", "blackboard"}
 	isos     = []string{"auto", "100", "200", "400", "800", "1600"}
 	bandings = []string{"auto", "off", "50hz", "60hz"}
@@ -51,11 +60,24 @@ var (
 )
 
 func DefaultKnobs() Knobs {
-	return Knobs{Scene: "auto", Banding: "auto", ISO: "auto", WhiteBalance: "auto", Effect: "none",
-		Brightness: "middle", Contrast: "middle", Saturation: "middle", Sharpness: "middle", Hue: "middle",
-		RateAuto: true, Rate: FPS,
-		MainOn: true, MainSize: defaultMainSize(),
-		Keyframe: Keyframe, Quality: "standard"}
+	return Knobs{
+		Scene:        "auto",
+		Banding:      "auto",
+		ISO:          "auto",
+		WhiteBalance: "auto",
+		Effect:       "none",
+		Brightness:   "middle",
+		Contrast:     "middle",
+		Saturation:   "middle",
+		Sharpness:    "middle",
+		Hue:          "middle",
+		RateAuto:     true,
+		Rate:         FPS,
+		MainOn:       true,
+		MainSize:     defaultMainSize(),
+		Keyframe:     Keyframe,
+		Quality:      "standard",
+	}
 }
 
 func nearest(rates []int, n int) int {
@@ -71,8 +93,13 @@ func nearest(rates []int, n int) int {
 func abs(n int) int { return max(n, -n) }
 
 func rateRows(rates []int) []Knob {
-	auto := Knob{Name: "framerate_auto", Kind: setting.Toggle, Group: ExposureGroup, Icon: "mdi:speedometer",
-		Read: func(k *Knobs) string { return setting.OnOff(k.RateAuto) }}
+	auto := Knob{
+		Name:  "framerate_auto",
+		Kind:  setting.Toggle,
+		Group: ExposureGroup,
+		Icon:  "mdi:speedometer",
+		Read:  func(k *Knobs) string { return setting.OnOff(k.RateAuto) },
+	}
 	auto.Write = func(k *Knobs, v string) error {
 		on, ok := setting.Boolean(v)
 		if !ok {
@@ -81,10 +108,19 @@ func rateRows(rates []int) []Knob {
 		k.RateAuto = on
 		return nil
 	}
-	fixed := Knob{Name: "framerate", Kind: setting.Number, Group: ExposureGroup, Icon: "mdi:filmstrip",
-		Slider: true, Min: rates[0], Max: rates[len(rates)-1], Unit: "fps", IdleAs: "Auto",
-		Idle: func(k *Knobs) bool { return k.RateAuto },
-		Read: func(k *Knobs) string { return strconv.Itoa(k.Rate) }}
+	fixed := Knob{
+		Name:   "framerate",
+		Kind:   setting.Number,
+		Group:  ExposureGroup,
+		Icon:   "mdi:filmstrip",
+		Slider: true,
+		Min:    rates[0],
+		Max:    rates[len(rates)-1],
+		Unit:   "fps",
+		IdleAs: "Auto",
+		Idle:   func(k *Knobs) bool { return k.RateAuto },
+		Read:   func(k *Knobs) string { return strconv.Itoa(k.Rate) },
+	}
 	fixed.Write = func(k *Knobs, s string) error {
 		n, err := strconv.Atoi(s)
 		if err != nil {
@@ -112,7 +148,13 @@ func labels(values []string) []setting.Option {
 	return out
 }
 
-func choice(name string, g setting.Group, icon string, opts []setting.Option, field func(*Knobs) *string) Knob {
+func choice(
+	name string,
+	g setting.Group,
+	icon string,
+	opts []setting.Option,
+	field func(*Knobs) *string,
+) Knob {
 	k := Knob{Name: name, Kind: setting.Choice, Group: g, Icon: icon, Options: opts,
 		Read: func(k *Knobs) string { return *field(k) }}
 	k.Write = func(at *Knobs, v string) error {
@@ -128,9 +170,16 @@ func choice(name string, g setting.Group, icon string, opts []setting.Option, fi
 }
 
 func rows() []Knob {
-	ev := Knob{Name: "ev", Kind: setting.Number, Group: ExposureGroup, Icon: "mdi:plus-minus-variant", Slider: true,
-		Min: evMin, Max: evMax,
-		Read: func(k *Knobs) string { return strconv.Itoa(k.EV) }}
+	ev := Knob{
+		Name:   "ev",
+		Kind:   setting.Number,
+		Group:  ExposureGroup,
+		Icon:   "mdi:plus-minus-variant",
+		Slider: true,
+		Min:    evMin,
+		Max:    evMax,
+		Read:   func(k *Knobs) string { return strconv.Itoa(k.EV) },
+	}
 	ev.Write = func(k *Knobs, s string) error {
 		n, err := strconv.Atoi(s)
 		if err != nil || n < evMin || n > evMax {
@@ -142,18 +191,66 @@ func rows() []Knob {
 
 	out := []Knob{
 		ev,
-		choice("scene", ExposureGroup, "mdi:image-filter-hdr", words(scenes), func(k *Knobs) *string { return &k.Scene }),
-		choice("banding", ExposureGroup, "mdi:sine-wave", words(bandings), func(k *Knobs) *string { return &k.Banding }),
-		choice("iso", ExposureGroup, "mdi:film", labels(isos), func(k *Knobs) *string { return &k.ISO }),
+		choice(
+			"scene",
+			ExposureGroup,
+			"mdi:image-filter-hdr",
+			words(scenes),
+			func(k *Knobs) *string { return &k.Scene },
+		),
+		choice(
+			"banding",
+			ExposureGroup,
+			"mdi:sine-wave",
+			words(bandings),
+			func(k *Knobs) *string { return &k.Banding },
+		),
+		choice(
+			"iso",
+			ExposureGroup,
+			"mdi:film",
+			labels(isos),
+			func(k *Knobs) *string { return &k.ISO },
+		),
 		choice("whitebalance", BalanceGroup, "mdi:white-balance-auto", words(balances),
 			func(k *Knobs) *string { return &k.WhiteBalance }),
 		choice("effect", PictureGroup, "mdi:image-filter-black-white", words(effects),
 			func(k *Knobs) *string { return &k.Effect }),
-		choice("brightness", PictureGroup, "mdi:brightness-6", words(levels), func(k *Knobs) *string { return &k.Brightness }),
-		choice("contrast", PictureGroup, "mdi:contrast-box", words(levels), func(k *Knobs) *string { return &k.Contrast }),
-		choice("saturation", PictureGroup, "mdi:palette", words(levels), func(k *Knobs) *string { return &k.Saturation }),
-		choice("sharpness", PictureGroup, "mdi:blur-off", words(levels), func(k *Knobs) *string { return &k.Sharpness }),
-		choice("hue", PictureGroup, "mdi:looks", words(levels), func(k *Knobs) *string { return &k.Hue }),
+		choice(
+			"brightness",
+			PictureGroup,
+			"mdi:brightness-6",
+			words(levels),
+			func(k *Knobs) *string { return &k.Brightness },
+		),
+		choice(
+			"contrast",
+			PictureGroup,
+			"mdi:contrast-box",
+			words(levels),
+			func(k *Knobs) *string { return &k.Contrast },
+		),
+		choice(
+			"saturation",
+			PictureGroup,
+			"mdi:palette",
+			words(levels),
+			func(k *Knobs) *string { return &k.Saturation },
+		),
+		choice(
+			"sharpness",
+			PictureGroup,
+			"mdi:blur-off",
+			words(levels),
+			func(k *Knobs) *string { return &k.Sharpness },
+		),
+		choice(
+			"hue",
+			PictureGroup,
+			"mdi:looks",
+			words(levels),
+			func(k *Knobs) *string { return &k.Hue },
+		),
 	}
 	out = append(out, rateRows(rates)...)
 	return append(out, streamRows()...)
@@ -166,7 +263,11 @@ var (
 
 func Table() *setting.Table[Knobs] {
 	built.Do(func() {
-		table = setting.NewTable("camera", []setting.Group{PictureGroup, ExposureGroup, BalanceGroup, StreamGroup}, rows())
+		table = setting.NewTable(
+			"camera",
+			[]setting.Group{PictureGroup, ExposureGroup, BalanceGroup, StreamGroup},
+			rows(),
+		)
 	})
 	return table
 }
@@ -229,12 +330,7 @@ func Reset() error {
 
 // Apply sends the saved knobs to the camera, if it is running.
 func Apply() {
-	hub.mu.Lock()
-	defer hub.mu.Unlock()
-	if hub.cur == nil {
-		return
-	}
-	if err := hub.cur.stream.SetParams(Params(Saved())); err != nil {
+	if err := hub.SetParams(Params(Saved())); err != nil {
 		slog.Warn("the camera settings could not be applied", "err", err)
 	}
 }
@@ -271,8 +367,13 @@ func controls() *setting.Controls[Knobs] {
 
 func (*Camera) Entities() []esphome.Entity {
 	reset := &esphome.Button{
-		Base: esphome.Base{ObjectID: "camera_reset", Name: "Reset camera settings", Icon: "mdi:restore",
-			Category: esphome.CategoryConfig, DeviceID: component.DeviceCamera},
+		Base: esphome.Base{
+			ObjectID: "camera_reset",
+			Name:     "Reset camera settings",
+			Icon:     "mdi:restore",
+			Category: esphome.CategoryConfig,
+			DeviceID: component.DeviceCamera,
+		},
 		OnPress: func() {
 			if err := Reset(); err != nil {
 				slog.Error("resetting the camera settings", "err", err)

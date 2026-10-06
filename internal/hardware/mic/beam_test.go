@@ -92,13 +92,23 @@ func TestBeamformerImprovesSignalToNoise(t *testing.T) {
 		beamErr, micErr = math.Sqrt(beamErr/float64(n)), math.Sqrt(micErr/float64(n))
 
 		gain := 20 * math.Log10(micErr/beamErr)
-		t.Logf("bearing %3.0f°: noise %6.1f on one microphone, %6.1f on the beam, %.1f dB better, beam %d",
-			bearing*180/math.Pi, micErr, beamErr, gain, b.Beam())
+		t.Logf(
+			"bearing %3.0f°: noise %6.1f on one microphone, %6.1f on the beam, %.1f dB better, beam %d",
+			bearing*180/math.Pi,
+			micErr,
+			beamErr,
+			gain,
+			b.Beam(),
+		)
 
 		// Seven independent noise sources average down by about 8 dB; anything under 4 dB means the
 		// sum is not lining the microphones up.
 		if gain < 4 {
-			t.Errorf("bearing %.0f°: only %.1f dB better than one microphone", bearing*180/math.Pi, gain)
+			t.Errorf(
+				"bearing %.0f°: only %.1f dB better than one microphone",
+				bearing*180/math.Pi,
+				gain,
+			)
 		}
 		if rms(got) < rms(want)*0.5 {
 			t.Errorf("bearing %.0f°: the beam lost the signal, %.0f against %.0f",

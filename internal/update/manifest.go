@@ -153,7 +153,10 @@ func (m Manifest) For(board, arch string) (Binary, error) {
 		return b, nil
 	}
 	if board == "" {
-		return Binary{}, fmt.Errorf("update: %s cannot be installed without knowing which board this is", m.Version)
+		return Binary{}, fmt.Errorf(
+			"update: %s cannot be installed without knowing which board this is",
+			m.Version,
+		)
 	}
 	return Binary{}, fmt.Errorf("update: %s carries no %s build for %s", m.Version, arch, board)
 }

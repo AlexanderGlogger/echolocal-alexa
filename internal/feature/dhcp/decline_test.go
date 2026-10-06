@@ -118,7 +118,11 @@ func TestTheLengthsAgreeWithTheFrame(t *testing.T) {
 	if got, want := int(binary.BigEndian.Uint16(ip[2:4])), len(frame)-ethHeader; got != want {
 		t.Errorf("the IP header says %d bytes, the frame has %d", got, want)
 	}
-	if got, want := int(binary.BigEndian.Uint16(ip[ipHeader+4:ipHeader+6])), len(ip)-ipHeader; got != want {
+	if got, want := int(
+		binary.BigEndian.Uint16(ip[ipHeader+4:ipHeader+6]),
+	), len(
+		ip,
+	)-ipHeader; got != want {
 		t.Errorf("the UDP header says %d bytes, the datagram has %d", got, want)
 	}
 }

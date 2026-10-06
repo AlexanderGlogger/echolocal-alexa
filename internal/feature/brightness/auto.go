@@ -16,7 +16,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	"github.com/ygelfand/echolocal/internal/hardware/alsps"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {

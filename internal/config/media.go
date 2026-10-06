@@ -1,5 +1,10 @@
 package config
 
+import (
+	"fmt"
+	"github.com/ygelfand/libcountertop/pkg/audio/ducking"
+)
+
 // Media is what happens to a track that is playing when the device is spoken to.
 type Media struct {
 	// OnTurn is whether music carries on quietly under a turn or stops for it.
@@ -35,7 +40,7 @@ const (
 	DefaultOnTurn = OnTurnDuck
 
 	// Far enough down that a reply wins, not so far that the track sounds stopped.
-	DefaultDuckDB = -15
+	DefaultDuckDB = ducking.DefaultDB
 )
 
 func defaultMedia() Media {
@@ -52,5 +57,12 @@ func (w MediaWriter) OnTurn(v OnTurn) error {
 }
 
 func (w MediaWriter) DuckDB(db int) error {
+	if !ducking.Valid(float64(db)) {
+		return fmt.Errorf(
+			"config: ducking must be between %d and %d dB",
+			ducking.MinimumDB,
+			ducking.MaximumDB,
+		)
+	}
 	return w.st.Update(func(c *Config) { c.Media.DuckDB = db })
 }

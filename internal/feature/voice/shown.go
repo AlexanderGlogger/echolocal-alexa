@@ -1,6 +1,6 @@
 package voice
 
-import "github.com/ygelfand/echolocal/internal/lib/hook"
+import "github.com/ygelfand/libcountertop/pkg/hook"
 
 // Phase is what a turn is doing, for whatever shows it.
 type Phase int

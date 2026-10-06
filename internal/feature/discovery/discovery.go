@@ -22,8 +22,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/wifi"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -83,7 +83,10 @@ func (d *Discovery) Peers() []Peer {
 		out = append(out, p)
 	}
 	d.mu.Unlock()
-	slices.SortFunc(out, func(a, b Peer) int { return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
+	slices.SortFunc(
+		out,
+		func(a, b Peer) int { return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) },
+	)
 	return out
 }
 
@@ -100,7 +103,13 @@ func (d *Discovery) Touch(id string) {
 
 func Self() Peer {
 	b := component.Board()
-	return Peer{ID: ID(), Name: config.Get().Device.Name, Model: b.Model, Board: b.Codename, Caps: caps()}
+	return Peer{
+		ID:    ID(),
+		Name:  config.Get().Device.Name,
+		Model: b.Model,
+		Board: b.Codename,
+		Caps:  caps(),
+	}
 }
 
 func (d *Discovery) Find(id string) (Peer, bool) {

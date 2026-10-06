@@ -25,14 +25,14 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/ble"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/bt"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avdtp"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avrcp"
-	"github.com/ygelfand/echolocal/internal/lib/bt/l2cap"
-	"github.com/ygelfand/echolocal/internal/lib/bt/pair"
-	"github.com/ygelfand/echolocal/internal/lib/bt/sbc"
-	"github.com/ygelfand/echolocal/internal/lib/bt/sdp"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avdtp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avrcp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/l2cap"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/pair"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/sbc"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/sdp"
 )
 
 func init() {
@@ -700,7 +700,13 @@ func (s *Sink) Data(handle uint16, pdu []byte) ([][]byte, error) {
 
 	if said {
 		for _, r := range out {
-			slog.Info("bluetooth answered", "cid", fmt.Sprintf("%#04x", r.CID), "pdu", brief(r.Payload))
+			slog.Info(
+				"bluetooth answered",
+				"cid",
+				fmt.Sprintf("%#04x", r.CID),
+				"pdu",
+				brief(r.Payload),
+			)
 		}
 	}
 

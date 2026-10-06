@@ -72,7 +72,13 @@ func probe(iface string, ip net.IP) (conflict bool, err error) {
 		// After the last probe the wait is the same, and it is the one that decides: an address
 		// nobody has claimed by then is free.
 		if listen(fd, link.HardwareAddr, addr, wait(probeMin, probeMax)) {
-			slog.Warn("something else already holds the offered address", "address", ip, "probe", i+1)
+			slog.Warn(
+				"something else already holds the offered address",
+				"address",
+				ip,
+				"probe",
+				i+1,
+			)
 			return true, nil
 		}
 	}

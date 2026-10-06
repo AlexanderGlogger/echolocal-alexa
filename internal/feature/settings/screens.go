@@ -32,10 +32,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 // none is a row that does nothing when it is touched.
@@ -51,13 +51,28 @@ func root() *shell.Page {
 			cfg := config.Get()
 
 			rows := []widget.Row{
-				{Glyph: gogui.IconGlobe, Label: say.T("settings.network"), Kind: widget.Chevron, Value: wifi.Get().Network()},
+				{
+					Glyph: gogui.IconGlobe,
+					Label: say.T("settings.network"),
+					Kind:  widget.Chevron,
+					Value: wifi.Get().Network(),
+				},
 				{Glyph: gogui.IconPlug, Label: say.T("settings.features"), Kind: widget.Chevron},
-				{Glyph: gogui.IconSunnyO, Label: say.T("settings.display"), Kind: widget.Chevron, Value: themeSays(cfg.Screen.Theme)},
+				{
+					Glyph: gogui.IconSunnyO,
+					Label: say.T("settings.display"),
+					Kind:  widget.Chevron,
+					Value: themeSays(cfg.Screen.Theme),
+				},
 				{Glyph: gogui.IconHome, Label: say.T("home.title"), Kind: widget.Chevron},
 				{Glyph: gogui.IconSpeaker, Label: say.T("settings.volume"), Kind: widget.Chevron,
 					Value: fmt.Sprintf("%d%%", cfg.Volume.Level(config.StreamMedia))},
-				{Glyph: gogui.IconComment, Label: say.T("settings.assistants"), Kind: widget.Chevron, Value: phrases()},
+				{
+					Glyph: gogui.IconComment,
+					Label: say.T("settings.assistants"),
+					Kind:  widget.Chevron,
+					Value: phrases(),
+				},
 			}
 			acts := []func(int){
 				open(networkPage()),
@@ -68,13 +83,30 @@ func root() *shell.Page {
 				open(assistantsPage()),
 			}
 			for _, s := range sections {
-				rows = append(rows, widget.Row{Glyph: s.glyph, Label: say.T(s.label), Kind: widget.Chevron})
+				rows = append(
+					rows,
+					widget.Row{Glyph: s.glyph, Label: say.T(s.label), Kind: widget.Chevron},
+				)
 				acts = append(acts, open(s.page()))
 			}
-			rows = append(rows,
-				widget.Row{Glyph: gogui.IconGear, Label: say.T("settings.system"), Kind: widget.Chevron},
-				widget.Row{Glyph: gogui.IconCode, Label: say.T("settings.debug"), Kind: widget.Chevron},
-				widget.Row{Glyph: gogui.IconInfo, Label: say.T("settings.about"), Kind: widget.Chevron, Value: layout.Version},
+			rows = append(
+				rows,
+				widget.Row{
+					Glyph: gogui.IconGear,
+					Label: say.T("settings.system"),
+					Kind:  widget.Chevron,
+				},
+				widget.Row{
+					Glyph: gogui.IconCode,
+					Label: say.T("settings.debug"),
+					Kind:  widget.Chevron,
+				},
+				widget.Row{
+					Glyph: gogui.IconInfo,
+					Label: say.T("settings.about"),
+					Kind:  widget.Chevron,
+					Value: layout.Version,
+				},
 			)
 			acts = append(acts, open(systemPage()), open(debugPage()), open(aboutPage()))
 			return rows, acts
@@ -110,10 +142,27 @@ func debugPage() *shell.Page {
 			fps, seed := config.Get().Visual.MaxFPS, config.Get().Visual.Seed
 			adb := diag.Get().RemoteADB()
 			return []widget.Row{
-					{Glyph: gogui.IconTerminal, Label: say.T("system.adb"), Hint: say.T("system.adb.hint"), Kind: widget.Toggle, On: adb},
+					{
+						Glyph: gogui.IconTerminal,
+						Label: say.T("system.adb"),
+						Hint:  say.T("system.adb.hint"),
+						Kind:  widget.Toggle,
+						On:    adb,
+					},
 					{Label: say.T("debug.visuals"), Kind: widget.Chevron},
-					{Label: say.T("debug.fps"), Kind: widget.Slider, Level: fpsLevel(fps), Snap: fpsSnap, Value: fpsSays(fps)},
-					{Label: say.T("debug.seed"), Kind: widget.Slider, Level: seedLevel(seed), Value: seedSays(seed)},
+					{
+						Label: say.T("debug.fps"),
+						Kind:  widget.Slider,
+						Level: fpsLevel(fps),
+						Snap:  fpsSnap,
+						Value: fpsSays(fps),
+					},
+					{
+						Label: say.T("debug.seed"),
+						Kind:  widget.Slider,
+						Level: seedLevel(seed),
+						Value: seedSays(seed),
+					},
 				}, []func(int){
 					func(int) { diag.Get().SetRemoteADB(!adb) },
 					open(visualPage()),
@@ -169,18 +218,65 @@ func displayPage() *shell.Page {
 			auto := cfg.Screen.Mode == config.ModeAuto
 
 			return []widget.Row{
-					{Label: say.T("display.brightness"), Kind: widget.Slider, Level: cfg.Screen.Backlight},
+					{
+						Label: say.T("display.brightness"),
+						Kind:  widget.Slider,
+						Level: cfg.Screen.Backlight,
+					},
 					{Label: say.T("display.auto"), Kind: widget.Toggle, On: auto},
-					{Glyph: gogui.IconPalette, Label: say.T("display.theme"), Kind: widget.Chevron, Value: themeSays(cfg.Screen.Theme)},
-					{Label: say.T("display.style"), Kind: widget.Chevron, Value: say.T("style." + style.ByName(cfg.Screen.Style).Name)},
-					{Label: say.T("display.size"), Kind: widget.Slider, Level: sizeLevel(uiSize()), Snap: sizeSnap, Value: say.T("uisize." + uiSize())},
-					{Glyph: gogui.IconClock, Label: say.T("display.clock"), Kind: widget.Chevron, Value: cfg.Clock.Face.Label()},
-					{Glyph: gogui.IconMoon, Label: say.T("display.idle"), Kind: widget.Chevron, Value: cfg.Idle.After.Label()},
-					{Glyph: gogui.IconPicture, Label: say.T("display.poster"), Kind: widget.Chevron, Value: posterSays(cfg.Poster)},
-					{Label: say.T("controls.dock"), Kind: widget.Chevron, Value: cfg.Screen.Drawer.Label()},
-					{Label: say.T("controls.volume"), Kind: widget.Chevron, Value: cfg.Screen.Volume.Label()},
+					{
+						Glyph: gogui.IconPalette,
+						Label: say.T("display.theme"),
+						Kind:  widget.Chevron,
+						Value: themeSays(cfg.Screen.Theme),
+					},
+					{
+						Label: say.T("display.style"),
+						Kind:  widget.Chevron,
+						Value: say.T("style." + style.ByName(cfg.Screen.Style).Name),
+					},
+					{
+						Label: say.T("display.size"),
+						Kind:  widget.Slider,
+						Level: sizeLevel(uiSize()),
+						Snap:  sizeSnap,
+						Value: say.T("uisize." + uiSize()),
+					},
+					{
+						Glyph: gogui.IconClock,
+						Label: say.T("display.clock"),
+						Kind:  widget.Chevron,
+						Value: cfg.Clock.Face.Label(),
+					},
+					{
+						Glyph: gogui.IconMoon,
+						Label: say.T("display.idle"),
+						Kind:  widget.Chevron,
+						Value: cfg.Idle.After.Label(),
+					},
+					{
+						Glyph: gogui.IconPicture,
+						Label: say.T("display.poster"),
+						Kind:  widget.Chevron,
+						Value: posterSays(cfg.Poster),
+					},
+					{
+						Label: say.T("controls.dock"),
+						Kind:  widget.Chevron,
+						Value: cfg.Screen.Drawer.Label(),
+					},
+					{
+						Label: say.T("controls.volume"),
+						Kind:  widget.Chevron,
+						Value: cfg.Screen.Volume.Label(),
+					},
 					{Label: say.T("controls.logo"), Kind: widget.Toggle, On: cfg.Screen.Logo},
-					{Glyph: gogui.IconEye, Label: say.T("display.marks"), Kind: widget.Toggle, On: cfg.Screen.Marks},
+					{
+						Glyph: gogui.IconEye,
+						Label: say.T("display.marks"),
+						Kind:  widget.Toggle,
+						On:    cfg.Screen.Marks,
+					},
 				}, []func(int){
 					setBrightness,
 					func(int) { toggleAuto(auto) },
@@ -211,11 +307,23 @@ func clockPage() *shell.Page {
 			cfg := config.Get()
 
 			return []widget.Row{
-					{Label: say.T("clock.face"), Kind: widget.Chevron, Value: cfg.Clock.Face.Label()},
+					{
+						Label: say.T("clock.face"),
+						Kind:  widget.Chevron,
+						Value: cfg.Clock.Face.Label(),
+					},
 					{Label: say.T("clock.position"), Kind: widget.Chevron,
 						Value: cfg.Clock.Position.Label()},
-					{Label: say.T("clock.size"), Kind: widget.Chevron, Value: cfg.Clock.Size.Label()},
-					{Label: say.T("clock.color"), Kind: widget.Chevron, Value: cfg.Clock.Ink.Label()},
+					{
+						Label: say.T("clock.size"),
+						Kind:  widget.Chevron,
+						Value: cfg.Clock.Size.Label(),
+					},
+					{
+						Label: say.T("clock.color"),
+						Kind:  widget.Chevron,
+						Value: cfg.Clock.Ink.Label(),
+					},
 					{Label: say.T("clock.date"), Kind: widget.Toggle, On: cfg.Clock.Date},
 				}, []func(int){
 					open(facePage(say.T("clock.face"),
@@ -272,7 +380,12 @@ func visualPage() *shell.Page {
 	})
 }
 
-func visualPicker(title, empty string, none func(), chosen func() string, pick func(visual.Kind)) *shell.Page {
+func visualPicker(
+	title, empty string,
+	none func(),
+	chosen func() string,
+	pick func(visual.Kind),
+) *shell.Page {
 	return &shell.Page{
 		Title: title,
 		Tiles: func() ([]widget.Cell, []func(int)) {
@@ -283,11 +396,21 @@ func visualPicker(title, empty string, none func(), chosen func() string, pick f
 			var cells []widget.Cell
 			var acts []func(int)
 			if none != nil {
-				cells = append(cells, widget.Cell{Label: empty, Chosen: chosen != nil && now == "", Paint: noneTile})
+				cells = append(
+					cells,
+					widget.Cell{Label: empty, Chosen: chosen != nil && now == "", Paint: noneTile},
+				)
 				acts = append(acts, func(int) { none() })
 			}
 			for _, k := range visual.Built() {
-				cells = append(cells, widget.Cell{Label: k.Label(), Chosen: chosen != nil && string(k) == now, Paint: thumbTile(k)})
+				cells = append(
+					cells,
+					widget.Cell{
+						Label:  k.Label(),
+						Chosen: chosen != nil && string(k) == now,
+						Paint:  thumbTile(k),
+					},
+				)
 				acts = append(acts, func(int) { pick(k) })
 			}
 			return cells, acts
@@ -321,7 +444,12 @@ func posterPage() *shell.Page {
 			return []widget.Row{
 					{Label: say.T("poster.show"), Kind: widget.Toggle, On: cfg.Enabled},
 					{Label: say.T("poster.next"), Dim: !cfg.Enabled},
-					{Label: say.T("poster.every"), Kind: widget.Chevron, Value: cfg.Every.Label(), Dim: !cfg.Enabled},
+					{
+						Label: say.T("poster.every"),
+						Kind:  widget.Chevron,
+						Value: cfg.Every.Label(),
+						Dim:   !cfg.Enabled,
+					},
 				}, []func(int){
 					func(int) { poster.Get().SetEnabled(!cfg.Enabled) },
 					func(int) { poster.Get().Next() },
@@ -532,7 +660,10 @@ func stylePage() *shell.Page {
 			var cells []widget.Cell
 			var taps []func(int)
 			for _, name := range style.Names() {
-				cells = append(cells, widget.Cell{Label: say.T("style." + name), Chosen: name == now, Style: name})
+				cells = append(
+					cells,
+					widget.Cell{Label: say.T("style." + name), Chosen: name == now, Style: name},
+				)
 				taps = append(taps, func(int) {
 					if err := screen.Get().Set("style", name); err != nil {
 						slog.Error("the style could not be saved", "style", name, "err", err)
@@ -554,7 +685,13 @@ func themePage() *shell.Page {
 			now := config.Get().Screen.Theme
 			follow, _ := theme.ByName(style.Theme(config.Get().Screen.Style, style.ThemeDefault))
 
-			cells := []widget.Cell{{Label: say.T("theme.default"), Chosen: now == style.ThemeDefault, Palette: &follow}}
+			cells := []widget.Cell{
+				{
+					Label:   say.T("theme.default"),
+					Chosen:  now == style.ThemeDefault,
+					Palette: &follow,
+				},
+			}
 			acts := []func(int){use(style.ThemeDefault)}
 
 			for _, t := range theme.All {
@@ -664,19 +801,31 @@ func networkPage() *shell.Page {
 			}
 			acts := []func(int){nil, nil, nil}
 			if l := dhcp.Get().Lease(); l != nil {
-				rows = append(rows,
-					widget.Row{Label: say.T("network.router"), Kind: widget.Plain, Value: l.Router.String()},
-					widget.Row{Label: say.T("network.lease"), Kind: widget.Plain, Value: in(l.Renew)})
+				rows = append(
+					rows,
+					widget.Row{
+						Label: say.T("network.router"),
+						Kind:  widget.Plain,
+						Value: l.Router.String(),
+					},
+					widget.Row{
+						Label: say.T("network.lease"),
+						Kind:  widget.Plain,
+						Value: in(l.Renew),
+					},
+				)
 				acts = append(acts, nil, nil)
 			}
-			rows = append(rows, widget.Row{Glyph: gogui.IconLock, Label: say.T("system.certificates"),
-				Hint: say.T("system.certificates.hint"), Kind: widget.Toggle, On: verify})
+			rows = append(
+				rows,
+				widget.Row{Glyph: gogui.IconLock, Label: say.T("system.certificates"),
+					Hint: say.T("system.certificates.hint"), Kind: widget.Toggle, On: verify},
+			)
 			acts = append(acts, func(int) { diag.Get().SetInsecureTLS(verify) })
 			return rows, acts
 		},
 	}
 }
-
 
 func aboutPage() *shell.Page {
 	return &shell.Page{
@@ -830,12 +979,28 @@ func assistantPage(slot int) *shell.Page {
 					// something: a way to talk to this assistant without saying its word.
 					{Label: say.T("assistants.talk"), Hint: say.T("assistants.talk.hint")},
 
-					{Label: say.T("assistants.threshold"), Kind: widget.Slider, Level: sensitivity(saved.Threshold),
-						Hint: say.T("assistants.threshold.hint")},
+					{
+						Label: say.T("assistants.threshold"),
+						Kind:  widget.Slider,
+						Level: sensitivity(saved.Threshold),
+						Hint:  say.T("assistants.threshold.hint"),
+					},
 
-					{Label: say.T("assistants.tone"), Kind: widget.Chevron, Value: saved.Tone.Label()},
-					{Label: say.T("assistants.reply"), Kind: widget.Chevron, Value: saved.Delivery.Label()},
-					{Label: say.T("look.title"), Kind: widget.Chevron, Value: saved.Look.Place.Label()},
+					{
+						Label: say.T("assistants.tone"),
+						Kind:  widget.Chevron,
+						Value: saved.Tone.Label(),
+					},
+					{
+						Label: say.T("assistants.reply"),
+						Kind:  widget.Chevron,
+						Value: saved.Delivery.Label(),
+					},
+					{
+						Label: say.T("look.title"),
+						Kind:  widget.Chevron,
+						Value: saved.Look.Place.Label(),
+					},
 				}, []func(int){
 					func(int) { wakeword.Requested.Emit(slot) },
 					setThreshold(slot),

@@ -103,8 +103,16 @@ func hearing() []*cobra.Command {
 				return err
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "%s seconds %.2f sounding %.2f\n  mic %s\n  ref %s\n  out %s\n",
-				args[1], float64(len(m))/mic.Rate, float64(sounding)/mic.Rate, levels(m), levels(r), levels(o))
+			fmt.Fprintf(
+				cmd.OutOrStdout(),
+				"%s seconds %.2f sounding %.2f\n  mic %s\n  ref %s\n  out %s\n",
+				args[1],
+				float64(len(m))/mic.Rate,
+				float64(sounding)/mic.Rate,
+				levels(m),
+				levels(r),
+				levels(o),
+			)
 			return nil
 		},
 	}

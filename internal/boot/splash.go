@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ygelfand/echolocal/internal/hardware/led"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // startSplash runs the boot animation and lets go of the ring once the device can actually answer.

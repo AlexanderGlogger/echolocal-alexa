@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avrcp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avrcp"
 )
 
 // The phone as the player sees it.
@@ -119,6 +119,10 @@ func TestAudioArrivingIsWhatPlayingMeans(t *testing.T) {
 	// Paused is the one thing the phone knows better: the stream stays up across a pause.
 	paused := avrcp.State{Progress: avrcp.Progress{Status: avrcp.StatusPaused}}
 	if got := nowOf(paused, true, nil); got.Playing || !got.Paused {
-		t.Errorf("a paused phone with the stream up reads playing=%v paused=%v", got.Playing, got.Paused)
+		t.Errorf(
+			"a paused phone with the stream up reads playing=%v paused=%v",
+			got.Playing,
+			got.Paused,
+		)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"math/rand/v2"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/fft"
+	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
 // testFrame is the frame the microphone hands out, 20 ms at 16 kHz. It is deliberately not a whole

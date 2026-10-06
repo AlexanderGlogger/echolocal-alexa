@@ -34,7 +34,13 @@ func drawStranded(p *display.Panel) error {
 	top := (h - (mark + gap + sign + gap + wordH)) / 2
 
 	ui.DrawLogo(s, ui.Rect{X: (w - mark) / 2, Y: top, W: mark, H: mark}, t.Background)
-	ui.DrawIcon(s, icons.AlertWarning, ui.Rect{X: (w - sign) / 2, Y: top + mark + gap, W: sign, H: sign}, t.Danger, t.Background)
+	ui.DrawIcon(
+		s,
+		icons.AlertWarning,
+		ui.Rect{X: (w - sign) / 2, Y: top + mark + gap, W: sign, H: sign},
+		t.Danger,
+		t.Background,
+	)
 	ui.DrawText(s, font, (w-wordW)/2, top+mark+gap+sign+gap, t.Text, t.Background, word)
 	return nil
 }

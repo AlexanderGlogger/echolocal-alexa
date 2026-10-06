@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
-	"github.com/ygelfand/echolocal/internal/lib/bt"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avrcp"
-	"github.com/ygelfand/echolocal/internal/lib/bt/l2cap"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avrcp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/l2cap"
 )
 
 // What is lined up behind the current track, off the browsing channel.

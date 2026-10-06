@@ -69,7 +69,10 @@ func (n *Nav) Show(o *Overlay) {
 	n.mu.Lock()
 	if !slices.Contains(n.overlays, o) {
 		n.overlays = append(n.overlays, o)
-		slices.SortStableFunc(n.overlays, func(a, b *Overlay) int { return a.Priority - b.Priority })
+		slices.SortStableFunc(
+			n.overlays,
+			func(a, b *Overlay) int { return a.Priority - b.Priority },
+		)
 	}
 	n.mu.Unlock()
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 var active struct {
@@ -155,7 +155,16 @@ func (a *App) keyboard(w *gogui.Window) gogui.View {
 			line = append(line, key(string(ch), label, unit, plain, typeRune(ch)))
 		}
 		if i == 2 {
-			line = append(line, key("back", gogui.IconArrowLeft, unit*1.5+gap*0.5, special, func() { r.Press(gogui.KeyBackspace) }))
+			line = append(
+				line,
+				key(
+					"back",
+					gogui.IconArrowLeft,
+					unit*1.5+gap*0.5,
+					special,
+					func() { r.Press(gogui.KeyBackspace) },
+				),
+			)
 		}
 		lines = append(lines, keyRow(line, gap))
 	}
@@ -165,7 +174,13 @@ func (a *App) keyboard(w *gogui.Window) gogui.View {
 		mode = "abc"
 	}
 	lines = append(lines, keyRow([]gogui.View{
-		key("mode", mode, unit*2+gap, special, func() { kb.symbols, kb.shift = !kb.symbols, false }),
+		key(
+			"mode",
+			mode,
+			unit*2+gap,
+			special,
+			func() { kb.symbols, kb.shift = !kb.symbols, false },
+		),
 		key("space", " ", unit*4+gap*3, plain, func() { r.Type(' ') }),
 		key("cancel", say.T("keyboard.cancel"), unit*2+gap, special, func() { w.ClearFocus() }),
 		key("save", say.T("keyboard.save"), unit*2+gap, special, func() {

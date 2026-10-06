@@ -17,7 +17,11 @@ func installed(t *testing.T, phrases map[string]string) *Library {
 
 	for id, phrase := range phrases {
 		body := `{"type":"openwakeword","wake_word":"` + phrase + `","model":"` + id + `.tflite"}`
-		if err := os.WriteFile(filepath.Join(dir, id+".tflite"), []byte("not a model"), 0o644); err != nil {
+		if err := os.WriteFile(
+			filepath.Join(dir, id+".tflite"),
+			[]byte("not a model"),
+			0o644,
+		); err != nil {
 			t.Fatal(err)
 		}
 		if err := os.WriteFile(filepath.Join(dir, id+".json"), []byte(body), 0o644); err != nil {

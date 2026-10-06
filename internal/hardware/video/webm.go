@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/lib/webm"
+	"github.com/ygelfand/libcountertop/pkg/media/webm"
 )
 
 type webmFrames struct {

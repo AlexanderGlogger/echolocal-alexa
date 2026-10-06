@@ -3,7 +3,7 @@ package video
 import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/cast/playback"
+	"github.com/ygelfand/libcountertop/pkg/media/playback"
 )
 
 var heights = []int{360, 480, 720, 1080}

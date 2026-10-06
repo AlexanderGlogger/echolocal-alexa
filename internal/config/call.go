@@ -1,6 +1,5 @@
 package config
 
-
 type Call struct {
 	Incoming   bool       `json:"incoming"`
 	AutoAnswer bool       `json:"auto_answer"`

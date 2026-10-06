@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/lib/immich"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/media/immich"
 )
 
 func jpegOf(w, h int, c color.RGBA) []byte {
@@ -133,7 +133,19 @@ func scrimEveryPixel(img *image.RGBA, box image.Rectangle, bg theme.Color) {
 				k = int32(strength*t*t*(3-2*t)*256 + 0.5)
 			}
 			i := img.PixOffset(x, y)
-			img.Pix[i], img.Pix[i+1], img.Pix[i+2] = mix(img.Pix[i], bg.R, k), mix(img.Pix[i+1], bg.G, k), mix(img.Pix[i+2], bg.B, k)
+			img.Pix[i], img.Pix[i+1], img.Pix[i+2] = mix(
+				img.Pix[i],
+				bg.R,
+				k,
+			), mix(
+				img.Pix[i+1],
+				bg.G,
+				k,
+			), mix(
+				img.Pix[i+2],
+				bg.B,
+				k,
+			)
 		}
 	}
 }
@@ -161,7 +173,11 @@ func stripesRGBA(w, h int) *image.RGBA {
 }
 
 func TestAPickAvoidsTheLastPictureAndVideos(t *testing.T) {
-	found := []immich.Asset{{ID: "v", Type: "VIDEO"}, {ID: "a", Type: "IMAGE"}, {ID: "b", Type: "IMAGE"}}
+	found := []immich.Asset{
+		{ID: "v", Type: "VIDEO"},
+		{ID: "a", Type: "IMAGE"},
+		{ID: "b", Type: "IMAGE"},
+	}
 	if got := pick(found, "a"); got != "b" {
 		t.Errorf("picked %q after a", got)
 	}
@@ -202,7 +218,10 @@ func BenchmarkCompose(b *testing.B) {
 	}
 }
 
-func testPoster(t *testing.T, fetch func(context.Context, config.Poster) (string, []byte, error)) *Poster {
+func testPoster(
+	t *testing.T,
+	fetch func(context.Context, config.Poster) (string, []byte, error),
+) *Poster {
 	config.Use(filepath.Join(t.TempDir(), "state.json"))
 	p := Get()
 	p.mu.Lock()
@@ -241,7 +260,13 @@ func TestTheScheduleFetchesWhenDueAndBacksOffAfterAFailure(t *testing.T) {
 	if calls != 1 || config.Get().Poster.Last != "id1" {
 		t.Fatalf("first step: %d calls, last %q", calls, config.Get().Poster.Last)
 	}
-	if img, key := p.Backdrop(40, 60, image.Rect(10, 10, 30, 30), theme.Color{}); img == nil || key == "" {
+	if img, key := p.Backdrop(
+		40,
+		60,
+		image.Rect(10, 10, 30, 30),
+		theme.Color{},
+	); img == nil ||
+		key == "" {
 		t.Fatal("no backdrop after a fetch")
 	}
 	p.step(ctx, t0.Add(59*time.Minute), false, false)

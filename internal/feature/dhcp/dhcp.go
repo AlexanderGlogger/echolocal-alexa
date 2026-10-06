@@ -19,9 +19,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/wifi"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -259,18 +259,35 @@ func (c *Client) contested(ctx context.Context, lease *Lease) (bool, error) {
 	if err != nil {
 		// The probe itself failing is not evidence. Taking the address is what a client that
 		// cannot probe at all does, and it is what this one did until now.
-		slog.Warn("could not check whether the address is free", "address", lease.Address.IP, "err", err)
+		slog.Warn(
+			"could not check whether the address is free",
+			"address",
+			lease.Address.IP,
+			"err",
+			err,
+		)
 		return false, nil
 	}
 	if !taken {
 		return false, nil
 	}
 
-	slog.Warn("refusing an address something else is using", "address", lease.Address.IP, "server", lease.Server)
+	slog.Warn(
+		"refusing an address something else is using",
+		"address",
+		lease.Address.IP,
+		"server",
+		lease.Server,
+	)
 
 	// Told, not just refused. Without this the server offers the same address straight back and a
 	// real conflict becomes a loop on the backoff.
-	if err := declining(Interface, lease.Address.IP, lease.Server, "address already in use"); err != nil {
+	if err := declining(
+		Interface,
+		lease.Address.IP,
+		lease.Server,
+		"address already in use",
+	); err != nil {
 		slog.Warn("could not tell the server", "err", err)
 	}
 	return true, sleep(ctx, backoff)
@@ -293,7 +310,12 @@ func (c *Client) hold(ctx context.Context, lease *Lease, taken <-chan struct{}) 
 		case <-taken:
 			// Surrendered to another host. The address is dropped rather than renewed: asking to
 			// extend one this device has stopped using would get it back.
-			if err := declining(Interface, lease.Address.IP, lease.Server, "address in use elsewhere"); err != nil {
+			if err := declining(
+				Interface,
+				lease.Address.IP,
+				lease.Server,
+				"address in use elsewhere",
+			); err != nil {
 				slog.Warn("could not tell the server", "err", err)
 			}
 			c.set(nil)

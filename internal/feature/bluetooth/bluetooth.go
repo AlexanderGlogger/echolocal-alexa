@@ -20,7 +20,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/ble"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {

@@ -82,10 +82,19 @@ func plainFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) go
 
 	line := []gogui.View{gogui.Label(r.Time, big)}
 	if r.Suffix != "" {
-		line = append(line, gogui.Label(r.Suffix, lettering(glyph.TypefaceBold, size*0.24, ink.Muted)))
+		line = append(
+			line,
+			gogui.Label(r.Suffix, lettering(glyph.TypefaceBold, size*0.24, ink.Muted)),
+		)
 	}
 	cfg := centred(append([]gogui.View{
-		gogui.Row(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(size * 0.08), Content: line}),
+		gogui.Row(
+			gogui.ContainerCfg{
+				Padding: gogui.NoPadding,
+				Spacing: gogui.SpacingPx(size * 0.08),
+				Content: line,
+			},
+		),
 	}, dateLine(r, size*0.20, ink)...)...)
 	cfg.Spacing = gogui.SpacingPx(size * 0.1)
 	return gogui.Column(cfg)
@@ -103,14 +112,35 @@ func stackFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) go
 
 	top := []gogui.View{gogui.Label(hour, big)}
 	if r.Suffix != "" {
-		top = append(top, gogui.Label(r.Suffix, lettering(glyph.TypefaceBold, size*0.22, ink.Muted)))
+		top = append(
+			top,
+			gogui.Label(r.Suffix, lettering(glyph.TypefaceBold, size*0.22, ink.Muted)),
+		)
 	}
-	digits := gogui.Column(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: tight, Content: []gogui.View{
-		gogui.Row(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(size * 0.06), Content: top}),
-		gogui.Label(minute, big),
-	}})
+	digits := gogui.Column(
+		gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: tight, Content: []gogui.View{
+			gogui.Row(
+				gogui.ContainerCfg{
+					Padding: gogui.NoPadding,
+					Spacing: gogui.SpacingPx(size * 0.06),
+					Content: top,
+				},
+			),
+			gogui.Label(minute, big),
+		}},
+	)
 	block := append([]gogui.View{digits}, dateLine(r, size*0.13, ink)...)
-	return gogui.Column(centred(gogui.Column(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(size * 0.08), Content: block})))
+	return gogui.Column(
+		centred(
+			gogui.Column(
+				gogui.ContainerCfg{
+					Padding: gogui.NoPadding,
+					Spacing: gogui.SpacingPx(size * 0.08),
+					Content: block,
+				},
+			),
+		),
+	)
 }
 
 func cardsFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) gogui.View {
@@ -132,24 +162,49 @@ func cardsFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) go
 		content := []gogui.View{gogui.Label(digits, st)}
 		if corner != "" {
 			content = append(content, gogui.Column(gogui.ContainerCfg{
-				Float: true, FloatAnchor: gogui.FloatTopRight, FloatTieOff: gogui.FloatTopRight,
-				FloatOffsetX: -side * 0.09, FloatOffsetY: side * 0.09, Padding: gogui.NoPadding,
-				Content: []gogui.View{gogui.Label(corner, lettering(glyph.TypefaceBold, side*0.15, ink.Muted))},
+				Float:        true,
+				FloatAnchor:  gogui.FloatTopRight,
+				FloatTieOff:  gogui.FloatTopRight,
+				FloatOffsetX: -side * 0.09,
+				FloatOffsetY: side * 0.09,
+				Padding:      gogui.NoPadding,
+				Content: []gogui.View{
+					gogui.Label(corner, lettering(glyph.TypefaceBold, side*0.15, ink.Muted)),
+				},
 			}))
 		}
 		return gogui.Column(gogui.ContainerCfg{
-			Width: side, Height: side, Sizing: gogui.FixedFixed,
-			HAlign: gogui.HAlignCenter, VAlign: gogui.VAlignMiddle,
-			Color: color(ink.Surface), Radius: gogui.RadiusPx(side * 0.11), Padding: gogui.NoPadding,
+			Width:  side,
+			Height: side,
+			Sizing: gogui.FixedFixed,
+			HAlign: gogui.HAlignCenter,
+			VAlign: gogui.VAlignMiddle,
+			Color: color(
+				ink.Surface,
+			),
+			Radius:  gogui.RadiusPx(side * 0.11),
+			Padding: gogui.NoPadding,
 			Content: content,
 		})
 	}
 	pair := []gogui.View{card(hour, r.Suffix), card(minute, "")}
 	var block gogui.View
 	if across {
-		block = gogui.Row(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(gap), Content: pair})
+		block = gogui.Row(
+			gogui.ContainerCfg{
+				Padding: gogui.NoPadding,
+				Spacing: gogui.SpacingPx(gap),
+				Content: pair,
+			},
+		)
 	} else {
-		block = gogui.Column(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(gap), Content: pair})
+		block = gogui.Column(
+			gogui.ContainerCfg{
+				Padding: gogui.NoPadding,
+				Spacing: gogui.SpacingPx(gap),
+				Content: pair,
+			},
+		)
 	}
 	cfg := centred(append([]gogui.View{block}, dateLine(r, side*0.085, ink)...)...)
 	cfg.Spacing = gogui.SpacingPx(side * 0.16)
@@ -193,10 +248,19 @@ func analogFace(seconds bool) faceView {
 				}
 
 				width := dial * 0.058
-				dc.FilledPolygon(hand(cx, cy, dial*0.28, width, float64(hour%12)*30+float64(minute)*0.5), color(ink.Text))
-				dc.FilledPolygon(hand(cx, cy, dial*0.44, width*0.70, float64(minute)*6), color(ink.Text))
+				dc.FilledPolygon(
+					hand(cx, cy, dial*0.28, width, float64(hour%12)*30+float64(minute)*0.5),
+					color(ink.Text),
+				)
+				dc.FilledPolygon(
+					hand(cx, cy, dial*0.44, width*0.70, float64(minute)*6),
+					color(ink.Text),
+				)
 				if seconds {
-					dc.FilledPolygon(hand(cx, cy, dial*0.47, width*0.28, float64(r.Second)*6), color(ink.Accent))
+					dc.FilledPolygon(
+						hand(cx, cy, dial*0.47, width*0.28, float64(r.Second)*6),
+						color(ink.Accent),
+					)
 				}
 				dc.FilledCircle(cx, cy, dial*0.0375, color(ink.Text))
 
@@ -272,7 +336,13 @@ func wordsFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) go
 	for _, line := range said {
 		lines = append(lines, gogui.Label(line, big))
 	}
-	block := gogui.Column(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(-size * 0.1), Content: lines})
+	block := gogui.Column(
+		gogui.ContainerCfg{
+			Padding: gogui.NoPadding,
+			Spacing: gogui.SpacingPx(-size * 0.1),
+			Content: lines,
+		},
+	)
 	cfg := centred(append([]gogui.View{block}, dateLine(r, size*0.26, ink)...)...)
 	cfg.Spacing = gogui.SpacingPx(size * 0.3)
 	return gogui.Column(cfg)
@@ -293,10 +363,21 @@ func overlapFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme) 
 	if r.Suffix != "" {
 		top = append(top, gogui.Label(r.Suffix, lettering(glyph.TypefaceBold, size*0.20, ink.Text)))
 	}
-	pair := gogui.Column(gogui.ContainerCfg{Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(-size * 0.45), Content: []gogui.View{
-		gogui.Row(gogui.ContainerCfg{Padding: gogui.NoPadding, Content: top}),
-		gogui.Row(gogui.ContainerCfg{Padding: gogui.NewPadding(0, 0, 0, size*0.18), Content: []gogui.View{gogui.Label(minute, big)}}),
-	}})
+	pair := gogui.Column(
+		gogui.ContainerCfg{
+			Padding: gogui.NoPadding,
+			Spacing: gogui.SpacingPx(-size * 0.45),
+			Content: []gogui.View{
+				gogui.Row(gogui.ContainerCfg{Padding: gogui.NoPadding, Content: top}),
+				gogui.Row(
+					gogui.ContainerCfg{
+						Padding: gogui.NewPadding(0, 0, 0, size*0.18),
+						Content: []gogui.View{gogui.Label(minute, big)},
+					},
+				),
+			},
+		},
+	)
 	cfg := centred(append([]gogui.View{pair}, dateLine(r, size*0.13, ink)...)...)
 	cfg.Spacing = gogui.SpacingPx(size * 0.1)
 	return gogui.Column(cfg)
@@ -337,8 +418,18 @@ func segmentsFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme)
 	on := color(ink.Text)
 	off := color(ink.Text.Blend(ink.Background, 0.91))
 	digits := gogui.DrawCanvas(gogui.DrawCanvasCfg{
-		ID: "segments", Width: bw, Height: tall,
-		Version: uint64(len(r.Time))<<48 ^ uint64(box.W)<<32 ^ uint64(box.H)<<16 ^ uint64(r.Time[len(r.Time)-1]),
+		ID:     "segments",
+		Width:  bw,
+		Height: tall,
+		Version: uint64(
+			len(r.Time),
+		)<<48 ^ uint64(
+			box.W,
+		)<<32 ^ uint64(
+			box.H,
+		)<<16 ^ uint64(
+			r.Time[len(r.Time)-1],
+		),
 		OnDraw: func(dc *gogui.DrawContext) {
 			y := float32(0)
 			for _, row := range rows {
@@ -363,7 +454,14 @@ func segmentsFace(w *gogui.Window, box ui.Rect, r face.Reading, ink theme.Theme)
 						if lit[k] {
 							paint = on
 						}
-						dc.FilledRoundedRect(float32(bar.X), float32(bar.Y), float32(bar.W), float32(bar.H), float32(min(bar.W, bar.H))/2, paint)
+						dc.FilledRoundedRect(
+							float32(bar.X),
+							float32(bar.Y),
+							float32(bar.W),
+							float32(bar.H),
+							float32(min(bar.W, bar.H))/2,
+							paint,
+						)
 					}
 					x += height * 0.56
 				}

@@ -17,7 +17,13 @@ import (
 //
 // Per board because what is compiled in differs — a board with a panel carries the screen and the
 // artwork, and a board without it must not.
-func resolveEchod(ctx context.Context, out io.Writer, d *device.Device, p profile.Profile, manifest, path string) ([]byte, string, error) {
+func resolveEchod(
+	ctx context.Context,
+	out io.Writer,
+	d *device.Device,
+	p profile.Profile,
+	manifest, path string,
+) ([]byte, string, error) {
 	if path != "" {
 		data, err := os.ReadFile(path)
 		return data, path, err
@@ -41,7 +47,12 @@ func resolveEchod(ctx context.Context, out io.Writer, d *device.Device, p profil
 		return nil, "", fmt.Errorf("%w\n\nA local binary can be given with --echod", err)
 	}
 
-	title := fmt.Sprintf("Fetching echod %s for %s (%.1f MB)", m.Version, p.Board, float64(b.Size)/(1<<20))
+	title := fmt.Sprintf(
+		"Fetching echod %s for %s (%.1f MB)",
+		m.Version,
+		p.Board,
+		float64(b.Size)/(1<<20),
+	)
 	return fetchImage(ctx, out, title, b.Resolve)
 }
 

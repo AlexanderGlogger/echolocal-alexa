@@ -53,10 +53,18 @@ func TestConfigureTakesOutTheOldDefaultWhenTheRouterChanges(t *testing.T) {
 	}
 
 	if removed != 1 {
-		t.Errorf("the old default was removed %d times, want once:\n%s", removed, strings.Join(said, "\n"))
+		t.Errorf(
+			"the old default was removed %d times, want once:\n%s",
+			removed,
+			strings.Join(said, "\n"),
+		)
 	}
 	if added != 1 {
-		t.Errorf("the new default was added %d times, want once:\n%s", added, strings.Join(said, "\n"))
+		t.Errorf(
+			"the new default was added %d times, want once:\n%s",
+			added,
+			strings.Join(said, "\n"),
+		)
 	}
 
 	// Order matters: removing after adding would take the new route's place in the table.

@@ -77,8 +77,16 @@ func newWakeCmd() *cobra.Command {
 			frames, unlisten := source.Listen("tools wake")
 			defer unlisten()
 
-			fmt.Fprintf(out, "listening on the center mic for %.0fs: %q (%s), cutoff %.2f, window %d, step %dms\n",
-				secs, m.Phrase, m.ID, m.Config.ProbabilityCutoff, m.Config.SlidingWindowSize, m.Config.FeaturesStepMs)
+			fmt.Fprintf(
+				out,
+				"listening on the center mic for %.0fs: %q (%s), cutoff %.2f, window %d, step %dms\n",
+				secs,
+				m.Phrase,
+				m.ID,
+				m.Config.ProbabilityCutoff,
+				m.Config.SlidingWindowSize,
+				m.Config.FeaturesStepMs,
+			)
 
 			deadline := time.Now().Add(time.Duration(secs * float64(time.Second)))
 			var (
@@ -117,8 +125,13 @@ func newWakeCmd() *cobra.Command {
 					}
 					clipped += clipping(frame)
 					if processed%50 == 0 {
-						fmt.Fprintf(out, "  best score %.3f, loudest %6.1f dBFS, clipped %d samples\n",
-							best, loudest, clipped)
+						fmt.Fprintf(
+							out,
+							"  best score %.3f, loudest %6.1f dBFS, clipped %d samples\n",
+							best,
+							loudest,
+							clipped,
+						)
 						best, loudest, clipped = 0, math.Inf(-1), 0
 					}
 
@@ -129,7 +142,12 @@ func newWakeCmd() *cobra.Command {
 					}
 					if hit {
 						hits++
-						fmt.Fprintf(out, "  DETECTED  score %.3f  (%d)\n", det.SlidingAverage(), hits)
+						fmt.Fprintf(
+							out,
+							"  DETECTED  score %.3f  (%d)\n",
+							det.SlidingAverage(),
+							hits,
+						)
 					}
 				}
 			}
@@ -150,7 +168,8 @@ func newWakeCmd() *cobra.Command {
 
 	c.Flags().StringVar(&dir, "models", layout.ModelDir, "directory of installed models")
 	c.Flags().Float64Var(&secs, "seconds", 30, "how long to listen")
-	c.Flags().Float64Var(&gain, "gain", 1, "multiply the microphone before detection, to test level")
+	c.Flags().
+		Float64Var(&gain, "gain", 1, "multiply the microphone before detection, to test level")
 	c.Flags().BoolVar(&compare, "compare", false, "score several channel mixes on the same audio")
 	c.Flags().StringVar(&wav, "wav", "", "run against a 16 kHz mono WAV instead of the microphones")
 	return c
@@ -171,7 +190,13 @@ func wakeFromWAV(out io.Writer, det *microwakeword.Detector, path string) error 
 	for i := range samples {
 		samples[i] = int16(binary.LittleEndian.Uint16(pcm[i*2:]))
 	}
-	fmt.Fprintf(out, "%s: %d samples, %.2fs at 16 kHz\n", path, len(samples), float64(len(samples))/mic.Rate)
+	fmt.Fprintf(
+		out,
+		"%s: %d samples, %.2fs at 16 kHz\n",
+		path,
+		len(samples),
+		float64(len(samples))/mic.Rate,
+	)
 
 	var (
 		hits  int
@@ -184,7 +209,12 @@ func wakeFromWAV(out io.Writer, det *microwakeword.Detector, path string) error 
 
 		if hit {
 			hits++
-			fmt.Fprintf(out, "  DETECTED at %.2fs  score %.3f\n", float64(off)/mic.Rate, det.SlidingAverage())
+			fmt.Fprintf(
+				out,
+				"  DETECTED at %.2fs  score %.3f\n",
+				float64(off)/mic.Rate,
+				det.SlidingAverage(),
+			)
 		}
 	}
 

@@ -37,7 +37,13 @@ func rebootChoiceOf(yes, no bool) rebootChoice {
 // work" — writing the binary, remounting /system and restarting the service happen on every run and a
 // reboot settles none of them, so counting those would raise the question every time and teach anyone
 // re-running an install to dismiss it.
-func offerReboot(ctx context.Context, out io.Writer, d *device.Device, settles bool, choice rebootChoice) error {
+func offerReboot(
+	ctx context.Context,
+	out io.Writer,
+	d *device.Device,
+	settles bool,
+	choice rebootChoice,
+) error {
 	switch choice {
 	case rebootNo:
 		return nil
@@ -58,7 +64,11 @@ func offerReboot(ctx context.Context, out io.Writer, d *device.Device, settles b
 			return err
 		}
 		if !yes {
-			fmt.Fprintf(out, "%s\n", styleSkip.Render("• not rebooting; the rest lands whenever it next boots"))
+			fmt.Fprintf(
+				out,
+				"%s\n",
+				styleSkip.Render("• not rebooting; the rest lands whenever it next boots"),
+			)
 			return nil
 		}
 	}

@@ -1,6 +1,6 @@
 package asp
 
-import "github.com/ygelfand/echolocal/internal/lib/fft"
+import "github.com/ygelfand/libcountertop/pkg/audio/fft"
 
 // fir convolves with the tuning filter by overlap-save: each block is transformed together with the
 // samples before it, so the block that comes out is the exact convolution of the block that went in.

@@ -58,7 +58,13 @@ func SettleEffect(sel *esphome.Select, name string) string {
 		name = EffectNone
 	}
 	if !slices.Contains(sel.Options, name) {
-		slog.Warn("no such effect, showing nothing instead", "setting", sel.ObjectID, "effect", name)
+		slog.Warn(
+			"no such effect, showing nothing instead",
+			"setting",
+			sel.ObjectID,
+			"effect",
+			name,
+		)
 		name = EffectNone
 	}
 
@@ -72,7 +78,12 @@ func SettleEffect(sel *esphome.Select, name string) string {
 // BindEffect offers the catalogue on a select and saves what is chosen. apply is for a choice
 // something has to be told about as it happens, such as the room reaction, which holds a claim; it
 // is nil for the rest, where whoever shows the animation looks the name up when the moment comes.
-func BindEffect(sel *esphome.Select, choices []string, apply func(string), save func(string) error) {
+func BindEffect(
+	sel *esphome.Select,
+	choices []string,
+	apply func(string),
+	save func(string) error,
+) {
 	sel.Options = append([]string{EffectNone}, choices...)
 
 	sel.OnCommand = func(chosen string) {
@@ -130,7 +141,13 @@ func SettleOverride(sel *esphome.Select, name string) string {
 		name = EffectDefault
 	}
 	if !slices.Contains(sel.Options, name) {
-		slog.Warn("no such effect, leaving it at the default", "setting", sel.ObjectID, "effect", name)
+		slog.Warn(
+			"no such effect, leaving it at the default",
+			"setting",
+			sel.ObjectID,
+			"effect",
+			name,
+		)
 		name = EffectDefault
 	}
 

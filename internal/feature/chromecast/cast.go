@@ -35,13 +35,13 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/hardware/video"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/cast"
-	_ "github.com/ygelfand/echolocal/internal/lib/cast/protocols/all"
-	"github.com/ygelfand/echolocal/internal/lib/cast/protocols/youtube"
-	"github.com/ygelfand/echolocal/internal/lib/fetch"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/libcountertop/pkg/fetch"
+	"github.com/ygelfand/libcountertop/pkg/media/cast"
+	_ "github.com/ygelfand/libcountertop/pkg/media/cast/protocols/all"
+	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -462,7 +462,13 @@ func (r *Receiver) up() error {
 			return
 		}
 		unspoken[namespace] = true
-		slog.Debug("a cast sender used a namespace this does not speak", "namespace", namespace, "type", kind)
+		slog.Debug(
+			"a cast sender used a namespace this does not speak",
+			"namespace",
+			namespace,
+			"type",
+			kind,
+		)
 	}
 	service.Receiver.Volume = r.loud.asked
 	service.Receiver.Credentials = r.keys.Current
@@ -524,8 +530,17 @@ func (r *Receiver) up() error {
 		slog.Debug("a cast sender sent a setup request", "type", kind, "data", string(data))
 	}
 	service.Receiver.Challenged = func(c cast.Challenge, answered bool) {
-		slog.Debug("a cast sender asked for device authentication",
-			"hash", c.Hash, "algorithm", c.Algorithm, "nonce", len(c.Nonce) > 0, "answered", answered)
+		slog.Debug(
+			"a cast sender asked for device authentication",
+			"hash",
+			c.Hash,
+			"algorithm",
+			c.Algorithm,
+			"nonce",
+			len(c.Nonce) > 0,
+			"answered",
+			answered,
+		)
 	}
 
 	ctx, stop := context.WithCancel(context.Background())
@@ -538,10 +553,23 @@ func (r *Receiver) up() error {
 	r.setup = &http.Server{
 		Addr:              fmt.Sprintf(":%d", cast.SetupPort),
 		ReadHeaderTimeout: 5 * time.Second,
-		Handler: cast.SetupHandler(service.Receiver.Eureka, ui.LogoPNG, func(req *http.Request, status int) {
-			slog.Debug("a cast sender asked the setup endpoint", "peer", req.RemoteAddr, "method", req.Method,
-				"url", req.URL.String(), "status", status)
-		}),
+		Handler: cast.SetupHandler(
+			service.Receiver.Eureka,
+			ui.LogoPNG,
+			func(req *http.Request, status int) {
+				slog.Debug(
+					"a cast sender asked the setup endpoint",
+					"peer",
+					req.RemoteAddr,
+					"method",
+					req.Method,
+					"url",
+					req.URL.String(),
+					"status",
+					status,
+				)
+			},
+		),
 	}
 	setup := r.setup
 	safe.Go("cast setup", func() {
@@ -570,7 +598,10 @@ func (r *Receiver) up() error {
 
 // contentShape is a contentId without its path or query, which can carry tokens.
 func contentShape(id string) string {
-	if u, err := url.Parse(id); err == nil && u.Host != "" && (u.Scheme == "http" || u.Scheme == "https") {
+	if u, err := url.Parse(
+		id,
+	); err == nil && u.Host != "" &&
+		(u.Scheme == "http" || u.Scheme == "https") {
 		return u.Scheme + "://" + u.Host
 	}
 	return fmt.Sprintf("opaque, %d characters", len(id))

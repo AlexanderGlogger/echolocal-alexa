@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/aec"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
+	"github.com/ygelfand/libcountertop/pkg/audio/aec"
 )
 
 // ECHO_REPLAY is a capture from `echod ctl record echo`. Each variant runs the pipeline over its

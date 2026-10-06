@@ -34,7 +34,10 @@ func newStatusCmd() *cobra.Command {
 			fmt.Fprintln(out, styleTitle.Render("EchoLocal status"))
 			row := func(k, v string) { fmt.Fprintf(out, "  %s %s\n", styleKey.Render(k), v) }
 
-			row("device", fmt.Sprintf("%s (%s) %s", s.Model, s.Product, styleDetail.Render(s.Serial)))
+			row(
+				"device",
+				fmt.Sprintf("%s (%s) %s", s.Model, s.Product, styleDetail.Render(s.Serial)),
+			)
 			row("android", "SDK "+s.SDK)
 			row("uptime", fmt.Sprintf("%.0fs", s.Uptime))
 
@@ -44,7 +47,10 @@ func newStatusCmd() *cobra.Command {
 				row("name", styleSkip.Render("unset"))
 			}
 			if s.Provisioned {
-				row("key", styleDone.Render("provisioned")+" "+styleDetail.Render("echoctl key show"))
+				row(
+					"key",
+					styleDone.Render("provisioned")+" "+styleDetail.Render("echoctl key show"),
+				)
 			} else {
 				row("key", styleSkip.Render("unprovisioned"))
 			}

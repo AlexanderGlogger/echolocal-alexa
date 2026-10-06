@@ -15,16 +15,26 @@ import (
 
 // served stands in for Home Assistant's custom_wake_words directory, which it serves statically: the
 // config at one path and the model beside it.
-func served(t *testing.T, config string, model []byte) (*httptest.Server, esphome.ExternalWakeWord) {
+func served(
+	t *testing.T,
+	config string,
+	model []byte,
+) (*httptest.Server, esphome.ExternalWakeWord) {
 	t.Helper()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/esphome/wake_words/test.json", func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(config))
-	})
-	mux.HandleFunc("/api/esphome/wake_words/test_model.tflite", func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write(model)
-	})
+	mux.HandleFunc(
+		"/api/esphome/wake_words/test.json",
+		func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte(config))
+		},
+	)
+	mux.HandleFunc(
+		"/api/esphome/wake_words/test_model.tflite",
+		func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write(model)
+		},
+	)
 
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)

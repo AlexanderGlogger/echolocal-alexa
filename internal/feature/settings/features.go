@@ -49,12 +49,18 @@ func featuresPage() *shell.Page {
 			acts := make([]func(int), 0, len(features))
 			for _, f := range features {
 				if f.page != nil {
-					rows = append(rows, widget.Row{Label: f.label(), Hint: f.hint(), Kind: widget.Chevron})
+					rows = append(
+						rows,
+						widget.Row{Label: f.label(), Hint: f.hint(), Kind: widget.Chevron},
+					)
 					acts = append(acts, open(f.page()))
 					continue
 				}
 				on := f.on(cfg)
-				rows = append(rows, widget.Row{Label: f.label(), Hint: f.hint(), Kind: widget.Toggle, On: on})
+				rows = append(
+					rows,
+					widget.Row{Label: f.label(), Hint: f.hint(), Kind: widget.Toggle, On: on},
+				)
 				acts = append(acts, func(int) { f.set(!on) })
 			}
 			return rows, acts

@@ -69,7 +69,10 @@ func newAnalyzeCmd() *cobra.Command {
 				fmt.Fprintf(w, "  d=1 adjacent %.4f\n  d=2 two-apart %.4f\n  d=3 opposite  %.4f\n",
 					t.ByDistance[1], t.ByDistance[2], t.ByDistance[3])
 				if t.Monotonic() {
-					fmt.Fprintln(w, "  -> monotonic with separation: consistent with this ring order")
+					fmt.Fprintln(
+						w,
+						"  -> monotonic with separation: consistent with this ring order",
+					)
 				} else {
 					fmt.Fprintln(w, "  -> NOT monotonic: ring order is wrong or no coherent field")
 				}
@@ -166,7 +169,11 @@ func newDirectionCmd() *cobra.Command {
 				fmt.Fprintln(w, "-> weak fit: source too diffuse or too far; bearing is unreliable")
 			} else if amp < 0.8*expect {
 				el := math.Acos(math.Min(1, amp/expect)) * 180 / math.Pi
-				fmt.Fprintf(w, "-> consistent with a source about %.0f deg above the ring plane\n", el)
+				fmt.Fprintf(
+					w,
+					"-> consistent with a source about %.0f deg above the ring plane\n",
+					el,
+				)
 			} else {
 				fmt.Fprintln(w, "-> strong in-plane fit")
 			}
@@ -180,12 +187,20 @@ func newDirectionCmd() *cobra.Command {
 			}
 			byLevel := float64(loudest) * 60
 			diff := math.Abs(math.Mod(bearing-byLevel+540, 360) - 180)
-			fmt.Fprintf(w, "loudest mic ch%d sits at %.0f deg; level and timing differ by %.0f deg\n",
-				loudest, byLevel, diff)
+			fmt.Fprintf(
+				w,
+				"loudest mic ch%d sits at %.0f deg; level and timing differ by %.0f deg\n",
+				loudest,
+				byLevel,
+				diff,
+			)
 			if diff <= 60 {
 				fmt.Fprintln(w, "-> level and timing agree")
 			} else {
-				fmt.Fprintln(w, "-> level and timing disagree; suspect reflections or a near-field source")
+				fmt.Fprintln(
+					w,
+					"-> level and timing disagree; suspect reflections or a near-field source",
+				)
 			}
 			return nil
 		},

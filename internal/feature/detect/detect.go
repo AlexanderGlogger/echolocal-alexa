@@ -87,7 +87,7 @@ func newDetect() *Detect {
 	// on advertising wake words it was not listening for.
 	e.Load = func() error {
 		turn := voice.Get()
-		turn.SetActiveWakeWords(d.load(turn.ActiveWakeWords()))
+		turn.SetSlots(d.load(turn.Slots()))
 		d.loadStop()
 		return nil
 	}
@@ -122,7 +122,7 @@ func (d *Detect) load(ids []string) []string {
 	// library is asked rather than a list captured at boot: this is where a new word arrives.
 	models := wake.Lib().Ensure(ids)
 
-	var accepted []string
+	accepted := make([]string, wakeword.Slots)
 	var loaded []int
 	for slot := range wakeword.Slots {
 		if slot >= len(ids) || ids[slot] == "" {
@@ -137,11 +137,19 @@ func (d *Detect) load(ids []string) []string {
 			continue
 		}
 		if err := d.engine.Use(slot, m); err != nil {
-			slog.Error("loading the selected wake word failed", "slot", slot+1, "id", m.ID, "err", err)
+			slog.Error(
+				"loading the selected wake word failed",
+				"slot",
+				slot+1,
+				"id",
+				m.ID,
+				"err",
+				err,
+			)
 			d.engine.Clear(slot)
 			continue
 		}
-		accepted = append(accepted, m.ID)
+		accepted[slot] = m.ID
 		loaded = append(loaded, slot)
 	}
 

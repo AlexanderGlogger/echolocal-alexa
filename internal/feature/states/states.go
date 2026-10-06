@@ -23,7 +23,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
@@ -173,7 +173,13 @@ func (s *States) take(entity, attribute, state string) {
 			return
 		}
 	}
-	slog.Debug("a state arrived for something nothing is following", "entity", entity, "attribute", attribute)
+	slog.Debug(
+		"a state arrived for something nothing is following",
+		"entity",
+		entity,
+		"attribute",
+		attribute,
+	)
 }
 
 // Get is what was last reported, and whether anything has been.

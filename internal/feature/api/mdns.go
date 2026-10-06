@@ -63,7 +63,15 @@ func (a *API) advertise(ctx context.Context, port int) {
 			continue
 		}
 
-		slog.Info("advertising over mdns", "name", a.name, "port", port, "addrs", metrics.AddressKey(ips))
+		slog.Info(
+			"advertising over mdns",
+			"name",
+			a.name,
+			"port",
+			port,
+			"addrs",
+			metrics.AddressKey(ips),
+		)
 
 		// The registration stands until the addresses it was made with are no longer the ones the
 		// device has: a lease that changed, or a network that arrived late.

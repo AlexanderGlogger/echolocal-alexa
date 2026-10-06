@@ -22,7 +22,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/api"
 	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

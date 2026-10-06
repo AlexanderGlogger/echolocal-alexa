@@ -7,8 +7,8 @@ import (
 
 	"github.com/zserge/microwakeword"
 
-	"github.com/ygelfand/echolocal/internal/lib/oww"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
+	"github.com/ygelfand/libcountertop/pkg/inference/oww"
 )
 
 // backend runs the wake words of one Kind. It is the whole engine rather than one detector because
@@ -42,7 +42,10 @@ func newBackend(k wake.Kind) (backend, error) {
 		}
 		return &owwBackend{front: front, scores: map[string]float64{}}, nil
 	}
-	return &microBackend{dets: map[string]*microwakeword.Detector{}, scores: map[string]float64{}}, nil
+	return &microBackend{
+		dets:   map[string]*microwakeword.Detector{},
+		scores: map[string]float64{},
+	}, nil
 }
 
 // microBackend is microWakeWord: each wake word is a self-contained streaming model with its own

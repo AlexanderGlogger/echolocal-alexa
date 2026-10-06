@@ -3,6 +3,7 @@ package speaker
 import (
 	"context"
 	"errors"
+	"github.com/ygelfand/echolocal/internal/component"
 	"log/slog"
 	"time"
 
@@ -23,8 +24,16 @@ const (
 // mediaserver retries the open and wins it within a few hundred milliseconds of echod releasing,
 // so a restart can leave us with no speaker. Stopping the service releases it; it is started again
 // either way, because leaving it down trips the framework watchdog.
-func (p *Player) Start(context.Context) error {
-	err := p.open()
+func (p *Player) Start(context.Context) (err error) {
+	defer func() {
+		state := component.Progress{Done: err == nil}
+		if err != nil {
+			state.Failed = true
+			state.Doing = err.Error()
+		}
+		p.startup.Store(&state)
+	}()
+	err = p.open()
 	if err == nil || !errors.Is(err, alsa.ErrBusy) {
 		return err
 	}

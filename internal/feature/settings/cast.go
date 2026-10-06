@@ -9,9 +9,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/chromecast"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/cast/protocols/youtube"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
+	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
 )
 
 func init() {
@@ -65,9 +65,19 @@ func primePage() *shell.Page {
 				state = say.T("cast.prime.registered")
 			}
 			return []widget.Row{
-					{Label: say.T("cast.prime.persist"), Hint: say.T("cast.prime.persist.hint"), Kind: widget.Toggle, On: persist},
+					{
+						Label: say.T("cast.prime.persist"),
+						Hint:  say.T("cast.prime.persist.hint"),
+						Kind:  widget.Toggle,
+						On:    persist,
+					},
 					{Label: say.T("cast.prime.reset"), Kind: widget.Plain, Value: state},
-					{Label: say.T("cast.prime.skipintro"), Hint: say.T("cast.prime.skipintro.hint"), Kind: widget.Toggle, On: skip},
+					{
+						Label: say.T("cast.prime.skipintro"),
+						Hint:  say.T("cast.prime.skipintro.hint"),
+						Kind:  widget.Toggle,
+						On:    skip,
+					},
 				}, []func(int){
 					func(int) { chromecast.Get().SetPrimePersist(!persist) },
 					func(int) { chromecast.Get().ResetPrime() },
@@ -83,10 +93,23 @@ func youtubePage() *shell.Page {
 		Build: func() ([]widget.Row, []func(int)) {
 			c := config.Get().Cast.YouTube
 			return []widget.Row{
-					{Label: say.T("youtube.demand"), Hint: say.T("youtube.demand.hint"), Kind: widget.Toggle, On: c.OnDemand},
+					{
+						Label: say.T("youtube.demand"),
+						Hint:  say.T("youtube.demand.hint"),
+						Kind:  widget.Toggle,
+						On:    c.OnDemand,
+					},
 					{Label: say.T("youtube.skip"), Kind: widget.Chevron, Value: skipSays(c.Skip)},
-					{Label: say.T("youtube.delay"), Hint: say.T("youtube.delay.hint"), Kind: widget.Slider,
-						Level: delayLevel(c.LiveDelay), Snap: delaySnap, Value: delaySays(c.LiveDelay)},
+					{
+						Label: say.T("youtube.delay"),
+						Hint:  say.T("youtube.delay.hint"),
+						Kind:  widget.Slider,
+						Level: delayLevel(
+							c.LiveDelay,
+						),
+						Snap:  delaySnap,
+						Value: delaySays(c.LiveDelay),
+					},
 				}, []func(int){
 					func(int) { chromecast.Get().SetLoungeOnDemand(!c.OnDemand) },
 					open(skipPage()),
@@ -105,8 +128,14 @@ func skipPage() *shell.Page {
 			acts := make([]func(int), 0, len(youtube.Categories))
 			for _, cat := range youtube.Categories {
 				on := slices.Contains(skip, cat)
-				rows = append(rows, widget.Row{Label: say.T("skip." + cat), Kind: widget.Toggle, On: on})
-				acts = append(acts, func(int) { chromecast.Get().SetSkip(strings.Join(toggled(skip, cat, !on), ",")) })
+				rows = append(
+					rows,
+					widget.Row{Label: say.T("skip." + cat), Kind: widget.Toggle, On: on},
+				)
+				acts = append(
+					acts,
+					func(int) { chromecast.Get().SetSkip(strings.Join(toggled(skip, cat, !on), ",")) },
+				)
 			}
 			return rows, acts
 		},
@@ -140,4 +169,8 @@ func delayLevel(seconds int) int {
 
 func delaySnap(level int) int { return delayLevel(delayOf(level)) }
 
-func delaySays(seconds int) string { return say.F("youtube.delay.value", map[string]any{"N": seconds}) }
+func delaySays(
+	seconds int,
+) string {
+	return say.F("youtube.delay.value", map[string]any{"N": seconds})
+}

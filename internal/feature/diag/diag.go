@@ -4,9 +4,8 @@ package diag
 
 import (
 	"context"
-	"crypto/tls"
+	"github.com/ygelfand/libcountertop/pkg/fetch"
 	"log/slog"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -27,6 +26,7 @@ import (
 )
 
 func init() {
+	fetch.UseAsDefault()
 	component.Register(component.Network, Get, component.Order(90))
 }
 
@@ -280,7 +280,7 @@ func (d *Diag) SetInsecureTLS(on bool) { d.tls.OnCommand(on) }
 // insecureTLS applies to everything the device downloads: models, firmware and the audio Home
 // Assistant serves all go through the default transport.
 func insecureTLS(on bool) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: on}
+	fetch.Verify(!on)
 	if on {
 		slog.Warn("certificates are not being checked")
 	}
@@ -449,7 +449,10 @@ func (d *Diag) hardware() {
 	count := func(id, name string) *esphome.Sensor {
 		return &esphome.Sensor{
 			Base: esphome.Base{
-				ObjectID: id, Name: name, Icon: "mdi:cpu-64-bit", Category: esphome.CategoryDiagnostic,
+				ObjectID: id,
+				Name:     name,
+				Icon:     "mdi:cpu-64-bit",
+				Category: esphome.CategoryDiagnostic,
 			},
 			StateClass: esphome.StateClassMeasurement,
 		}

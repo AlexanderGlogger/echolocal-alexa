@@ -86,10 +86,22 @@ func newInstallCmd() *cobra.Command {
 				return err
 			}
 			if (!state.Ready || reflash) && p.Boot.SHA256 != "" {
-				if cfg.BootImage, cfg.BootImageFrom, err = resolveBootImage(cmd.Context(), out, p, bootImage); err != nil {
+				if cfg.BootImage, cfg.BootImageFrom, err = resolveBootImage(
+					cmd.Context(),
+					out,
+					p,
+					bootImage,
+				); err != nil {
 					return err
 				}
-				if cfg.Approved, err = approveFlash(cmd.Context(), out, d, state, cfg.BootImageFrom, assumeYes); err != nil {
+				if cfg.Approved, err = approveFlash(
+					cmd.Context(),
+					out,
+					d,
+					state,
+					cfg.BootImageFrom,
+					assumeYes,
+				); err != nil {
 					return err
 				}
 			}
@@ -109,7 +121,14 @@ func newInstallCmd() *cobra.Command {
 				return nil
 			}
 
-			if cfg.Echod, _, err = resolveEchod(cmd.Context(), out, d, p, manifest, echod); err != nil {
+			if cfg.Echod, _, err = resolveEchod(
+				cmd.Context(),
+				out,
+				d,
+				p,
+				manifest,
+				echod,
+			); err != nil {
 				return err
 			}
 			chosen, err := resolveName(cmd.Context(), out, d, name)
@@ -140,12 +159,22 @@ func newInstallCmd() *cobra.Command {
 				if !errors.Is(err, ErrCancelled) {
 					return err
 				}
-				fmt.Fprintf(out, "%s\n", styleSkip.Render("• wireless left unconfigured; run `echoctl wifi` when ready"))
+				fmt.Fprintf(
+					out,
+					"%s\n",
+					styleSkip.Render("• wireless left unconfigured; run `echoctl wifi` when ready"),
+				)
 			}
 
 			// Before the pairing key rather than after, so the one thing to carry off the screen is the
 			// last thing printed.
-			if err := offerReboot(cmd.Context(), out, d, settles, rebootChoiceOf(doReboot, noReboot)); err != nil {
+			if err := offerReboot(
+				cmd.Context(),
+				out,
+				d,
+				settles,
+				rebootChoiceOf(doReboot, noReboot),
+			); err != nil {
 				return err
 			}
 			return printPairing(out, d, chosen)
@@ -156,13 +185,15 @@ func newInstallCmd() *cobra.Command {
 	c.Flags().StringVar(&echod, "echod", "", "echod binary to install, instead of fetching one")
 	c.Flags().StringVar(&manifest, "manifest", "",
 		"manifest to resolve echod from, as a url or a local file, instead of the release channel")
-	c.Flags().StringVar(&bootImage, "boot-image", "", "boot image to write, instead of the one shipped")
+	c.Flags().
+		StringVar(&bootImage, "boot-image", "", "boot image to write, instead of the one shipped")
 	c.Flags().StringVar(&ssid, "ssid", "", "network to join, instead of picking from a scan")
 	c.Flags().StringVar(&password, "password", "", "passphrase, for an --ssid that needs one")
 	c.Flags().BoolVar(&wps, "wps", false, "join by pressing the router's WPS button instead")
 	c.Flags().BoolVar(&flashOnly, "flash-only", false,
 		"write the boot image and stop, without installing echod")
-	c.Flags().BoolVar(&reflash, "reflash", false, "write the boot image even when the device already has root")
+	c.Flags().
+		BoolVar(&reflash, "reflash", false, "write the boot image even when the device already has root")
 	c.Flags().BoolVarP(&assumeYes, "yes", "y", false,
 		"do not ask before overwriting the boot partition")
 	c.Flags().BoolVar(&genKey, "generate-key", false,
@@ -198,17 +229,34 @@ func printPairing(out io.Writer, d *device.Device, name string) error {
 }
 
 // render drives a step run, live when attached to a terminal and plain lines otherwise.
-func render(ctx context.Context, out io.Writer, title, success string, run func(installer.Reporter) error) error {
+func render(
+	ctx context.Context,
+	out io.Writer,
+	title, success string,
+	run func(installer.Reporter) error,
+) error {
 	if !isTerminal() {
 		return run(func(e installer.Event) {
 			if e.Status == installer.Running {
 				return
 			}
-			fmt.Fprintf(out, "[%d/%d] %s %s %s\n", e.Step, e.Total, statusWord(e.Status), e.Name, detailOf(e))
+			fmt.Fprintf(
+				out,
+				"[%d/%d] %s %s %s\n",
+				e.Step,
+				e.Total,
+				statusWord(e.Status),
+				e.Name,
+				detailOf(e),
+			)
 		})
 	}
 
-	m := &installModel{title: title, success: success, spin: spinner.New(spinner.WithSpinner(spinner.Dot))}
+	m := &installModel{
+		title:   title,
+		success: success,
+		spin:    spinner.New(spinner.WithSpinner(spinner.Dot)),
+	}
 	m.spin.Style = styleActive
 
 	p := tea.NewProgram(m, tea.WithContext(ctx), tea.WithOutput(out))

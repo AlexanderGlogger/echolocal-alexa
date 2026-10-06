@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/ygelfand/libcountertop/pkg/audio/ducking"
 	"io"
 	"log/slog"
 	"math"
@@ -16,8 +17,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/noise"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/audio/noise"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 const (
@@ -126,7 +127,7 @@ func (m *Stream) Duck(on bool) {
 
 	level := float32(1)
 	if on && !pause {
-		level = float32(math.Pow(10, float64(config.Get().Media.DuckDB)/20))
+		level = ducking.Gain(float64(config.Get().Media.DuckDB))
 	}
 	m.write.Lock()
 	m.target = level

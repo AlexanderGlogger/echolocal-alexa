@@ -49,7 +49,15 @@ func (plain) Draw(s ui.Surface, in ui.Rect, r Reading, palette theme.Theme) {
 
 	ui.DrawText(s, f.Time, l.Time.X, l.Time.Y, palette.Text, palette.Background, r.Time)
 	if r.Suffix != "" {
-		ui.DrawText(s, f.Suffix, l.Suffix.X, l.Suffix.Y, palette.Muted, palette.Background, r.Suffix)
+		ui.DrawText(
+			s,
+			f.Suffix,
+			l.Suffix.X,
+			l.Suffix.Y,
+			palette.Muted,
+			palette.Background,
+			r.Suffix,
+		)
 	}
 	if r.Dated() {
 		ui.DrawText(s, f.Date, l.Date.X, l.Date.Y, palette.Muted, palette.Background, r.Date)

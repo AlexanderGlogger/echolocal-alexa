@@ -14,7 +14,12 @@ const absInfoBytes = 24
 func (d *Device) Abs(code uint16) (int32, error) {
 	var b [absInfoBytes]byte
 	req := uintptr(2<<30 | absInfoBytes<<16 | 'E'<<8 | (0x40 + uint32(code)))
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, d.f.Fd(), req, uintptr(unsafe.Pointer(&b[0]))); errno != 0 {
+	if _, _, errno := unix.Syscall(
+		unix.SYS_IOCTL,
+		d.f.Fd(),
+		req,
+		uintptr(unsafe.Pointer(&b[0])),
+	); errno != 0 {
 		return 0, errno
 	}
 	return int32(binary.LittleEndian.Uint32(b[:4])), nil

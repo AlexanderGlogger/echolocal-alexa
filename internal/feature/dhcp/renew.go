@@ -98,7 +98,12 @@ func extend(ctx context.Context, iface string, lease *Lease) (*Lease, error) {
 }
 
 // ask sends one renewal and reads the answer.
-func ask(ctx context.Context, link *net.Interface, lease *Lease, broadcasting bool) (*Lease, error) {
+func ask(
+	ctx context.Context,
+	link *net.Interface,
+	lease *Lease,
+	broadcasting bool,
+) (*Lease, error) {
 	msg, err := renewMessage(link.HardwareAddr, lease.Address.IP, broadcasting)
 	if err != nil {
 		return nil, err

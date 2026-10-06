@@ -102,7 +102,13 @@ func listAny() []device.Info {
 // other, when set, adds a row for none of them being the one, which is reported as a device that
 // could not be reached: that is the same answer as nothing being connected, and the caller that
 // retries treats it the same way.
-func resolveSerial(ctx context.Context, out io.Writer, serial string, list func() ([]device.Info, error), other string) (string, error) {
+func resolveSerial(
+	ctx context.Context,
+	out io.Writer,
+	serial string,
+	list func() ([]device.Info, error),
+	other string,
+) (string, error) {
 	if serial != "" {
 		return serial, nil
 	}
@@ -120,7 +126,12 @@ func resolveSerial(ctx context.Context, out io.Writer, serial string, list func(
 	return pickDevice(ctx, out, devices, other)
 }
 
-func pickDevice(ctx context.Context, out io.Writer, devices []device.Info, other string) (string, error) {
+func pickDevice(
+	ctx context.Context,
+	out io.Writer,
+	devices []device.Info,
+	other string,
+) (string, error) {
 	chosen, err := choose(ctx, out, "Select a device", devices,
 		func(d device.Info) string { return fmt.Sprintf("%s  %s", d, d.Serial) }, other)
 	if err != nil {

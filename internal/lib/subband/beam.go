@@ -3,7 +3,7 @@ package subband
 import (
 	"math"
 
-	"github.com/ygelfand/echolocal/internal/lib/fft"
+	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
 // Beamformer is one stream through the vendor's bank and weights. It is not safe for concurrent use.

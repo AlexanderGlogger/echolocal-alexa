@@ -68,7 +68,11 @@ func TestAHighHandleDoesNotSpillIntoTheFlags(t *testing.T) {
 		t.Errorf("handle came back %#x, want 0xfff", got.Handle)
 	}
 	if got.Boundary != boundaryStart || got.Broadcast != 0 {
-		t.Errorf("flags came back boundary %#x broadcast %#x, want zero", got.Boundary, got.Broadcast)
+		t.Errorf(
+			"flags came back boundary %#x broadcast %#x, want zero",
+			got.Boundary,
+			got.Broadcast,
+		)
 	}
 }
 
@@ -207,7 +211,9 @@ func TestAFirstFragmentShorterThanTheL2CAPHeader(t *testing.T) {
 func TestFragmentsThatDoNotMakeSense(t *testing.T) {
 	t.Run("continuing nothing", func(t *testing.T) {
 		r := newReassembler()
-		if _, err := r.add(aclPacket{Handle: 1, Boundary: boundaryContinue, Data: []byte{1}}); err == nil {
+		if _, err := r.add(
+			aclPacket{Handle: 1, Boundary: boundaryContinue, Data: []byte{1}},
+		); err == nil {
 			t.Error("a continuation with nothing before it was accepted")
 		}
 	})
@@ -216,10 +222,14 @@ func TestFragmentsThatDoNotMakeSense(t *testing.T) {
 		r := newReassembler()
 		half := pdu(0x0040, 40)[:10]
 
-		if _, err := r.add(aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: half}); err != nil {
+		if _, err := r.add(
+			aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: half},
+		); err != nil {
 			t.Fatalf("the first fragment: %v", err)
 		}
-		if _, err := r.add(aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: half}); err == nil {
+		if _, err := r.add(
+			aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: half},
+		); err == nil {
 			t.Error("a second start while one was outstanding was accepted")
 		}
 		if r.pending() != 0 {
@@ -231,7 +241,9 @@ func TestFragmentsThatDoNotMakeSense(t *testing.T) {
 		r := newReassembler()
 		long := append(pdu(0x0040, 4), 0xff, 0xff)
 
-		if _, err := r.add(aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: long}); err == nil {
+		if _, err := r.add(
+			aclPacket{Handle: 1, Boundary: boundaryFlushable, Data: long},
+		); err == nil {
 			t.Error("a pdu longer than its own length was accepted")
 		}
 	})

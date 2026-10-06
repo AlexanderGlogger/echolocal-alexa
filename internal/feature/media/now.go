@@ -159,7 +159,13 @@ func (p *Player) Began(s Source) {
 	p.External(s)
 	p.Begun.Emit(s)
 	if replaced != nil {
-		slog.Info("the player was replaced", "was", fmt.Sprintf("%T", replaced), "by", fmt.Sprintf("%T", s))
+		slog.Info(
+			"the player was replaced",
+			"was",
+			fmt.Sprintf("%T", replaced),
+			"by",
+			fmt.Sprintf("%T", s),
+		)
 		replaced.Stop()
 	}
 }

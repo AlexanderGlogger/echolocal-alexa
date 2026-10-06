@@ -16,8 +16,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/mute"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/analysis"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
+	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 )
 
 const (
@@ -157,7 +157,11 @@ func Get() *Visuals {
 	return shared
 }
 
-func newVisuals(listen func() (<-chan []int16, func()), muted func() bool, tap func(speaker.Tap)) *Visuals {
+func newVisuals(
+	listen func() (<-chan []int16, func()),
+	muted func() bool,
+	tap func(speaker.Tap),
+) *Visuals {
 	v := &Visuals{
 		mic:    newStereo(mic.Rate, liftGain(config.Get().Microphone.VisualizerLift)),
 		spk:    newStereo(speaker.Rate, 1),

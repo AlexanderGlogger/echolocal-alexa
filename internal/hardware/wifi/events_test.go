@@ -61,7 +61,9 @@ func TestParseEvent(t *testing.T) {
 }
 
 func TestEventIs(t *testing.T) {
-	e, ok := parseEvent("<3>CTRL-EVENT-STATE-CHANGE id=0 state=9 BSSID=f0:9f:c2:f5:50:5f SSID=attic\n")
+	e, ok := parseEvent(
+		"<3>CTRL-EVENT-STATE-CHANGE id=0 state=9 BSSID=f0:9f:c2:f5:50:5f SSID=attic\n",
+	)
 	if !ok {
 		t.Fatal("parseEvent rejected a state change")
 	}

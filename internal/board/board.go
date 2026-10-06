@@ -38,6 +38,9 @@ const (
 
 	// ASP is the vendor's speaker tuning in /vendor/etc/audio-algorithms.
 	ASP
+
+	// MicMutesCamera is a hardware mute that also cuts the camera.
+	MicMutesCamera
 )
 
 // Key is a physical control. The same button is a different code on different boards.

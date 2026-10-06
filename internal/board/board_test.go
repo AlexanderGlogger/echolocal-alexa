@@ -33,7 +33,14 @@ func TestBiscuitColor(t *testing.T) {
 			return tt.serial
 		}
 		if got := Biscuit.Color(idme); got != tt.want {
-			t.Errorf("%s: Color(%q, %q) = %q, want %q", tt.name, tt.productID2, tt.serial, got, tt.want)
+			t.Errorf(
+				"%s: Color(%q, %q) = %q, want %q",
+				tt.name,
+				tt.productID2,
+				tt.serial,
+				got,
+				tt.want,
+			)
 		}
 	}
 }

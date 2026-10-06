@@ -116,8 +116,13 @@ func Start() (onTrial, rebooting bool) {
 	}
 
 	if was, _ := prop.Get(layout.TrialProp); was != "" {
-		slog.Error("this binary was already tried this boot and never settled, rebooting to go back",
-			"trial", was, "prev", prev)
+		slog.Error(
+			"this binary was already tried this boot and never settled, rebooting to go back",
+			"trial",
+			was,
+			"prev",
+			prev,
+		)
 		reboot()
 		return true, true
 	}

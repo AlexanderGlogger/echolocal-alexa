@@ -34,7 +34,10 @@ func parseLabels(raw json.RawMessage) ([]Label, error) {
 		return nil, fmt.Errorf("homeassistant: the label list: %w", err)
 	}
 	slices.SortFunc(out, func(a, b Label) int {
-		return cmp.Or(cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)), cmp.Compare(a.ID, b.ID))
+		return cmp.Or(
+			cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)),
+			cmp.Compare(a.ID, b.ID),
+		)
 	})
 	return out, nil
 }

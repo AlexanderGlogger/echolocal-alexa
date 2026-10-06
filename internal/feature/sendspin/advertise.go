@@ -2,6 +2,7 @@ package sendspin
 
 import (
 	"context"
+	core "github.com/ygelfand/libcountertop/pkg/audio/sendspin"
 	"log/slog"
 	"time"
 
@@ -13,9 +14,9 @@ import (
 // What a server browses for. The path is required by the spec — it is how a server knows where to
 // point its WebSocket once mDNS has told it the address.
 const (
-	service = "_sendspin._tcp"
-	domain  = "local."
-	path    = "/sendspin"
+	service = core.Service
+	domain  = core.Domain
+	path    = core.Path
 )
 
 // retry is how long to wait between attempts. There is no limit: wifi can come back long after boot,
@@ -61,7 +62,15 @@ func advertise(ctx context.Context, name string, port int) {
 			continue
 		}
 
-		slog.Info("advertising sendspin", "name", name, "port", port, "addrs", metrics.AddressKey(ips))
+		slog.Info(
+			"advertising sendspin",
+			"name",
+			name,
+			"port",
+			port,
+			"addrs",
+			metrics.AddressKey(ips),
+		)
 
 		// The registration stands until the addresses it was made with are no longer the ones the
 		// device has: a lease that changed, or a network that arrived late.

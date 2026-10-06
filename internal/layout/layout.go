@@ -166,7 +166,11 @@ func FactoryMAC() (string, error) {
 	}
 	mac := MAC(string(raw))
 	if mac == "" {
-		return "", fmt.Errorf("%s holds %q, which is not an address", MACPath, strings.TrimSpace(string(raw)))
+		return "", fmt.Errorf(
+			"%s holds %q, which is not an address",
+			MACPath,
+			strings.TrimSpace(string(raw)),
+		)
 	}
 	return mac, nil
 }

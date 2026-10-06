@@ -21,9 +21,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/noise"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/audio/noise"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -162,7 +162,13 @@ func build() *Player {
 	p.layers = noiseLayers()
 
 	// The player itself stays on the device: it is what people reach for. These are how it behaves.
-	bases := []*esphome.Base{&p.resampling.Base, &p.onTurn.Base, &p.duck.Base, &p.jack.Base, &p.asp.Base}
+	bases := []*esphome.Base{
+		&p.resampling.Base,
+		&p.onTurn.Base,
+		&p.duck.Base,
+		&p.jack.Base,
+		&p.asp.Base,
+	}
 	for _, sel := range p.layers {
 		bases = append(bases, &sel.Base)
 	}
@@ -204,10 +210,11 @@ func build() *Player {
 	}
 
 	p.duck.OnCommand = func(v float32) {
-		p.duck.Set(v)
 		if err := config.Set().Media().DuckDB(int(v)); err != nil {
 			slog.Error("saving the ducking level failed", "err", err)
+			return
 		}
+		p.duck.Set(float32(config.Get().Media.DuckDB))
 	}
 	p.stream = NewStream(speaker.Sound(), speaker.Get(), p.refresh)
 
@@ -356,15 +363,16 @@ func (p *Player) command(c esphome.MediaCommand) {
 // doorbell or a spoken alert, not a track.
 func (p *Player) announce(url string) {
 	p.Sounding(true)
-	claim := speaker.Sound().Claim("announce", func(ctx context.Context, spk *speaker.Player) error {
-		samples, err := Fetch(ctx, url)
-		if err != nil {
-			return err
-		}
-		spk.PlayVoice(samples)
-		spk.PlayVoice(make([]int16, speaker.VoiceRate*Tail/1000))
-		return nil
-	})
+	claim := speaker.Sound().
+		Claim("announce", func(ctx context.Context, spk *speaker.Player) error {
+			samples, err := Fetch(ctx, url)
+			if err != nil {
+				return err
+			}
+			spk.PlayVoice(samples)
+			spk.PlayVoice(make([]int16, speaker.VoiceRate*Tail/1000))
+			return nil
+		})
 
 	// The claim ends once the audio has been heard, not once it has been queued, so this is where
 	// the player stops saying it is playing.

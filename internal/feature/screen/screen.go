@@ -12,10 +12,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/setting"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

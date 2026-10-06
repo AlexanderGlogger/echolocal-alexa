@@ -123,7 +123,11 @@ func (r *Ring) SetFrame(vals []byte) error {
 	if bytes.Equal(vals, r.last) {
 		return nil
 	}
-	if err := os.WriteFile(r.attr("frame"), []byte(hex.EncodeToString(vals)+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(
+		r.attr("frame"),
+		[]byte(hex.EncodeToString(vals)+"\n"),
+		0o644,
+	); err != nil {
 		return err
 	}
 

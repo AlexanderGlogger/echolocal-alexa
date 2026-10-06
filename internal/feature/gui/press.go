@@ -115,7 +115,11 @@ func disc(cx, cy, radius float32) []float32 {
 	return points
 }
 
-func pressable(layout func(gogui.ContainerCfg) gogui.View, cfg gogui.ContainerCfg, do func(gogui.EventCtx)) gogui.View {
+func pressable(
+	layout func(gogui.ContainerCfg) gogui.View,
+	cfg gogui.ContainerCfg,
+	do func(gogui.EventCtx),
+) gogui.View {
 	id := cfg.ID
 	if do == nil || cfg.Disabled {
 		return layout(cfg)
@@ -131,7 +135,14 @@ func pressable(layout func(gogui.ContainerCfg) gogui.View, cfg gogui.ContainerCf
 		waveGen++
 		gen := waveGen
 		s := e.Layout.Shape
-		wave = ripple{id: id, x: e.Event.MouseX - s.X, y: e.Event.MouseY - s.Y, w: s.Width, h: s.Height, gen: gen}
+		wave = ripple{
+			id:  id,
+			x:   e.Event.MouseX - s.X,
+			y:   e.Event.MouseY - s.Y,
+			w:   s.Width,
+			h:   s.Height,
+			gen: gen,
+		}
 		pending = do
 		w := e.Window
 		time.AfterFunc(tapDelay, func() { w.QueueCommand(func(w *gogui.Window) { light(w, gen) }) })
@@ -194,7 +205,13 @@ func tapped(tap func(int), level int) func(gogui.EventCtx) {
 	return func(gogui.EventCtx) { tap(level) }
 }
 
-func button(id string, glyph string, st gogui.TextStyle, fill gogui.Color, do func(gogui.EventCtx)) gogui.View {
+func button(
+	id string,
+	glyph string,
+	st gogui.TextStyle,
+	fill gogui.Color,
+	do func(gogui.EventCtx),
+) gogui.View {
 	side := st.Size * 2
 	return pressable(gogui.Row, gogui.ContainerCfg{
 		ID:      id,

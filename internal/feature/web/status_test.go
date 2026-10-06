@@ -56,7 +56,10 @@ func TestComponentsReportWhatTheySayTheyAre(t *testing.T) {
 	reg := component.New()
 	reg.Add(component.Hardware, registered(part{"panel", component.Progress{Done: true}}))
 	reg.Add(component.Hardware, registered(part{"wifi", component.Progress{Doing: "associating"}}))
-	reg.Add(component.Network, registered(part{"api", component.Progress{Failed: true, Doing: "no key"}}))
+	reg.Add(
+		component.Network,
+		registered(part{"api", component.Progress{Failed: true, Doing: "no key"}}),
+	)
 
 	got := parts(reg)
 	if len(got) != 3 {

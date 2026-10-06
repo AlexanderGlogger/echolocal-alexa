@@ -35,7 +35,13 @@ func NewPicker(s Selection) *Picker {
 	p := &Picker{Sel: s, tab: TabManual, open: map[string]bool{}, from: shared}
 	p.save = func(pick config.HomePick) {
 		if err := config.Set().Home().Pick(s.Key, pick); err != nil {
-			slog.Error("the Home Assistant selection could not be saved", "selection", s.Key, "err", err)
+			slog.Error(
+				"the Home Assistant selection could not be saved",
+				"selection",
+				s.Key,
+				"err",
+				err,
+			)
 		}
 		shell.Get().Redraw()
 	}
@@ -97,10 +103,18 @@ func matches(query string, names ...string) bool {
 	if query == "" {
 		return true
 	}
-	return slices.ContainsFunc(names, func(n string) bool { return strings.Contains(strings.ToLower(n), query) })
+	return slices.ContainsFunc(
+		names,
+		func(n string) bool { return strings.Contains(strings.ToLower(n), query) },
+	)
 }
 
-func labelRows(labels []homeassistant.Label, entities []homeassistant.Entity, pick config.HomePick, query string) []LabelRow {
+func labelRows(
+	labels []homeassistant.Label,
+	entities []homeassistant.Entity,
+	pick config.HomePick,
+	query string,
+) []LabelRow {
 	var rows []LabelRow
 	for _, l := range labels {
 		if !matches(query, l.Name) {
@@ -112,12 +126,20 @@ func labelRows(labels []homeassistant.Label, entities []homeassistant.Entity, pi
 				n++
 			}
 		}
-		rows = append(rows, LabelRow{ID: l.ID, Name: l.Name, Count: n, On: slices.Contains(pick.Labels, l.ID)})
+		rows = append(
+			rows,
+			LabelRow{ID: l.ID, Name: l.Name, Count: n, On: slices.Contains(pick.Labels, l.ID)},
+		)
 	}
 	return rows
 }
 
-func areaRows(entities []homeassistant.Entity, pick config.HomePick, query string, open map[string]bool) []AreaRow {
+func areaRows(
+	entities []homeassistant.Entity,
+	pick config.HomePick,
+	query string,
+	open map[string]bool,
+) []AreaRow {
 	var rows []AreaRow
 	at := map[string]int{}
 	for _, e := range entities {
@@ -136,7 +158,11 @@ func areaRows(entities []homeassistant.Entity, pick config.HomePick, query strin
 				On:   e.AreaID != "" && slices.Contains(pick.Areas, e.AreaID),
 			})
 		}
-		row := EntityRow{Entity: e, On: slices.Contains(pick.Entities, e.ID), Included: Includes(pick, e)}
+		row := EntityRow{
+			Entity:   e,
+			On:       slices.Contains(pick.Entities, e.ID),
+			Included: Includes(pick, e),
+		}
 		if row.Included {
 			rows[i].Included++
 		}

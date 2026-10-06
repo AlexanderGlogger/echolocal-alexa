@@ -35,7 +35,10 @@ func follower(p Palette, r Room) Frame {
 				at, known = want, true
 			default:
 				// Round the ring the short way, or turning past segment 11 would sweep the long way home.
-				d := math.Mod(math.Mod(want-at, Segments)+Segments+Segments/2, Segments) - Segments/2
+				d := math.Mod(
+					math.Mod(want-at, Segments)+Segments+Segments/2,
+					Segments,
+				) - Segments/2
 				at += d * ease
 			}
 		}

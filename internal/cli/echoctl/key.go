@@ -18,7 +18,8 @@ func newKeyCmd() *cobra.Command {
 		Long: "Home Assistant needs this key to talk to the device. It is generated per device at\n" +
 			"install time and stored on the device, so it can be read back rather than saved here.",
 	}
-	c.PersistentFlags().StringVar(&serial, "serial", "", "device serial, when more than one is connected")
+	c.PersistentFlags().
+		StringVar(&serial, "serial", "", "device serial, when more than one is connected")
 
 	show := &cobra.Command{
 		Use:   "show",

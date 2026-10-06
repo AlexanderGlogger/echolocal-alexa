@@ -242,7 +242,21 @@ func (p *Page) tick() {
 	}
 	p.paused = now.Paused
 	spinning := p.loading && time.Since(p.began) > spinAfter
-	key := fmt.Sprintf("%v|%v|%d|%v|%v|%s|%s|%s|%d|%d|%d|%d", p.shown, p.picture, now.Elapsed/time.Second, now.Paused, now.Playing, now.Title, now.Artist, now.Album, now.ArtID, now.MarkID, now.Can, volume.Get().Level(config.StreamMedia))
+	key := fmt.Sprintf(
+		"%v|%v|%d|%v|%v|%s|%s|%s|%d|%d|%d|%d",
+		p.shown,
+		p.picture,
+		now.Elapsed/time.Second,
+		now.Paused,
+		now.Playing,
+		now.Title,
+		now.Artist,
+		now.Album,
+		now.ArtID,
+		now.MarkID,
+		now.Can,
+		volume.Get().Level(config.StreamMedia),
+	)
 	changed := key != p.drawn
 	p.drawn = key
 	p.mu.Unlock()

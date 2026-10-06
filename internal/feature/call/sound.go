@@ -21,7 +21,12 @@ const (
 )
 
 var (
-	ringTone     = []speaker.Note{{Freq: 1047, Ms: 110}, {Freq: 1319, Ms: 110}, {Freq: 1047, Ms: 110}, {Freq: 1319, Ms: 110}}
+	ringTone = []speaker.Note{
+		{Freq: 1047, Ms: 110},
+		{Freq: 1319, Ms: 110},
+		{Freq: 1047, Ms: 110},
+		{Freq: 1319, Ms: 110},
+	}
 	ringbackTone = []speaker.Note{{Freq: 440, Ms: 400}, {Ms: 200}, {Freq: 440, Ms: 400}}
 )
 

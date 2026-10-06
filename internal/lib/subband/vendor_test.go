@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/fft"
+	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
 // The vendor's coefficients are not ours to ship, so the tests that use them run against a copy
@@ -51,7 +51,10 @@ func TestVendorWindowReconstructs(t *testing.T) {
 	t.Logf("gain %.6f..%.6f, spread %.2f%%", least, most, 100*(most-least)/most)
 
 	if spread := (most - least) / most; spread > 0.02 {
-		t.Errorf("reconstruction gain varies by %.1f%% across the hop, so the fold is wrong", 100*spread)
+		t.Errorf(
+			"reconstruction gain varies by %.1f%% across the hop, so the fold is wrong",
+			100*spread,
+		)
 	}
 
 	f := fft.New(g.FFTLen)
@@ -81,6 +84,9 @@ func TestVendorWindowReconstructs(t *testing.T) {
 	t.Logf("worst reconstruction error %.5f of a peak of 0.7", worst)
 
 	if worst > 0.02 {
-		t.Errorf("reconstruction is off by %.4f, which is not a filter bank in agreement with itself", worst)
+		t.Errorf(
+			"reconstruction is off by %.4f, which is not a filter bank in agreement with itself",
+			worst,
+		)
 	}
 }

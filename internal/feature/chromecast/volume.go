@@ -6,8 +6,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
-	"github.com/ygelfand/echolocal/internal/lib/cast"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/media/cast"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // loudness is cast as a client of the main volume: it passes on what senders set and reports what the volume is.

@@ -73,7 +73,9 @@ func TestEnsureLeavesSystemAloneWhenNothingDiffers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if ensure([]Part{{Name: "service", Path: path, Data: []byte("same"), Mode: 0o644, Boot: true}}) {
+	if ensure(
+		[]Part{{Name: "service", Path: path, Data: []byte("same"), Mode: 0o644, Boot: true}},
+	) {
 		t.Error("an unchanged boot part asked for a reboot")
 	}
 	if len(f.mounts) != 0 || len(f.restarted) != 0 {

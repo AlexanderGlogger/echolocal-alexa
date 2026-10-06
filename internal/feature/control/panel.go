@@ -28,7 +28,11 @@ func panelCommands() []*cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			if !pages.OpenPage(args[0]) {
-				return fmt.Errorf("no page %q, want one of %s", args[0], strings.Join(pages.Pages(), ", "))
+				return fmt.Errorf(
+					"no page %q, want one of %s",
+					args[0],
+					strings.Join(pages.Pages(), ", "),
+				)
 			}
 			return nil
 		},
@@ -50,7 +54,15 @@ func panelCommands() []*cobra.Command {
 				if p, ok := v.View.(*screens.Page); ok {
 					title = fmt.Sprintf(" %q", p.Title)
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%d %T%s held=%v covers=%v\n", i, v.View, title, v.Held, v.View.Covers())
+				fmt.Fprintf(
+					cmd.OutOrStdout(),
+					"%d %T%s held=%v covers=%v\n",
+					i,
+					v.View,
+					title,
+					v.Held,
+					v.View.Covers(),
+				)
 			}
 			return nil
 		},

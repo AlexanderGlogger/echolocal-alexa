@@ -19,9 +19,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/feedback"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/update"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -221,7 +221,15 @@ func (u *Firmware) Check(ctx context.Context) {
 	u.found = found
 	u.mu.Unlock()
 
-	slog.Info("update check", "channel", channel.Label(), "running", layout.Version, "offered", found.Version)
+	slog.Info(
+		"update check",
+		"channel",
+		channel.Label(),
+		"running",
+		layout.Version,
+		"offered",
+		found.Version,
+	)
 	u.publish(found)
 }
 

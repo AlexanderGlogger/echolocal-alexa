@@ -49,7 +49,16 @@ func (a *App) video(w *gogui.Window, p *videoplayer.Page) gogui.View {
 			if now := look.Controls.Now(); ui.Picture(now.Mark, now.MarkID) != nil {
 				mark := ui.Picture(now.Mark, now.MarkID)
 				above := (vh - vw*look.FrameH/look.FrameW) / 2
-				layers = append(layers, floatAt(0, 0, float32(vw), float32(above), centredImage(still(mark), float32(vw)/2, float32(above)/2)))
+				layers = append(
+					layers,
+					floatAt(
+						0,
+						0,
+						float32(vw),
+						float32(above),
+						centredImage(still(mark), float32(vw)/2, float32(above)/2),
+					),
+				)
 			}
 		}
 	} else {
@@ -59,7 +68,10 @@ func (a *App) video(w *gogui.Window, p *videoplayer.Page) gogui.View {
 		layers = append(layers, floatAt(0, 0, float32(vw), float32(vh), backdrop(look, vw, vh)))
 	}
 	if look.Spinning {
-		layers = append(layers, floatAt(0, 0, float32(vw), float32(vh), spinner(vw, vh, time.Since(look.Began))))
+		layers = append(
+			layers,
+			floatAt(0, 0, float32(vw), float32(vh), spinner(vw, vh, time.Since(look.Began))),
+		)
 	}
 	if look.Shown {
 		layers = append(layers, floatAt(0, 0, float32(vw), 0, a.videoHeader(p)))
@@ -125,7 +137,10 @@ func backdrop(look videoplayer.Look, vw, vh int) gogui.View {
 		if ih > side {
 			iw, ih = side*float32(lw)/float32(max(lh, 1)), side
 		}
-		content = append(content, gogui.Image(gogui.ImageCfg{Src: still(look.Logo), Width: iw, Height: ih}))
+		content = append(
+			content,
+			gogui.Image(gogui.ImageCfg{Src: still(look.Logo), Width: iw, Height: ih}),
+		)
 	}
 	if look.Note != "" {
 		st := gogui.CurrentTheme().TextStyleDef
@@ -172,9 +187,17 @@ func (a *App) videoHeader(p *videoplayer.Page) gogui.View {
 		Sizing:  gogui.FillFit,
 		Padding: gogui.PaddingLarge,
 		Color:   videoScrim,
-		Content: []gogui.View{button("video-back", gogui.IconArrowLeft, iconStyle(videoInk), gogui.Color{}, func(e gogui.EventCtx) {
-			shell.Get().Remove(p)
-		})},
+		Content: []gogui.View{
+			button(
+				"video-back",
+				gogui.IconArrowLeft,
+				iconStyle(videoInk),
+				gogui.Color{},
+				func(e gogui.EventCtx) {
+					shell.Get().Remove(p)
+				},
+			),
+		},
 	})
 }
 
@@ -196,14 +219,38 @@ func (a *App) videoBand(w *gogui.Window, p *videoplayer.Page, look videoplayer.L
 	if sub := strings.Join(nonEmpty(now.Artist, now.Album), " · "); sub != "" {
 		words = append(words, gogui.Label(sub, quiet))
 	}
-	heading := []gogui.View{gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: words})}
+	heading := []gogui.View{
+		gogui.Column(
+			gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: words},
+		),
+	}
 	if mark := ui.Picture(now.Mark, now.MarkID); mark != nil && vw > vh {
 		mw, mh := mark.Size()
 		side := reach()
-		heading = append([]gogui.View{gogui.Image(gogui.ImageCfg{Src: still(mark), Width: side * float32(mw) / float32(max(mh, 1)), Height: side})}, heading...)
+		heading = append(
+			[]gogui.View{
+				gogui.Image(
+					gogui.ImageCfg{
+						Src:    still(mark),
+						Width:  side * float32(mw) / float32(max(mh, 1)),
+						Height: side,
+					},
+				),
+			},
+			heading...)
 	}
 
-	rows := []gogui.View{gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingMedium, VAlign: gogui.VAlignMiddle, Content: heading})}
+	rows := []gogui.View{
+		gogui.Row(
+			gogui.ContainerCfg{
+				Sizing:  gogui.FillFit,
+				Padding: gogui.NoPadding,
+				Spacing: gogui.SpacingMedium,
+				VAlign:  gogui.VAlignMiddle,
+				Content: heading,
+			},
+		),
+	}
 	if now.Length > 0 {
 		var sk media.Seeker = c
 		var marks []videoplayer.Mark
@@ -238,7 +285,10 @@ func live(now media.Now, c videoplayer.Controls, st gogui.TextStyle) gogui.View 
 		fill = gogui.Color{R: 0x60, G: 0x60, B: 0x60, A: 0xff}
 		content = append(content, gogui.Label("-"+clockText(behind), st))
 	}
-	content = append(content, gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding}))
+	content = append(
+		content,
+		gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding}),
+	)
 	pill := gogui.CurrentTheme().TextStyleDef
 	pill.Color = videoInk
 	length := now.Length
@@ -253,10 +303,21 @@ func live(now media.Now, c videoplayer.Controls, st gogui.TextStyle) gogui.View 
 			c.Seek(length)
 		}
 	}))
-	return gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, VAlign: gogui.VAlignMiddle, Content: content})
+	return gogui.Row(
+		gogui.ContainerCfg{
+			Sizing:  gogui.FillFit,
+			Padding: gogui.NoPadding,
+			VAlign:  gogui.VAlignMiddle,
+			Content: content,
+		},
+	)
 }
 
-func (a *App) videoTransport(p *videoplayer.Page, now media.Now, c videoplayer.Controls) gogui.View {
+func (a *App) videoTransport(
+	p *videoplayer.Page,
+	now media.Now,
+	c videoplayer.Controls,
+) gogui.View {
 	type control struct {
 		glyph    string
 		do       func()
@@ -273,11 +334,21 @@ func (a *App) videoTransport(p *videoplayer.Page, now media.Now, c videoplayer.C
 		shown = append(shown, control{glyph: gogui.IconStepBackward, do: c.Previous})
 	}
 	if c.CanSeek() {
-		shown = append(shown, control{glyph: gogui.IconBackward, do: func() { c.Seek(c.Now().Elapsed - videoSkip) }})
+		shown = append(
+			shown,
+			control{glyph: gogui.IconBackward, do: func() { c.Seek(c.Now().Elapsed - videoSkip) }},
+		)
 	}
 	shown = append(shown, middle)
 	if c.CanSeek() {
-		shown = append(shown, control{glyph: gogui.IconForward, do: func() { c.Seek(c.Now().Elapsed + videoSkip) }, disabled: atLive})
+		shown = append(
+			shown,
+			control{
+				glyph:    gogui.IconForward,
+				do:       func() { c.Seek(c.Now().Elapsed + videoSkip) },
+				disabled: atLive,
+			},
+		)
 	}
 	if now.Can.Has(media.CanNext) {
 		shown = append(shown, control{glyph: gogui.IconStepForward, do: c.Next})
@@ -311,7 +382,15 @@ func (a *App) videoTransport(p *videoplayer.Page, now media.Now, c videoplayer.C
 		}
 		buttons = append(buttons, button(fmt.Sprintf("video-%d", i), b.glyph, st, fill, do))
 	}
-	return gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, HAlign: gogui.HAlignCenter, VAlign: gogui.VAlignMiddle, Spacing: gogui.SpacingLarge, Content: buttons})
+	return gogui.Row(
+		gogui.ContainerCfg{
+			Sizing:  gogui.FillFit,
+			HAlign:  gogui.HAlignCenter,
+			VAlign:  gogui.VAlignMiddle,
+			Spacing: gogui.SpacingLarge,
+			Content: buttons,
+		},
+	)
 }
 
 func nonEmpty(ss ...string) []string {

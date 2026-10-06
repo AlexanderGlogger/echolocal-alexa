@@ -17,8 +17,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
@@ -732,7 +732,10 @@ func (d *Driver) stack() (draw []*Claim, clear bool) {
 
 	// By priority, keeping registration order within one: the most recent of equals ends up last
 	// and so draws over the others.
-	slices.SortStableFunc(showing, func(a, b *Claim) int { return cmp.Compare(a.priority, b.priority) })
+	slices.SortStableFunc(
+		showing,
+		func(a, b *Claim) int { return cmp.Compare(a.priority, b.priority) },
+	)
 
 	for i := len(showing) - 1; i >= 0; i-- {
 		if showing[i].covers {

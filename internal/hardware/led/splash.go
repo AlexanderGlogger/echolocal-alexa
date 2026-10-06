@@ -74,7 +74,9 @@ func walk(base Color) Frame {
 func fadeOut(ctx context.Context, r *Ring, d time.Duration) error {
 	steps := int(d / FrameInterval)
 	for i := steps; i > 0; i-- {
-		if err := r.SetSegments(around(Palette{HomeAssistant}, float64(i)/float64(steps))); err != nil {
+		if err := r.SetSegments(
+			around(Palette{HomeAssistant}, float64(i)/float64(steps)),
+		); err != nil {
 			return err
 		}
 		select {

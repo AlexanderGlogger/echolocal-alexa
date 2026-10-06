@@ -10,7 +10,11 @@ import (
 func put(t *testing.T, dir, id, manifest string, bytes int) {
 	t.Helper()
 
-	if err := os.WriteFile(filepath.Join(dir, id+".tflite"), make([]byte, bytes), 0o644); err != nil {
+	if err := os.WriteFile(
+		filepath.Join(dir, id+".tflite"),
+		make([]byte, bytes),
+		0o644,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if manifest == "" {

@@ -16,7 +16,12 @@ const (
 
 func (d *Device) switchBits(req uintptr) (uint64, error) {
 	var b [swBytes]byte
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, d.f.Fd(), req, uintptr(unsafe.Pointer(&b[0]))); errno != 0 {
+	if _, _, errno := unix.Syscall(
+		unix.SYS_IOCTL,
+		d.f.Fd(),
+		req,
+		uintptr(unsafe.Pointer(&b[0])),
+	); errno != 0 {
 		return 0, errno
 	}
 	return binary.LittleEndian.Uint64(b[:]), nil

@@ -16,12 +16,12 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/videoplayer"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/hardware/video"
-	"github.com/ygelfand/echolocal/internal/lib/cast/playback"
-	"github.com/ygelfand/echolocal/internal/lib/fetch"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/fetch"
+	"github.com/ygelfand/libcountertop/pkg/media/playback"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // Queued caps how far decoding may run ahead of the speaker. The speaker's queue is the buffer; this
@@ -241,7 +241,13 @@ func (o *output) picture(ctx context.Context, p *playing, pics playback.Pictures
 
 var errNoPicture = errors.New("cast video: no picture")
 
-func (o *output) pictureOnce(ctx context.Context, p *playing, pics playback.Pictures, play func(context.Context, video.Stream) (video.Report, error), view *videoplayer.Page) error {
+func (o *output) pictureOnce(
+	ctx context.Context,
+	p *playing,
+	pics playback.Pictures,
+	play func(context.Context, video.Stream) (video.Report, error),
+	view *videoplayer.Page,
+) error {
 	actx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var began, late atomic.Bool
@@ -281,7 +287,17 @@ func (o *output) pictureOnce(ctx context.Context, p *playing, pics playback.Pict
 		}
 	}
 	rep, err := play(actx, s)
-	slog.Info("cast video over", "shown", rep.Shown, "dropped", rep.Dropped, "size", fmt.Sprintf("%dx%d", s.Width, s.Height), "err", err)
+	slog.Info(
+		"cast video over",
+		"shown",
+		rep.Shown,
+		"dropped",
+		rep.Dropped,
+		"size",
+		fmt.Sprintf("%dx%d", s.Width, s.Height),
+		"err",
+		err,
+	)
 	if late.Load() {
 		return errNoPicture
 	}
@@ -298,14 +314,25 @@ func streamOf(ctx context.Context, pics playback.Pictures) (video.Stream, io.Clo
 			if !p.H264 {
 				return video.Stream{}, nil, errNoPicture
 			}
-			s := video.Stream{Codec: video.H264, Width: uint32(p.Width), Height: uint32(p.Height), Session: p.Session, Source: sealedFrames(p.Sealed)}
+			s := video.Stream{
+				Codec:   video.H264,
+				Width:   uint32(p.Width),
+				Height:  uint32(p.Height),
+				Session: p.Session,
+				Source:  sealedFrames(p.Sealed),
+			}
 			return s, io.NopCloser(nil), nil
 		}
 		if p.Next != nil {
 			if !p.H264 {
 				return video.Stream{}, nil, errNoPicture
 			}
-			s := video.Stream{Codec: video.H264, Width: uint32(p.Width), Height: uint32(p.Height), Source: liveFrames(p.Next)}
+			s := video.Stream{
+				Codec:  video.H264,
+				Width:  uint32(p.Width),
+				Height: uint32(p.Height),
+				Source: liveFrames(p.Next),
+			}
 			return s, io.NopCloser(nil), nil
 		}
 	}
@@ -852,7 +879,17 @@ func (c *card) Now() media.Now {
 			c.p.thumbs[u.Art] = picture{}
 			wanted = append(wanted, u.Art)
 		}
-		queue = append(queue, media.Track{Title: u.Title, Artist: u.Artist, Length: u.Length, Art: pic.raw, ArtID: pic.id, Play: u.Play})
+		queue = append(
+			queue,
+			media.Track{
+				Title:  u.Title,
+				Artist: u.Artist,
+				Length: u.Length,
+				Art:    pic.raw,
+				ArtID:  pic.id,
+				Play:   u.Play,
+			},
+		)
 	}
 	c.o.mu.Unlock()
 	for _, url := range wanted {
@@ -941,7 +978,12 @@ var _ media.Source = (*standby)(nil)
 func (b *standby) Now() media.Now {
 	b.o.mu.Lock()
 	defer b.o.mu.Unlock()
-	return media.Now{Hold: b.o.sess != nil, Title: b.o.note, Art: b.o.sessArt.raw, ArtID: b.o.sessArt.id}
+	return media.Now{
+		Hold:  b.o.sess != nil,
+		Title: b.o.note,
+		Art:   b.o.sessArt.raw,
+		ArtID: b.o.sessArt.id,
+	}
 }
 
 func (b *standby) Playing() (playing, paused bool) { return false, false }

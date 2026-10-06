@@ -117,8 +117,15 @@ func (c *Card) follow() {
 		held.Keep(false)
 	}
 
-	if limit := config.Get().Idle.Media.After(); idle && src != nil && limit > 0 && stalled > limit {
-		slog.Info("the player was left idle", "for", stalled.Round(time.Second), "by", fmt.Sprintf("%T", src))
+	if limit := config.Get().Idle.Media.After(); idle && src != nil && limit > 0 &&
+		stalled > limit {
+		slog.Info(
+			"the player was left idle",
+			"for",
+			stalled.Round(time.Second),
+			"by",
+			fmt.Sprintf("%T", src),
+		)
 		c.mu.Lock()
 		c.stalled = time.Time{}
 		c.mu.Unlock()

@@ -27,7 +27,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	backend "github.com/ygelfand/echolocal/pkg/gogui"
+	backend "github.com/ygelfand/libcountertop/pkg/display/gogui"
 )
 
 const (
@@ -88,7 +88,11 @@ func (a *App) Restyle() {
 	}
 }
 
-var phases = map[touch.Phase]backend.Phase{touch.Down: backend.Began, touch.Move: backend.Moved, touch.Up: backend.Ended}
+var phases = map[touch.Phase]backend.Phase{
+	touch.Down: backend.Began,
+	touch.Move: backend.Moved,
+	touch.Up:   backend.Ended,
+}
 
 func backSweep(from [2]int, x, y, width int) bool {
 	dx, dy := from[0]-x, from[1]-y

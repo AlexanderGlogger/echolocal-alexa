@@ -43,7 +43,11 @@ func installModels(r *run) (string, bool, error) {
 
 		// The manifest carries the phrase and the window the engine reads it with, so it is written
 		// first: a model without one falls back to defaults that are only right by coincidence.
-		if err := r.d.WriteFile(path.Join(layout.ModelDir, m.ID+".json"), m.Manifest, 0o644); err != nil {
+		if err := r.d.WriteFile(
+			path.Join(layout.ModelDir, m.ID+".json"),
+			m.Manifest,
+			0o644,
+		); err != nil {
 			return "", false, err
 		}
 		if err := r.d.WriteFile(modelPath, m.Model, 0o644); err != nil {

@@ -45,7 +45,10 @@ func init() {
 	})
 }
 
-func fromHomeAssistant(ctx context.Context, f homeassistant.Filter) ([]homeassistant.Entity, []homeassistant.Label, error) {
+func fromHomeAssistant(
+	ctx context.Context,
+	f homeassistant.Filter,
+) ([]homeassistant.Entity, []homeassistant.Label, error) {
 	ha := homeassistant.Get()
 	entities, err := ha.Entities(ctx, f)
 	if err != nil {

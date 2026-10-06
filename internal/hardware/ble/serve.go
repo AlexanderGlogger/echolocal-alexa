@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/lib/bt/pair"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/pair"
 )
 
 // Serving a classic connection: the loop that owns the line while a phone is connected.
@@ -234,7 +234,13 @@ func answer(ctx context.Context, on Classic, parts *reassembler, room *credit,
 }
 
 // carry reassembles a fragment and, once a whole PDU is there, hands it over and queues the reply.
-func carry(ctx context.Context, on Classic, parts *reassembler, out chan<- outbound, a aclPacket) error {
+func carry(
+	ctx context.Context,
+	on Classic,
+	parts *reassembler,
+	out chan<- outbound,
+	a aclPacket,
+) error {
 	pdu, err := parts.add(a)
 	if err != nil {
 		return err

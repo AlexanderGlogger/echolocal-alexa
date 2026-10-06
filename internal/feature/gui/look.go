@@ -6,8 +6,8 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 type Size struct {
@@ -33,7 +33,17 @@ func large(c *gogui.ThemeCfg) {
 	c.SizeProgressBar, c.SizeScrollbar = 14, 10
 	c.Padding, c.PaddingSmall = gogui.PadAll(14), gogui.PadAll(8)
 	c.PaddingMedium, c.PaddingLarge = gogui.PadAll(14), gogui.PadAll(22)
-	c.PaddingField, c.PaddingButton = gogui.NewPadding(16, 24, 16, 24), gogui.NewPadding(16, 28, 16, 28)
+	c.PaddingField, c.PaddingButton = gogui.NewPadding(
+		16,
+		24,
+		16,
+		24,
+	), gogui.NewPadding(
+		16,
+		28,
+		16,
+		28,
+	)
 	c.SpacingTight, c.SpacingSmall, c.SpacingMedium, c.SpacingLarge = 4, 8, 16, 28
 	c.Radius, c.RadiusSmall, c.RadiusMedium, c.RadiusLarge = 12, 8, 12, 18
 }
@@ -48,7 +58,17 @@ func compact(c *gogui.ThemeCfg) {
 	c.SizeProgressBar, c.SizeScrollbar = 10, 6
 	c.Padding, c.PaddingSmall = gogui.PadAll(10), gogui.PadAll(6)
 	c.PaddingMedium, c.PaddingLarge = gogui.PadAll(10), gogui.PadAll(16)
-	c.PaddingField, c.PaddingButton = gogui.NewPadding(10, 16, 10, 16), gogui.NewPadding(10, 18, 10, 18)
+	c.PaddingField, c.PaddingButton = gogui.NewPadding(
+		10,
+		16,
+		10,
+		16,
+	), gogui.NewPadding(
+		10,
+		18,
+		10,
+		18,
+	)
 	c.SpacingTight, c.SpacingSmall, c.SpacingMedium, c.SpacingLarge = 3, 6, 12, 20
 	c.Radius, c.RadiusSmall, c.RadiusMedium, c.RadiusLarge = 9, 6, 9, 12
 }
@@ -68,7 +88,15 @@ func scaled(base func(*gogui.ThemeCfg), f float32) func(*gogui.ThemeCfg) {
 		} {
 			*v *= f
 		}
-		c.Padding, c.PaddingSmall, c.PaddingMedium, c.PaddingLarge = pad(c.Padding), pad(c.PaddingSmall), pad(c.PaddingMedium), pad(c.PaddingLarge)
+		c.Padding, c.PaddingSmall, c.PaddingMedium, c.PaddingLarge = pad(
+			c.Padding,
+		), pad(
+			c.PaddingSmall,
+		), pad(
+			c.PaddingMedium,
+		), pad(
+			c.PaddingLarge,
+		)
 		c.PaddingField, c.PaddingButton = pad(c.PaddingField), pad(c.PaddingButton)
 	}
 }

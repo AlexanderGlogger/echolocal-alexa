@@ -59,7 +59,14 @@ func newPlayCmd() *cobra.Command {
 			if silence {
 				what = "silence"
 			}
-			fmt.Fprintf(out, "playing %s for %.1fs on card %d device %d\n", what, secs, card, device)
+			fmt.Fprintf(
+				out,
+				"playing %s for %.1fs on card %d device %d\n",
+				what,
+				secs,
+				card,
+				device,
+			)
 
 			frames := int(secs * playRate)
 			buf := make([]byte, playPeriod*playChannels*playBits/8)
@@ -82,7 +89,12 @@ func newPlayCmd() *cobra.Command {
 			if err := p.Drain(); err != nil {
 				return fmt.Errorf("drain: %w", err)
 			}
-			fmt.Fprintf(out, "wrote %d frames in %s\n", frames, time.Since(start).Round(time.Millisecond))
+			fmt.Fprintf(
+				out,
+				"wrote %d frames in %s\n",
+				frames,
+				time.Since(start).Round(time.Millisecond),
+			)
 			return nil
 		},
 	}
@@ -93,7 +105,8 @@ func newPlayCmd() *cobra.Command {
 	c.Flags().Float64Var(&secs, "seconds", 1, "how long to play")
 	c.Flags().Float64Var(&level, "level", 0.2, "amplitude, 0 to 1")
 	c.Flags().BoolVar(&silence, "silence", false, "write zeros instead of a tone")
-	c.Flags().StringVar(&channel, "channel", "both", "which channel carries the tone: left, right or both")
+	c.Flags().
+		StringVar(&channel, "channel", "both", "which channel carries the tone: left, right or both")
 	return c
 }
 

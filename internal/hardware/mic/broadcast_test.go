@@ -51,7 +51,11 @@ func TestListenerBehindKeepsEveryFrame(t *testing.T) {
 		frame := <-frames
 		for _, v := range frame {
 			if v != int16(i+1) {
-				t.Fatalf("frame %d carries frame %d: a frame a listener still held was overwritten", i+1, v)
+				t.Fatalf(
+					"frame %d carries frame %d: a frame a listener still held was overwritten",
+					i+1,
+					v,
+				)
 			}
 		}
 	}

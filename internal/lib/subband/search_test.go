@@ -80,7 +80,13 @@ func TestSearchLayout(t *testing.T) {
 					}
 					won, beams := steers(w)
 					best = append(best, result{
-						how:  fmt.Sprintf("%s down=%-5v split=%-5v mics=%s", order, down, split, name),
+						how: fmt.Sprintf(
+							"%s down=%-5v split=%-5v mics=%s",
+							order,
+							down,
+							split,
+							name,
+						),
 						won:  won,
 						beam: beams,
 					})

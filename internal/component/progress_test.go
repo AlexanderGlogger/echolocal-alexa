@@ -29,7 +29,10 @@ func TestProgressOnlyCollectsWhatSpeaks(t *testing.T) {
 // The registry fills the name in, so a component says what it is doing without repeating what it is.
 func TestProgressCarriesTheName(t *testing.T) {
 	r := New()
-	r.Add(Hardware, func() Component { return &coming{name: "screen", p: Progress{Doing: "taking the panel"}} })
+	r.Add(
+		Hardware,
+		func() Component { return &coming{name: "screen", p: Progress{Doing: "taking the panel"}} },
+	)
 
 	got := r.Progress()
 	if len(got) != 1 {
@@ -42,7 +45,10 @@ func TestProgressCarriesTheName(t *testing.T) {
 
 func TestReadyWaitsForWhatHolds(t *testing.T) {
 	r := New()
-	r.Add(Hardware, func() Component { return &coming{name: "wifi", p: Progress{Doing: "associating"}} })
+	r.Add(
+		Hardware,
+		func() Component { return &coming{name: "wifi", p: Progress{Doing: "associating"}} },
+	)
 
 	if r.Ready() {
 		t.Error("ready while something is still coming up")

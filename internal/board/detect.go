@@ -40,13 +40,23 @@ func detect() Board {
 	if pinned != "" {
 		b, ok := ByCodename(pinned)
 		if !ok {
-			slog.Error("built for a board this binary has no entry for, assuming biscuit", "pinned", pinned)
+			slog.Error(
+				"built for a board this binary has no entry for, assuming biscuit",
+				"pinned",
+				pinned,
+			)
 			return Biscuit
 		}
 		// A per-board build installed on the wrong device. The pin wins, since it is what decides
 		// which packages are even linked, but this is worth shouting about.
 		if said != "" && said != b.Device {
-			slog.Warn("built for one board and running on another", "pinned", b.Codename, "device", said)
+			slog.Warn(
+				"built for one board and running on another",
+				"pinned",
+				b.Codename,
+				"device",
+				said,
+			)
 		}
 		slog.Info("board", "codename", b.Codename, "pinned", true)
 		return b

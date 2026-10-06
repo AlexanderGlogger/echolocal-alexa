@@ -153,7 +153,10 @@ service boot2_anim_start /system/bin/start_animation.sh anim_start_phase2
 	if len(changed) != 3 {
 		t.Fatalf("changed %v, want the seclabel added and user and group dropped", changed)
 	}
-	if !strings.Contains(out, "service ledcontroller /system/bin/ledcontroller\n    seclabel "+Domain+"\n   class main\n\nservice") {
+	if !strings.Contains(
+		out,
+		"service ledcontroller /system/bin/ledcontroller\n    seclabel "+Domain+"\n   class main\n\nservice",
+	) {
 		t.Errorf("ledcontroller did not come out root in a domain:\n%s", out)
 	}
 	if !strings.Contains(out, "anim_start_phase2\n    user ledcontroller\n    group dbus\n") {

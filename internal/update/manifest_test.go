@@ -28,13 +28,25 @@ func TestForRefusesAReleaseThatNamesNoBoards(t *testing.T) {
 // only what names it.
 func TestForNeverOffersAnotherBoardsBuild(t *testing.T) {
 	m := Manifest{
-		Version:  "0.1.0",
-		URL:      "https://example/echod-arm64",
-		SHA256:   strings.Repeat("a", 64),
-		Size:     24 << 20,
-		Binaries: map[string]Binary{"arm": {URL: "https://example/echod-arm", SHA256: strings.Repeat("b", 64), Size: 22 << 20}},
+		Version: "0.1.0",
+		URL:     "https://example/echod-arm64",
+		SHA256:  strings.Repeat("a", 64),
+		Size:    24 << 20,
+		Binaries: map[string]Binary{
+			"arm": {
+				URL:    "https://example/echod-arm",
+				SHA256: strings.Repeat("b", 64),
+				Size:   22 << 20,
+			},
+		},
 		Boards: map[string]map[string]Binary{
-			"biscuit": {"arm": {URL: "https://example/echod-biscuit-arm", SHA256: strings.Repeat("c", 64), Size: 22 << 20}},
+			"biscuit": {
+				"arm": {
+					URL:    "https://example/echod-biscuit-arm",
+					SHA256: strings.Repeat("c", 64),
+					Size:   22 << 20,
+				},
+			},
 		},
 	}
 	if err := m.Valid(); err != nil {
@@ -64,13 +76,29 @@ func TestForTakesTheArchitectureTheDeviceRuns(t *testing.T) {
 		SHA256:  strings.Repeat("a", 64),
 		Size:    24 << 20,
 		Binaries: map[string]Binary{
-			"arm64": {URL: "https://example/echod-arm64", SHA256: strings.Repeat("a", 64), Size: 24 << 20},
-			"arm":   {URL: "https://example/echod-arm", SHA256: strings.Repeat("b", 64), Size: 22 << 20},
+			"arm64": {
+				URL:    "https://example/echod-arm64",
+				SHA256: strings.Repeat("a", 64),
+				Size:   24 << 20,
+			},
+			"arm": {
+				URL:    "https://example/echod-arm",
+				SHA256: strings.Repeat("b", 64),
+				Size:   22 << 20,
+			},
 		},
 		Boards: map[string]map[string]Binary{
 			"biscuit": {
-				"arm64": {URL: "https://example/echod-arm64", SHA256: strings.Repeat("a", 64), Size: 24 << 20},
-				"arm":   {URL: "https://example/echod-arm", SHA256: strings.Repeat("b", 64), Size: 22 << 20},
+				"arm64": {
+					URL:    "https://example/echod-arm64",
+					SHA256: strings.Repeat("a", 64),
+					Size:   24 << 20,
+				},
+				"arm": {
+					URL:    "https://example/echod-arm",
+					SHA256: strings.Repeat("b", 64),
+					Size:   22 << 20,
+				},
 			},
 		},
 	}

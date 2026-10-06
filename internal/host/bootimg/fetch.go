@@ -29,7 +29,10 @@ const fetchTimeout = 5 * time.Minute
 // progress is called with a fraction as the download runs, and may be nil.
 func (i Image) Resolve(ctx context.Context, progress func(float64)) ([]byte, string, error) {
 	if i.URL == "" {
-		return nil, "", fmt.Errorf("bootimg: no boot image is published for %s, so one has to be given with --boot-image", i.Device)
+		return nil, "", fmt.Errorf(
+			"bootimg: no boot image is published for %s, so one has to be given with --boot-image",
+			i.Device,
+		)
 	}
 
 	data, err := i.download(ctx, progress)

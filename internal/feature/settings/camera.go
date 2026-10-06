@@ -19,7 +19,10 @@ import (
 )
 
 func init() {
-	sections = append(sections, section{label: "settings.camera", glyph: gogui.IconCamera, page: cameraPage})
+	sections = append(
+		sections,
+		section{label: "settings.camera", glyph: gogui.IconCamera, page: cameraPage},
+	)
 	pages["camera"] = cameraPage
 }
 
@@ -71,8 +74,11 @@ func cameraPage() *shell.Page {
 				})
 				taps = append(taps, open(sectionPage(g)))
 			}
-			rows = append(rows, widget.Row{Label: say.T("camera.stream"), Hint: say.T("features.rtsp.hint"),
-				Kind: widget.Toggle, On: config.Get().RTSP.Enabled})
+			rows = append(
+				rows,
+				widget.Row{Label: say.T("camera.stream"), Hint: say.T("features.rtsp.hint"),
+					Kind: widget.Toggle, On: config.Get().RTSP.Enabled},
+			)
 			taps = append(taps, func(int) { rtspd.Get().SetEnabled(!config.Get().RTSP.Enabled) })
 			label := say.T("camera.reset")
 			if time.Since(resetArmed) < resetWindow {

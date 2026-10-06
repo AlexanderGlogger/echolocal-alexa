@@ -57,8 +57,15 @@ const (
 
 func defaultScreen() Screen {
 	return Screen{
-		Theme: DefaultTheme, Keyboard: KeyboardCompact, Drawer: DefaultEdge, Volume: DefaultEdge, Marks: true, Hours: TwentyFourHour, Logo: true,
-		Backlight: DefaultBacklight, Mode: DefaultScreenMode,
+		Theme:     DefaultTheme,
+		Keyboard:  KeyboardCompact,
+		Drawer:    DefaultEdge,
+		Volume:    DefaultEdge,
+		Marks:     true,
+		Hours:     TwentyFourHour,
+		Logo:      true,
+		Backlight: DefaultBacklight,
+		Mode:      DefaultScreenMode,
 	}
 }
 

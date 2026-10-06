@@ -28,8 +28,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/rtc"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -220,7 +220,23 @@ func (c *Calls) dial(s *session) {
 		return
 	}
 	me := discovery.Self()
-	status, err := post(s.ctx, s.addr, "offer", envelope{Call: s.ID, From: me.ID, Name: me.Name, Model: me.Model, Board: me.Board, Caps: me.Caps, SDP: sdp, Video: s.Video, Width: own.Width, Height: own.Height})
+	status, err := post(
+		s.ctx,
+		s.addr,
+		"offer",
+		envelope{
+			Call:   s.ID,
+			From:   me.ID,
+			Name:   me.Name,
+			Model:  me.Model,
+			Board:  me.Board,
+			Caps:   me.Caps,
+			SDP:    sdp,
+			Video:  s.Video,
+			Width:  own.Width,
+			Height: own.Height,
+		},
+	)
 	switch {
 	case err != nil:
 		c.fail(s, "offer", err)
@@ -279,7 +295,12 @@ func (c *Calls) answer(s *session) {
 		c.fail(s, "answer", err)
 		return
 	}
-	status, err := post(s.ctx, s.addr, "answer", envelope{Call: s.ID, SDP: sdp, Width: own.Width, Height: own.Height})
+	status, err := post(
+		s.ctx,
+		s.addr,
+		"answer",
+		envelope{Call: s.ID, SDP: sdp, Width: own.Width, Height: own.Height},
+	)
 	if err != nil || status != http.StatusOK {
 		c.fail(s, "answer", fmt.Errorf("status %d: %v", status, err))
 		return
@@ -360,7 +381,11 @@ func (c *Calls) apply(s *session) {
 }
 
 func (c *Calls) media(s *session) (rtc.Media, livecam.Size) {
-	m := rtc.Media{Audio: device{}, Opened: func() { c.tell(s); c.tellSize(s) }, Received: c.received(s)}
+	m := rtc.Media{
+		Audio:    device{},
+		Opened:   func() { c.tell(s); c.tellSize(s) },
+		Received: c.received(s),
+	}
 	c.mu.Lock()
 	video, remote, off := s.Video, s.remote, s.CameraOff
 	c.mu.Unlock()

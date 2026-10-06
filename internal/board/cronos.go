@@ -8,7 +8,7 @@ var Cronos = Board{
 	Codename:      "cronos",
 	Model:         "Echo Show 5 2nd gen (cronos)",
 	DefaultName:   "Echo Show 5",
-	Caps:          Panel | Wifi | Shutter | Camera,
+	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera,
 	PanelRotation: 270,
 	UISize:        "mini",
 	SecureDecoders: map[string]string{

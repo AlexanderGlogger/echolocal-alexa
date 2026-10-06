@@ -9,6 +9,7 @@ package voice
 
 import (
 	"context"
+	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 	"log/slog"
 	"sync"
 
@@ -38,8 +39,9 @@ const Features = esphome.DefaultVoiceFeatures |
 	esphome.FeatureTimers
 
 type Voice struct {
-	vs   *esphome.VoiceSatellite
-	turn *conversation
+	vs        *esphome.VoiceSatellite
+	turn      *conversation
+	selection wakeslots.Selection
 }
 
 var (
@@ -59,17 +61,19 @@ func Get() *Voice {
 // models arrive and are deleted while the device runs.
 func build() *Voice {
 	ours := wake.Lib().Ours()
-	active := activeWakeWords(ours, wakeword.Slots)
+	slots := wanted(ours, wakeword.Slots)
 
 	v := &Voice{
 		vs: &esphome.VoiceSatellite{
-			ActiveWakeWords:     active,
+			ActiveWakeWords:     chosen(slots),
 			MaxActiveWakeWords:  wakeword.Slots,
 			OnExternalWakeWords: wakeword.Answer,
 		},
 	}
+	v.selection.Set(slots)
 	v.turn = newConversation(v.vs)
-	slog.Info("wake words", "ours", len(ours), "active", active)
+	v.turn.word = v.selection.ID
+	slog.Info("wake words", "ours", len(ours), "slots", slots)
 
 	v.vs.OnTimer = timer.Get().Event
 	v.vs.OnSubscribed = func(subscribed bool) {
@@ -199,7 +203,7 @@ func (v *Voice) ActionHold() { v.turn.Start(1) }
 func (v *Voice) OnWakeWord(load func(ids []string) []string, selected func()) {
 	v.vs.OnSetActiveWakeWords = func(ids []string) {
 		accepted := load(ids)
-		v.vs.ActiveWakeWords = accepted
+		v.SetSlots(accepted)
 
 		for slot := range wakeword.Slots {
 			id := ""
@@ -210,20 +214,17 @@ func (v *Voice) OnWakeWord(load func(ids []string) []string, selected func()) {
 				slog.Error("saving the wake word failed", "slot", slot+1, "err", err)
 			}
 		}
-		if len(accepted) != len(ids) {
+		if len(chosen(accepted)) != len(chosen(ids)) {
 			slog.Warn("some wake words were refused", "asked", ids, "running", accepted)
 		}
 		selected()
 	}
 }
 
-// ActiveWakeWords is what the device is advertising as listening, by slot.
-func (v *Voice) ActiveWakeWords() []string { return v.vs.ActiveWakeWords }
-
-// SetActiveWakeWords corrects what is advertised to what is actually running. The engine loads at
-// start-up rather than waiting to be told, so this is how the advertisement is reconciled with what
-// came up: anything that failed to load is not claimed.
-func (v *Voice) SetActiveWakeWords(ids []string) {
-	v.vs.ActiveWakeWords = ids
-	slog.Info("wake words listening", "active", ids)
+func (v *Voice) Slots() []string { return v.selection.Get() }
+func (v *Voice) SetSlots(slots []string) {
+	v.selection.Set(slots)
+	v.vs.ActiveWakeWords = chosen(slots)
+	slog.Info("wake words listening", "slots", slots)
 }
+func chosen(slots []string) []string { return wakeslots.Advertised(slots) }

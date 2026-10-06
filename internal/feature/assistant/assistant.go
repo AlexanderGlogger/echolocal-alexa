@@ -16,7 +16,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

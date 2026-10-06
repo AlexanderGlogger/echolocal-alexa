@@ -94,7 +94,10 @@ func scaleOf(a, b []float32) (float64, error) {
 		tot += float64(b[i]) * float64(b[i])
 	}
 	if off/tot > 1e-9 {
-		return 0, fmt.Errorf("a different filter, not the same one %.2f dB louder", 20*math.Log10(g))
+		return 0, fmt.Errorf(
+			"a different filter, not the same one %.2f dB louder",
+			20*math.Log10(g),
+		)
 	}
 	return g, nil
 }

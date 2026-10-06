@@ -60,7 +60,9 @@ func writeConfig(d *device.Device) (bool, error) {
 	}
 
 	for _, path := range []string{layout.WifiSockets, layout.WifiConf} {
-		if _, err := d.Shell(fmt.Sprintf("chown %d:%d %s", layout.WifiUser, layout.WifiUser, path)); err != nil {
+		if _, err := d.Shell(
+			fmt.Sprintf("chown %d:%d %s", layout.WifiUser, layout.WifiUser, path),
+		); err != nil {
 			return false, fmt.Errorf("wifi: %w", err)
 		}
 	}

@@ -8,9 +8,9 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/wpa"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/network/wpa"
 )
 
 func init() {

@@ -130,7 +130,21 @@ func (l *Layer) Lines(s []visual.Segment) error {
 func (l *Layer) Quads(q []visual.Quad) error {
 	quads := make([]float32, 0, len(q)*surface.QuadFloats)
 	for _, v := range q {
-		quads = append(quads, v.X[0], v.Y[0], v.X[1], v.Y[1], v.X[2], v.Y[2], v.X[3], v.Y[3], v.R, v.G, v.B, v.A)
+		quads = append(
+			quads,
+			v.X[0],
+			v.Y[0],
+			v.X[1],
+			v.Y[1],
+			v.X[2],
+			v.Y[2],
+			v.X[3],
+			v.Y[3],
+			v.R,
+			v.G,
+			v.B,
+			v.A,
+		)
 	}
 	return l.c.GLQuads(l.id, quads)
 }
@@ -138,7 +152,8 @@ func (l *Layer) Quads(q []visual.Quad) error {
 func (l *Layer) Place(at ui.Rect) error {
 	d := display.Get()
 	fw, fh := d.Native()
-	x, y, m, _ := d.Orientation().Place(fw, fh, display.Rect{X: at.X, Y: at.Y, W: at.W, H: at.H}, l.W, l.H)
+	x, y, m, _ := d.Orientation().
+		Place(fw, fh, display.Rect{X: at.X, Y: at.Y, W: at.W, H: at.H}, l.W, l.H)
 	return l.c.VideoPlace(l.id, x, y, m, l.z, true)
 }
 

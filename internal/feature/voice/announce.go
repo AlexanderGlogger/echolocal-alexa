@@ -8,7 +8,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // announce plays what Home Assistant asks for, then reports back. It runs off the connection's

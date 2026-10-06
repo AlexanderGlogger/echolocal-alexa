@@ -17,9 +17,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
-	"github.com/ygelfand/echolocal/internal/lib/analysis"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
+	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 )
 
 const (
@@ -126,7 +126,13 @@ func shrink(src *image.RGBA, tw, th int) *image.RGBA {
 				}
 			}
 			o := out.PixOffset(x, y)
-			out.Pix[o], out.Pix[o+1], out.Pix[o+2], out.Pix[o+3] = uint8(r/n), uint8(g/n), uint8(b/n), 255
+			out.Pix[o], out.Pix[o+1], out.Pix[o+2], out.Pix[o+3] = uint8(
+				r/n,
+			), uint8(
+				g/n,
+			), uint8(
+				b/n,
+			), 255
 		}
 	}
 	return out

@@ -157,7 +157,8 @@ func iptablesRun(args ...string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), lockWait)
 	defer cancel()
 
-	out, err := exec.CommandContext(ctx, iptables, append([]string{"-w"}, args...)...).CombinedOutput()
+	out, err := exec.CommandContext(ctx, iptables, append([]string{"-w"}, args...)...).
+		CombinedOutput()
 	if err == nil {
 		return nil
 	}

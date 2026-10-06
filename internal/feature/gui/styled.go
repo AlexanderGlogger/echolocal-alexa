@@ -9,7 +9,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/videoplayer"
-	"github.com/ygelfand/echolocal/internal/ui/style"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 func controls() style.Kit { return style.ByName(config.Get().Screen.Style).Kit }
@@ -30,16 +30,58 @@ func seekBar(cfg gogui.SliderCfg, marks []style.Span) gogui.View {
 	return gogui.Slider(cfg)
 }
 
-func keyButton(id, glyph string, st gogui.TextStyle, state style.State, do func(gogui.EventCtx)) gogui.View {
+func keyButton(
+	id, glyph string,
+	st gogui.TextStyle,
+	state style.State,
+	do func(gogui.EventCtx),
+) gogui.View {
 	side := st.Size * 2
-	return keyed(gogui.ContainerCfg{ID: id, Width: side, Height: side, Sizing: gogui.FixedFixed, Radius: gogui.RadiusLarge, Color: gogui.CurrentTheme().Cfg.ColorPanel}, glyph, st, state, do)
+	return keyed(
+		gogui.ContainerCfg{
+			ID:     id,
+			Width:  side,
+			Height: side,
+			Sizing: gogui.FixedFixed,
+			Radius: gogui.RadiusLarge,
+			Color:  gogui.CurrentTheme().Cfg.ColorPanel,
+		},
+		glyph,
+		st,
+		state,
+		do,
+	)
 }
 
-func wideKey(id, glyph string, st gogui.TextStyle, height float32, state style.State, do func(gogui.EventCtx)) gogui.View {
-	return keyed(gogui.ContainerCfg{ID: id, Height: height, Sizing: gogui.FillFixed, Radius: gogui.RadiusMedium, Color: gogui.CurrentTheme().Cfg.ColorBackground}, glyph, st, state, do)
+func wideKey(
+	id, glyph string,
+	st gogui.TextStyle,
+	height float32,
+	state style.State,
+	do func(gogui.EventCtx),
+) gogui.View {
+	return keyed(
+		gogui.ContainerCfg{
+			ID:     id,
+			Height: height,
+			Sizing: gogui.FillFixed,
+			Radius: gogui.RadiusMedium,
+			Color:  gogui.CurrentTheme().Cfg.ColorBackground,
+		},
+		glyph,
+		st,
+		state,
+		do,
+	)
 }
 
-func keyed(cfg gogui.ContainerCfg, glyph string, st gogui.TextStyle, state style.State, do func(gogui.EventCtx)) gogui.View {
+func keyed(
+	cfg gogui.ContainerCfg,
+	glyph string,
+	st gogui.TextStyle,
+	state style.State,
+	do func(gogui.EventCtx),
+) gogui.View {
 	t := gogui.CurrentTheme().Cfg
 	cfg.Padding = gogui.NoPadding
 	cfg.HAlign = gogui.HAlignCenter
@@ -53,7 +95,13 @@ func keyed(cfg gogui.ContainerCfg, glyph string, st gogui.TextStyle, state style
 	return pressable(gogui.Row, cfg, do)
 }
 
-func iconKey(cfg gogui.ContainerCfg, glyph string, st gogui.TextStyle, state style.State, do func(gogui.EventCtx)) gogui.View {
+func iconKey(
+	cfg gogui.ContainerCfg,
+	glyph string,
+	st gogui.TextStyle,
+	state style.State,
+	do func(gogui.EventCtx),
+) gogui.View {
 	controls().Key(&cfg, &st, state)
 	cfg.Content = []gogui.View{gogui.Label(glyph, st)}
 	return pressable(gogui.Row, cfg, do)
@@ -97,11 +145,26 @@ func styleSample(name string, w, h float32) gogui.View {
 	face.Family, face.Size = st.Family, face.Size*1.3
 	mark := t.TextStyleIconLarge
 	mark.Size = reach() * 0.4
-	key := gogui.ContainerCfg{Width: reach() * 0.9, Height: reach() * 0.9, Sizing: gogui.FixedFixed, Color: t.Cfg.ColorAccent, Radius: gogui.RadiusLarge, HAlign: gogui.HAlignCenter, VAlign: gogui.VAlignMiddle, Padding: gogui.NoPadding}
+	key := gogui.ContainerCfg{
+		Width:   reach() * 0.9,
+		Height:  reach() * 0.9,
+		Sizing:  gogui.FixedFixed,
+		Color:   t.Cfg.ColorAccent,
+		Radius:  gogui.RadiusLarge,
+		HAlign:  gogui.HAlignCenter,
+		VAlign:  gogui.VAlignMiddle,
+		Padding: gogui.NoPadding,
+	}
 	mark.Color = t.Cfg.ColorBackground
 	st.Kit.Key(&key, &mark, style.Chosen)
 	key.Content = []gogui.View{gogui.Label(gogui.IconPlay, mark)}
-	level := gogui.SliderCfg{ID: "sample-" + name, Value: 60, Max: 100, Sizing: gogui.FillFit, Height: reach() * 0.7}
+	level := gogui.SliderCfg{
+		ID:     "sample-" + name,
+		Value:  60,
+		Max:    100,
+		Sizing: gogui.FillFit,
+		Height: reach() * 0.7,
+	}
 	st.Kit.Slider(&level)
 	card := gogui.ContainerCfg{
 		Width:   w,
@@ -113,12 +176,35 @@ func styleSample(name string, w, h float32) gogui.View {
 		Spacing: gogui.SpacingSmall,
 		VAlign:  gogui.VAlignMiddle,
 		Content: []gogui.View{
-			gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, VAlign: gogui.VAlignMiddle, Spacing: gogui.SpacingSmall, Content: []gogui.View{
-				gogui.Label("Aa", face), gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding}), st.Kit.Toggle("sample-toggle-"+name, true),
-			}}),
-			gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, VAlign: gogui.VAlignMiddle, Spacing: gogui.SpacingSmall, Content: []gogui.View{
-				gogui.Slider(level), gogui.Row(key),
-			}}),
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Padding: gogui.NoPadding,
+					VAlign:  gogui.VAlignMiddle,
+					Spacing: gogui.SpacingSmall,
+					Content: []gogui.View{
+						gogui.Label(
+							"Aa",
+							face,
+						),
+						gogui.Row(
+							gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding},
+						),
+						st.Kit.Toggle("sample-toggle-"+name, true),
+					},
+				},
+			),
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Padding: gogui.NoPadding,
+					VAlign:  gogui.VAlignMiddle,
+					Spacing: gogui.SpacingSmall,
+					Content: []gogui.View{
+						gogui.Slider(level), gogui.Row(key),
+					},
+				},
+			),
 		},
 	}
 	st.Kit.Panel(&card)
@@ -131,7 +217,14 @@ func spans(marks []videoplayer.Mark, length time.Duration) []style.Span {
 	}
 	out := make([]style.Span, 0, len(marks))
 	for _, m := range marks {
-		out = append(out, style.Span{From: float32(m.From) / float32(length), To: float32(m.To) / float32(length), Color: color(m.Color)})
+		out = append(
+			out,
+			style.Span{
+				From:  float32(m.From) / float32(length),
+				To:    float32(m.To) / float32(length),
+				Color: color(m.Color),
+			},
+		)
 	}
 	return out
 }

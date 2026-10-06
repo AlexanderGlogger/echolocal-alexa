@@ -37,7 +37,10 @@ func newBoardCmd() *cobra.Command {
 			// write to it, so an unrecognised device has to stop rather than be assumed a biscuit.
 			b, known := board.For(device)
 			if !known {
-				return fmt.Errorf("this device calls itself %q, which is not a board this build knows", device)
+				return fmt.Errorf(
+					"this device calls itself %q, which is not a board this build knows",
+					device,
+				)
 			}
 
 			out := cmd.OutOrStdout()

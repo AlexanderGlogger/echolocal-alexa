@@ -17,7 +17,10 @@ type Package struct {
 // The list was established by hand on a Fire OS 5 biscuit; these are the entries a Show still has
 // under the same name. A board adds its own by appending.
 var Hidden = []Package{
-	{"amazon.speech.sim", "owns the mute button and mic mute state; persistent, so it goes on the next boot"},
+	{
+		"amazon.speech.sim",
+		"owns the mute button and mic mute state; persistent, so it goes on the next boot",
+	},
 	{"amazon.speech.davs.davcservice", "Alexa voice service; holds capture"},
 	{"com.amazon.device.echoaudioservice", "audio service; holds the PCM devices"},
 	{"com.amazon.alexa.externalmediaplayer.fireos", "playback agent"},
@@ -34,7 +37,10 @@ var Hidden = []Package{
 	{"com.amazon.device.smarthome.adapters.wifi", "smart home wifi adapter"},
 	{"com.amazon.device.gadgetscontrolmanager", "Echo Buttons and other gadgets"},
 
-	{"com.amazon.android.service.wifiprofilemanager", "re-asserts its own network through WifiManager, leaving no trace on disk"},
+	{
+		"com.amazon.android.service.wifiprofilemanager",
+		"re-asserts its own network through WifiManager, leaving no trace on disk",
+	},
 	{"com.amazon.whisperjoin.wss.wifiprovisioner", "Wi-Fi Simple Setup provisioner"},
 
 	{"com.amazon.device.smarthome.ota", "smart home OTA"},
@@ -48,7 +54,10 @@ var Hidden = []Package{
 	{"com.amazon.adep", "remote device management and Arcus remote config"},
 	{"com.amazon.tcomm", "Amazon's cloud transport"},
 	{"com.amazon.device.messaging", "push messaging from Amazon"},
-	{"com.amazon.kindleautomatictimezone", "timezone from an Amazon account, woken by joining wifi"},
+	{
+		"com.amazon.kindleautomatictimezone",
+		"timezone from an Amazon account, woken by joining wifi",
+	},
 	{"com.amazon.device.settings", "the settings app"},
 	{"com.android.bluetooth", "Android's Bluetooth stack; holds /dev/stpbt"},
 }

@@ -26,7 +26,10 @@ func callStreamPage() *shell.Page {
 			var rows []widget.Row
 			var acts []func(int)
 			for _, v := range config.CallStreams() {
-				rows = append(rows, widget.Row{Label: v.Label(), Kind: widget.Plain, Chosen: v == now})
+				rows = append(
+					rows,
+					widget.Row{Label: v.Label(), Kind: widget.Plain, Chosen: v == now},
+				)
 				acts = append(acts, func(int) { call.SetStream(v) })
 			}
 			return rows, acts
@@ -41,19 +44,42 @@ func callsPage() *shell.Page {
 			c := config.Get().Call
 			rows := []widget.Row{
 				{Label: say.T("call.incoming.allow"), Kind: widget.Toggle, On: c.Incoming},
-				{Label: say.T("call.auto"), Hint: say.T("call.auto.hint"), Kind: widget.Toggle, On: c.AutoAnswer},
+				{
+					Label: say.T("call.auto"),
+					Hint:  say.T("call.auto.hint"),
+					Kind:  widget.Toggle,
+					On:    c.AutoAnswer,
+				},
 			}
 			acts := []func(int){
 				func(int) { call.SetIncoming(!c.Incoming) },
 				func(int) { call.SetAutoAnswer(!c.AutoAnswer) },
 			}
 			if c.AutoAnswer {
-				rows = append(rows, widget.Row{Label: say.T("call.autovideo"), Kind: widget.Toggle, On: c.AutoVideo})
+				rows = append(
+					rows,
+					widget.Row{
+						Label: say.T("call.autovideo"),
+						Kind:  widget.Toggle,
+						On:    c.AutoVideo,
+					},
+				)
 				acts = append(acts, func(int) { call.SetAutoVideo(!c.AutoVideo) })
 			}
-			rows = append(rows, widget.Row{Label: say.T("call.pausewake"), Kind: widget.Toggle, On: c.PauseWake})
+			rows = append(
+				rows,
+				widget.Row{Label: say.T("call.pausewake"), Kind: widget.Toggle, On: c.PauseWake},
+			)
 			acts = append(acts, func(int) { call.SetPauseWake(!c.PauseWake) })
-			rows = append(rows, widget.Row{Label: say.T("call.stream"), Hint: say.T("call.stream.hint"), Kind: widget.Chevron, Value: c.Stream.Label()})
+			rows = append(
+				rows,
+				widget.Row{
+					Label: say.T("call.stream"),
+					Hint:  say.T("call.stream.hint"),
+					Kind:  widget.Chevron,
+					Value: c.Stream.Label(),
+				},
+			)
 			acts = append(acts, open(callStreamPage()))
 			return rows, acts
 		},

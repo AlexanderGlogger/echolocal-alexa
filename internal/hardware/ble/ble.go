@@ -223,7 +223,12 @@ func (r *Radio) send(name string, opcode uint16, params []byte) error {
 	return nil
 }
 
-func (r *Radio) read(ctx context.Context, found func(Advertisement), held []byte, finished chan<- []byte) {
+func (r *Radio) read(
+	ctx context.Context,
+	found func(Advertisement),
+	held []byte,
+	finished chan<- []byte,
+) {
 	defer func() { finished <- held }()
 
 	// The driver refuses a read larger than its own buffer, and an HCI event is at most 258 bytes.
@@ -345,7 +350,12 @@ func clearNonBlock(fd int) error {
 	if errno != 0 {
 		return fmt.Errorf("ble: reading descriptor flags: %w", errno)
 	}
-	if _, _, errno := syscall.Syscall(syscall.SYS_FCNTL, uintptr(fd), syscall.F_SETFL, flags&^syscall.O_NONBLOCK); errno != 0 {
+	if _, _, errno := syscall.Syscall(
+		syscall.SYS_FCNTL,
+		uintptr(fd),
+		syscall.F_SETFL,
+		flags&^syscall.O_NONBLOCK,
+	); errno != 0 {
 		return fmt.Errorf("ble: clearing O_NONBLOCK: %w", errno)
 	}
 	return nil

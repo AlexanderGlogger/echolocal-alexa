@@ -6,7 +6,7 @@ import "time"
 type Idle struct {
 	After    Delay      `json:"after"`
 	Media    Delay      `json:"media"`
-	Face   Face       `json:"face"`
+	Face     Face       `json:"face"`
 	Position Position   `json:"position"`
 	Align    Align      `json:"align"`
 	Size     Size       `json:"size"`
@@ -137,7 +137,7 @@ func defaultIdle() Idle {
 	return Idle{
 		After:    DefaultDelay,
 		Media:    Delay5m,
-		Face:    DefaultFace,
+		Face:     DefaultFace,
 		Position: DefaultPosition,
 		Align:    AlignCenter,
 		Size:     DefaultSize,

@@ -17,21 +17,25 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 func (a *App) root(w *gogui.Window) gogui.View {
 	covering, above := a.nav.Showing(shell.Get().Views())
 	if fullLook() || assistant.StagedFull() {
 		a.seeThrough(true)
-		layers := []gogui.View{gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding})}
+		layers := []gogui.View{
+			gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding}),
+		}
 		for _, o := range a.nav.Overlays() {
 			if v := o.Build(w); v != nil {
 				layers = append(layers, floating(o.Priority+1, v))
 			}
 		}
-		return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers})
+		return gogui.Column(
+			gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers},
+		)
 	}
 	a.seeThrough(covering != nil && covering.Clear)
 	base := a.dashboard(w)
@@ -56,14 +60,35 @@ func (a *App) root(w *gogui.Window) gogui.View {
 	}
 	if typing(w) {
 		if v := a.keyboard(w); v != nil {
-			layers = append(layers, gogui.Column(gogui.ContainerCfg{Float: true, FloatZIndex: 1001, Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: []gogui.View{v}}))
+			layers = append(
+				layers,
+				gogui.Column(
+					gogui.ContainerCfg{
+						Float:       true,
+						FloatZIndex: 1001,
+						Sizing:      gogui.FillFill,
+						Padding:     gogui.NoPadding,
+						Content:     []gogui.View{v},
+					},
+				),
+			)
 		}
 	}
-	return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers})
+	return gogui.Column(
+		gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: layers},
+	)
 }
 
 func floating(z int, v gogui.View) gogui.View {
-	return gogui.Column(gogui.ContainerCfg{Float: true, FloatZIndex: z + 1, Sizing: gogui.FillFill, Padding: gogui.NoPadding, Content: []gogui.View{v}})
+	return gogui.Column(
+		gogui.ContainerCfg{
+			Float:       true,
+			FloatZIndex: z + 1,
+			Sizing:      gogui.FillFill,
+			Padding:     gogui.NoPadding,
+			Content:     []gogui.View{v},
+		},
+	)
 }
 
 func (a *App) dashboard(w *gogui.Window) gogui.View {
@@ -88,8 +113,12 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 	}
 
 	var layers []gogui.View
-	if backdrop, behind := poster.Get().Backdrop(vw, vh, image.Rect(box.X, box.Y, box.X+box.W, box.Y+box.H), pal.Background); backdrop != nil {
-		layers = append(layers, placed(ui.Rect{W: vw, H: vh}, picture(imageSrc("poster/"+behind, backdrop), vw, vh)))
+	if backdrop, behind := poster.Get().
+		Backdrop(vw, vh, image.Rect(box.X, box.Y, box.X+box.W, box.Y+box.H), pal.Background); backdrop != nil {
+		layers = append(
+			layers,
+			placed(ui.Rect{W: vw, H: vh}, picture(imageSrc("poster/"+behind, backdrop), vw, vh)),
+		)
 	}
 	if now := media.Get().Now(); cfg.Screen.Logo && !(now.Playing || now.Paused) {
 		layers = append(layers, logo(vw, vh, pal))
@@ -98,7 +127,14 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 	switch build, ok := faces[cfg.Clock.Face]; {
 	case tabbed && drawn:
 		below := strip.Y + strip.H + margin
-		layers = append(layers, kind.board(ui.Rect{X: margin, Y: below, W: vw - 2*margin, H: vh - below - margin}, showing, pal))
+		layers = append(
+			layers,
+			kind.board(
+				ui.Rect{X: margin, Y: below, W: vw - 2*margin, H: vh - below - margin},
+				showing,
+				pal,
+			),
+		)
 	case ok:
 		layers = append(layers, placed(box, build(w, box, r, ink)))
 	}
@@ -122,7 +158,14 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 		Content: layers,
 	}
 	dash := gogui.Column(frame)
-	return gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Padding: gogui.NoPadding, Color: color(pal.Background), Content: []gogui.View{dash}})
+	return gogui.Column(
+		gogui.ContainerCfg{
+			Sizing:  gogui.FillFill,
+			Padding: gogui.NoPadding,
+			Color:   color(pal.Background),
+			Content: []gogui.View{dash},
+		},
+	)
 }
 
 func placed(at ui.Rect, v gogui.View) gogui.View {
@@ -152,14 +195,28 @@ func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
 				VAlign:  gogui.VAlignMiddle,
 				Spacing: gogui.SpacingMedium,
 				Content: []gogui.View{
-					keyButton("back", gogui.IconArrowLeft, back, style.Rest, func(e gogui.EventCtx) {
-						shell.Get().Pop()
-						e.Window.InvalidateLayout()
-					}),
+					keyButton(
+						"back",
+						gogui.IconArrowLeft,
+						back,
+						style.Rest,
+						func(e gogui.EventCtx) {
+							shell.Get().Pop()
+							e.Window.InvalidateLayout()
+						},
+					),
 					gogui.Label(p.Title, t.TextStyleDisplay),
 				},
 			}),
-			gogui.Column(gogui.ContainerCfg{ID: "page", Sizing: gogui.FillFill, Scrollable: !p.Fixed, OnGesture: holdStill, Content: append([]gogui.View{p.Build(w)}, room(w)...)}),
+			gogui.Column(
+				gogui.ContainerCfg{
+					ID:         "page",
+					Sizing:     gogui.FillFill,
+					Scrollable: !p.Fixed,
+					OnGesture:  holdStill,
+					Content:    append([]gogui.View{p.Build(w)}, room(w)...),
+				},
+			),
 		},
 	})
 }
@@ -178,5 +235,13 @@ func room(w *gogui.Window) []gogui.View {
 	if !typing(w) || keyTop <= 0 {
 		return nil
 	}
-	return []gogui.View{gogui.Column(gogui.ContainerCfg{Height: float32(vh) - keyTop, Sizing: gogui.FillFixed, Padding: gogui.NoPadding})}
+	return []gogui.View{
+		gogui.Column(
+			gogui.ContainerCfg{
+				Height:  float32(vh) - keyTop,
+				Sizing:  gogui.FillFixed,
+				Padding: gogui.NoPadding,
+			},
+		),
+	}
 }

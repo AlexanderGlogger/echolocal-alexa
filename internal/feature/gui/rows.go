@@ -21,9 +21,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 func (a *App) screenFor(v shell.View) *Screen {
@@ -60,7 +60,11 @@ func (a *App) screenFor(v shell.View) *Screen {
 var screenMakers []func(shell.View) *Screen
 
 func pageScreen(p *shell.Page) *Screen {
-	return &Screen{Title: p.Title, View: p, Build: func(w *gogui.Window) gogui.View { return pageBody(w, p) }}
+	return &Screen{
+		Title: p.Title,
+		View:  p,
+		Build: func(w *gogui.Window) gogui.View { return pageBody(w, p) },
+	}
 }
 
 func iconStyle(c gogui.Color) gogui.TextStyle {
@@ -101,9 +105,26 @@ func pageBody(w *gogui.Window, p *shell.Page) gogui.View {
 			}
 			tiles = append(tiles, tileView(w, fmt.Sprintf("tile-%d", i), p.Title, c, tap))
 		}
-		views = append(views, gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Wrap: true, Spacing: gogui.SpacingMedium, Content: tiles}))
+		views = append(
+			views,
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Wrap:    true,
+					Spacing: gogui.SpacingMedium,
+					Content: tiles,
+				},
+			),
+		)
 	}
-	list := gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingTight, Content: views})
+	list := gogui.Column(
+		gogui.ContainerCfg{
+			Sizing:  gogui.FillFit,
+			Padding: gogui.NoPadding,
+			Spacing: gogui.SpacingTight,
+			Content: views,
+		},
+	)
 	if p.Preview == nil {
 		return list
 	}
@@ -185,7 +206,12 @@ func livePreview(w *gogui.Window, watch func(ui.Rect) bool) gogui.View {
 
 func beside(w *gogui.Window, aside, list gogui.View) gogui.View {
 	vw, vh := w.WindowSize()
-	cfg := gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingLarge, Content: []gogui.View{aside, list}}
+	cfg := gogui.ContainerCfg{
+		Sizing:  gogui.FillFit,
+		Padding: gogui.NoPadding,
+		Spacing: gogui.SpacingLarge,
+		Content: []gogui.View{aside, list},
+	}
 	if vh > vw {
 		return gogui.Column(cfg)
 	}
@@ -208,7 +234,20 @@ func tileView(w *gogui.Window, id, page string, c widget.Cell, tap func(int)) go
 	case native:
 		content = append(content, faceTile(w, build, tw, th))
 	case c.Paint != nil:
-		content = append(content, picture(painted("tile/"+page+"/"+c.Label+"/"+time.Now().Format("15:04"), tw, th, palette().Surface, c.Paint), tw, th))
+		content = append(
+			content,
+			picture(
+				painted(
+					"tile/"+page+"/"+c.Label+"/"+time.Now().Format("15:04"),
+					tw,
+					th,
+					palette().Surface,
+					c.Paint,
+				),
+				tw,
+				th,
+			),
+		)
 	}
 	content = append(content, gogui.Label(c.Label, gogui.TextStyle{}))
 	cfg := gogui.ContainerCfg{
@@ -231,7 +270,17 @@ func tileView(w *gogui.Window, id, page string, c widget.Cell, tap func(int)) go
 func preview(page string, r widget.Row) gogui.View {
 	h := int(gogui.CurrentTheme().Cfg.SizeTextMedium * 2.4)
 	w := h * 2
-	return picture(painted("row/"+page+"/"+r.Label+"/"+r.Value+"/"+time.Now().Format("15:04"), w, h, palette().Background, r.Preview), w, h)
+	return picture(
+		painted(
+			"row/"+page+"/"+r.Label+"/"+r.Value+"/"+time.Now().Format("15:04"),
+			w,
+			h,
+			palette().Background,
+			r.Preview,
+		),
+		w,
+		h,
+	)
 }
 
 func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.View {
@@ -239,7 +288,9 @@ func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.Vi
 	if r.Hint != "" {
 		label = append(label, gogui.Label(r.Hint, secondary()))
 	}
-	head := gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: label})
+	head := gogui.Column(
+		gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Content: label},
+	)
 
 	content := []gogui.View{head}
 	if glyphs {
@@ -271,7 +322,12 @@ func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.Vi
 			Content: []gogui.View{gogui.Label(says, secondary())},
 		}))
 		level := gogui.SliderCfg{
-			ID: id + "-slider", Value: float32(r.Level), Min: 0, Max: 100, Sizing: gogui.FillFit, Height: reach(),
+			ID:     id + "-slider",
+			Value:  float32(r.Level),
+			Min:    0,
+			Max:    100,
+			Sizing: gogui.FillFit,
+			Height: reach(),
 			OnChange: func(v float32, e gogui.EventCtx) {
 				level := int(v + 0.5)
 				if snap != nil {
@@ -290,7 +346,10 @@ func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.Vi
 		if r.Value != "" {
 			content = append(content, gogui.Label(r.Value, secondary()))
 		}
-		content = append(content, icon(gogui.IconArrowRight, gogui.CurrentTheme().Cfg.ColorTextSecondary))
+		content = append(
+			content,
+			icon(gogui.IconArrowRight, gogui.CurrentTheme().Cfg.ColorTextSecondary),
+		)
 		onClick = tapped(tap, 0)
 	default:
 		if r.Value != "" {
@@ -375,7 +434,19 @@ func swatchView(p theme.Theme, w, h float32) gogui.View {
 	side := min(h*0.28, (w*0.8)/5)
 	var chips []gogui.View
 	for _, c := range []theme.Color{p.Surface, p.Text, p.Accent, p.Accent2} {
-		chips = append(chips, gogui.Column(gogui.ContainerCfg{Width: side, Height: side, Sizing: gogui.FixedFixed, Color: color(c), Radius: gogui.RadiusPx(side * 0.2), Padding: gogui.NoPadding}))
+		chips = append(
+			chips,
+			gogui.Column(
+				gogui.ContainerCfg{
+					Width:   side,
+					Height:  side,
+					Sizing:  gogui.FixedFixed,
+					Color:   color(c),
+					Radius:  gogui.RadiusPx(side * 0.2),
+					Padding: gogui.NoPadding,
+				},
+			),
+		)
 	}
 	return gogui.Row(gogui.ContainerCfg{
 		Width:       w,

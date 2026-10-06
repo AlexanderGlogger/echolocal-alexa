@@ -28,7 +28,11 @@ func pressing() *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 			name, ok := pressable[args[0]]
 			if !ok {
-				return fmt.Errorf("no button %q, want one of %s", args[0], strings.Join(pressableNames(), ", "))
+				return fmt.Errorf(
+					"no button %q, want one of %s",
+					args[0],
+					strings.Join(pressableNames(), ", "),
+				)
 			}
 			times := 1
 			if len(args) > 1 {

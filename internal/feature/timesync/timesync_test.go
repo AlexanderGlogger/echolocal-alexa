@@ -16,7 +16,10 @@ func TestAnAnswerThatAgreesLeavesTheClockAndSaysSo(t *testing.T) {
 		t.Fatalf("%d syncs, want 1", len(got))
 	}
 	if got[0].Stepped() {
-		t.Errorf("an answer within a second stepped the clock by %v", got[0].After.Sub(got[0].Before))
+		t.Errorf(
+			"an answer within a second stepped the clock by %v",
+			got[0].After.Sub(got[0].Before),
+		)
 	}
 	if !ts.Valid() {
 		t.Error("the time is not valid after Home Assistant agreed with it")

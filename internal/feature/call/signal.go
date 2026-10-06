@@ -16,8 +16,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
 	"github.com/ygelfand/echolocal/internal/feature/web"
-	"github.com/ygelfand/echolocal/internal/lib/fetch"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/fetch"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 const postWait = 5 * time.Second
@@ -54,7 +54,16 @@ func (c *Calls) offered(w http.ResponseWriter, r *http.Request) {
 	}
 	p, ok := discovery.Get().Find(m.From)
 	if !ok {
-		p = discovery.Peer{ID: m.From, Name: m.Name, Model: m.Model, Board: m.Board, Caps: m.Caps, Addrs: []net.IP{net.ParseIP(host)}, Port: web.Port, Seen: time.Now()}
+		p = discovery.Peer{
+			ID:    m.From,
+			Name:  m.Name,
+			Model: m.Model,
+			Board: m.Board,
+			Caps:  m.Caps,
+			Addrs: []net.IP{net.ParseIP(host)},
+			Port:  web.Port,
+			Seen:  time.Now(),
+		}
 		if p.Name == "" {
 			p.Name = host
 		}
@@ -65,13 +74,33 @@ func (c *Calls) offered(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "busy", http.StatusConflict)
 		return
 	}
-	s := c.open(Call{ID: m.Call, Peer: p, State: Ringing, Since: time.Now(), Video: m.Video, CameraOff: m.Video && cfg.AutoAnswer && !cfg.AutoVideo}, net.JoinHostPort(host, strconv.Itoa(web.Port)))
+	s := c.open(
+		Call{
+			ID:        m.Call,
+			Peer:      p,
+			State:     Ringing,
+			Since:     time.Now(),
+			Video:     m.Video,
+			CameraOff: m.Video && cfg.AutoAnswer && !cfg.AutoVideo,
+		},
+		net.JoinHostPort(host, strconv.Itoa(web.Port)),
+	)
 	s.offer = m.SDP
 	s.remote = livecam.Size{Width: m.Width, Height: m.Height}
 	ringing, quiet := context.WithCancel(s.ctx)
 	s.quiet = quiet
 	c.mu.Unlock()
-	slog.Info("incoming call", "from", p.Name, "call", s.ID, "video", m.Video, "auto", cfg.AutoAnswer)
+	slog.Info(
+		"incoming call",
+		"from",
+		p.Name,
+		"call",
+		s.ID,
+		"video",
+		m.Video,
+		"auto",
+		cfg.AutoAnswer,
+	)
 	c.changed(s)
 	w.WriteHeader(http.StatusAccepted)
 	if cfg.AutoAnswer {
@@ -154,7 +183,12 @@ func post(ctx context.Context, addr, what string, m envelope) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+addr+"/call/"+what, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"http://"+addr+"/call/"+what,
+		bytes.NewReader(body),
+	)
 	if err != nil {
 		return 0, err
 	}

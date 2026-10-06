@@ -33,7 +33,12 @@ func TestASubDeviceNoEntityNamesIsLeftOut(t *testing.T) {
 		&esphome.Switch{Base: esphome.Base{ObjectID: "a", DeviceID: component.DevicePlayback}},
 		&esphome.Switch{Base: esphome.Base{ObjectID: "b"}},
 	}
-	if got := ids(api.SubDevices("show", ents)); !slices.Equal(got, []uint32{component.DevicePlayback}) {
+	if got := ids(
+		api.SubDevices("show", ents),
+	); !slices.Equal(
+		got,
+		[]uint32{component.DevicePlayback},
+	) {
 		t.Errorf("announced %v, want only playback", got)
 	}
 }

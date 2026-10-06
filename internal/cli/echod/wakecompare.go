@@ -28,7 +28,13 @@ type variant struct {
 // compareMixes scores several channel mixes on the same audio, which is the only fair way to
 // compare them: detection varies enough between utterances that testing one mix at a time proves
 // nothing.
-func compareMixes(ctx context.Context, out io.Writer, source *mic.Source, m wake.Model, frames int) error {
+func compareMixes(
+	ctx context.Context,
+	out io.Writer,
+	source *mic.Source,
+	m wake.Model,
+	frames int,
+) error {
 	variants := []*variant{
 		{name: "center", gain: 1},
 		{name: "center x4", gain: 4},
@@ -46,8 +52,12 @@ func compareMixes(ctx context.Context, out io.Writer, source *mic.Source, m wake
 	raw, unlisten := source.ListenRaw()
 	defer unlisten()
 
-	fmt.Fprintf(out, "scoring %d mixes on the same audio, cutoff %.2f — say the wake word a few times\n\n",
-		len(variants), m.Config.ProbabilityCutoff)
+	fmt.Fprintf(
+		out,
+		"scoring %d mixes on the same audio, cutoff %.2f — say the wake word a few times\n\n",
+		len(variants),
+		m.Config.ProbabilityCutoff,
+	)
 
 	for range frames {
 		select {

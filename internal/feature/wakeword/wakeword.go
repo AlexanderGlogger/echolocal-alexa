@@ -21,7 +21,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {

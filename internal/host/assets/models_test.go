@@ -95,7 +95,12 @@ func TestWhatIsShippedIsWhatTheEngineLoads(t *testing.T) {
 			t.Errorf("%s: phrase %q did not come from the manifest", m.ID, m.Phrase)
 		}
 		if m.Config.SlidingWindowSize == 0 || m.Config.FeaturesStepMs == 0 {
-			t.Errorf("%s: window %d step %d", m.ID, m.Config.SlidingWindowSize, m.Config.FeaturesStepMs)
+			t.Errorf(
+				"%s: window %d step %d",
+				m.ID,
+				m.Config.SlidingWindowSize,
+				m.Config.FeaturesStepMs,
+			)
 		}
 	}
 }

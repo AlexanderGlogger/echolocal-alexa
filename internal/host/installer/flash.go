@@ -87,7 +87,11 @@ type BootState struct {
 // Probe reports what a device is without changing anything.
 func Probe(d *device.Device) (BootState, error) {
 	s, err := probe(d)
-	return BootState{Ready: s.ready(), Summary: s.String(), Partition: bootimg.Partition(s.slot)}, err
+	return BootState{
+		Ready:     s.ready(),
+		Summary:   s.String(),
+		Partition: bootimg.Partition(s.slot),
+	}, err
 }
 
 // probe reads the device's state. It runs before the flash and again after, so the two can never
@@ -146,7 +150,12 @@ func checkImage(r *run) (string, bool, error) {
 	if err := r.cfg.Profile.Boot.Verify(r.cfg.BootImageFrom, r.cfg.BootImage); err != nil {
 		return "", false, err
 	}
-	detail := fmt.Sprintf("%s, %d bytes, %s", r.cfg.BootImageFrom, r.cfg.Profile.Boot.Size, r.cfg.Profile.Boot.SHA256[:12])
+	detail := fmt.Sprintf(
+		"%s, %d bytes, %s",
+		r.cfg.BootImageFrom,
+		r.cfg.Profile.Boot.Size,
+		r.cfg.Profile.Boot.SHA256[:12],
+	)
 
 	// getprop in recovery describes the recovery image, which is somebody else's build: it names neither
 	// the hardware nor the system this ramdisk pairs with, so there is nothing to compare against.
@@ -214,7 +223,12 @@ func (r *run) stage() error {
 		if err := r.settle(); err != nil {
 			return err
 		}
-		if err := r.d.WriteFile(remoteImage, r.cfg.BootImage, 0o644); err != nil && try == stageTries-1 {
+		if err := r.d.WriteFile(
+			remoteImage,
+			r.cfg.BootImage,
+			0o644,
+		); err != nil &&
+			try == stageTries-1 {
 			return err
 		}
 		if err := r.settle(); err != nil {
@@ -296,9 +310,14 @@ func bootRecovery(r *run) (string, bool, error) {
 	}
 	if !root {
 		if err := r.d.Reboot(""); err != nil {
-			return "", false, fmt.Errorf("recovery is not running adbd as root, and rebooting back failed: %w", err)
+			return "", false, fmt.Errorf(
+				"recovery is not running adbd as root, and rebooting back failed: %w",
+				err,
+			)
 		}
-		return "", false, errors.New("recovery is not running adbd as root: this needs TWRP installed as the recovery partition; rebooting back to Android")
+		return "", false, errors.New(
+			"recovery is not running adbd as root: this needs TWRP installed as the recovery partition; rebooting back to Android",
+		)
 	}
 	return "root recovery", false, nil
 }
@@ -334,8 +353,13 @@ func checkPartition(r *run) (string, bool, error) {
 			target, node, strings.TrimSpace(raw))
 	}
 	if !bootimg.KnownPartition(size) {
-		return "", false, fmt.Errorf("%s resolves to %s of %d bytes, want one of %v: refusing to write",
-			target, node, size, bootimg.PartitionSizes)
+		return "", false, fmt.Errorf(
+			"%s resolves to %s of %d bytes, want one of %v: refusing to write",
+			target,
+			node,
+			size,
+			bootimg.PartitionSizes,
+		)
 	}
 	return fmt.Sprintf("%s → %s, %d bytes", target, node, size), false, nil
 }
@@ -369,7 +393,9 @@ func writeImage(r *run) (string, bool, error) {
 
 	// sync rather than conv=fsync: busybox builds differ on whether they accept it, and a dd that
 	// rejects the flag would fail after the partition was already open for writing.
-	if _, err := r.d.Shell(fmt.Sprintf("dd if=%s of=%s bs=1048576 && sync", remoteImage, bootimg.Node(r.state.slot))); err != nil {
+	if _, err := r.d.Shell(
+		fmt.Sprintf("dd if=%s of=%s bs=1048576 && sync", remoteImage, bootimg.Node(r.state.slot)),
+	); err != nil {
 		return "", false, err
 	}
 	return "written", false, nil
@@ -393,7 +419,11 @@ func verifyImage(r *run) (string, bool, error) {
 	// request would hash fewer bytes and report a mismatch on a write that was fine.
 	const block = 512
 	if r.cfg.Profile.Boot.Size%block != 0 {
-		return "", false, fmt.Errorf("image size %d is not a multiple of %d", r.cfg.Profile.Boot.Size, block)
+		return "", false, fmt.Errorf(
+			"image size %d is not a multiple of %d",
+			r.cfg.Profile.Boot.Size,
+			block,
+		)
 	}
 	got, err := sha256Of(r.d, fmt.Sprintf("dd if=%s bs=%d count=%d 2>/dev/null",
 		bootimg.Node(r.state.slot), block, r.cfg.Profile.Boot.Size/block))
@@ -401,8 +431,11 @@ func verifyImage(r *run) (string, bool, error) {
 		return "", false, err
 	}
 	if got != r.cfg.Profile.Boot.SHA256 {
-		return "", false, fmt.Errorf("the partition hashes to %s, want %s: left in recovery, re-run to write it again",
-			got, r.cfg.Profile.Boot.SHA256)
+		return "", false, fmt.Errorf(
+			"the partition hashes to %s, want %s: left in recovery, re-run to write it again",
+			got,
+			r.cfg.Profile.Boot.SHA256,
+		)
 	}
 	return got[:12] + " matches", false, nil
 }

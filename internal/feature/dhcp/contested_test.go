@@ -83,7 +83,10 @@ func TestANewAddressIsProbed(t *testing.T) {
 func TestTheFirstAddressIsProbed(t *testing.T) {
 	calls := instead(t, func(string, net.IP) (bool, error) { return false, nil })
 
-	if _, err := (&Client{}).contested(context.Background(), leaseFor("10.100.101.106")); err != nil {
+	if _, err := (&Client{}).contested(
+		context.Background(),
+		leaseFor("10.100.101.106"),
+	); err != nil {
 		t.Fatal(err)
 	}
 	if *calls != 1 {
@@ -130,7 +133,10 @@ func TestAnAddressThatIsFreeIsNotDeclined(t *testing.T) {
 	instead(t, func(string, net.IP) (bool, error) { return false, nil })
 	sent := told(t)
 
-	if _, err := (&Client{}).contested(context.Background(), leaseFor("10.100.101.106")); err != nil {
+	if _, err := (&Client{}).contested(
+		context.Background(),
+		leaseFor("10.100.101.106"),
+	); err != nil {
 		t.Fatal(err)
 	}
 	if *sent != 0 {
@@ -145,7 +151,10 @@ func TestAProbeThatCannotRunDeclinesNothing(t *testing.T) {
 	})
 	sent := told(t)
 
-	if _, err := (&Client{}).contested(context.Background(), leaseFor("10.100.101.106")); err != nil {
+	if _, err := (&Client{}).contested(
+		context.Background(),
+		leaseFor("10.100.101.106"),
+	); err != nil {
 		t.Fatal(err)
 	}
 	if *sent != 0 {

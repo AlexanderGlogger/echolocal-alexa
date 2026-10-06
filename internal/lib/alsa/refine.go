@@ -30,7 +30,11 @@ func Refine(card, device int, capture bool) (Range, error) {
 	if capture {
 		dir, flags = "c", os.O_RDONLY
 	}
-	f, err := os.OpenFile(fmt.Sprintf("/dev/snd/pcmC%dD%d%s", card, device, dir), flags|syscall.O_NONBLOCK, 0)
+	f, err := os.OpenFile(
+		fmt.Sprintf("/dev/snd/pcmC%dD%d%s", card, device, dir),
+		flags|syscall.O_NONBLOCK,
+		0,
+	)
 	if err != nil {
 		return Range{}, err
 	}

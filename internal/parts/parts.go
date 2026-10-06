@@ -78,7 +78,15 @@ func ensure(ps []Part) (rebootPending bool) {
 
 		if p.Service != "" {
 			if err := restart(p.Service); err != nil {
-				slog.Error("restarting a part failed", "part", p.Name, "service", p.Service, "err", err)
+				slog.Error(
+					"restarting a part failed",
+					"part",
+					p.Name,
+					"service",
+					p.Service,
+					"err",
+					err,
+				)
 			}
 		}
 		if p.Boot {

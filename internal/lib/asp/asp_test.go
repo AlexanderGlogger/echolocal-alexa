@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/fft"
+	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
 // convolve is the definition the FIR has to meet: every output sample is the filter run against the
@@ -171,7 +171,13 @@ func unitTaps() []float32 {
 
 func testMBCL() mbcl {
 	band := mbclBand{CompRatio: 2, CompThresh: -10, CompGainMin: -40, LimThresh: 0, LimRelease: 1}
-	low := mbclBand{CompRatio: 20, CompThresh: -50, CompGainMin: -40, LimThresh: -8, LimRelease: 200}
+	low := mbclBand{
+		CompRatio:   20,
+		CompThresh:  -50,
+		CompGainMin: -40,
+		LimThresh:   -8,
+		LimRelease:  200,
+	}
 	return mbcl{
 		PreFilterBypass: true,
 		NumBands:        4,
@@ -249,7 +255,10 @@ func TestVendorMBCLIsTheOneWeBuiltFor(t *testing.T) {
 		t.Fatalf("%d bands and %d crossovers", len(m.Bands), len(m.Crossovers))
 	}
 	if m.Crossovers[0] != 115 {
-		t.Errorf("the low crossover is at %g Hz, the driver protection assumes 115", m.Crossovers[0])
+		t.Errorf(
+			"the low crossover is at %g Hz, the driver protection assumes 115",
+			m.Crossovers[0],
+		)
 	}
 	if b := m.Bands[0]; b.CompRatio < 10 || b.CompThresh > -40 {
 		t.Errorf("the low band compresses %g:1 from %g dB, which will not hold the bass boost",
@@ -262,7 +271,11 @@ func TestVendorMBCLIsTheOneWeBuiltFor(t *testing.T) {
 
 func TestLoadRejectsAWrongLengthFilter(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, eqFiles[0].name), []byte("1.0,\n2.0,\n"), 0o600); err != nil {
+	if err := os.WriteFile(
+		filepath.Join(dir, eqFiles[0].name),
+		[]byte("1.0,\n2.0,\n"),
+		0o600,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := Load(dir); err == nil {

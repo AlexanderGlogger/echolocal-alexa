@@ -3,7 +3,7 @@ package visuals
 import (
 	"math"
 
-	"github.com/ygelfand/echolocal/internal/lib/analysis"
+	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 )
 
 const LiftMax = 40

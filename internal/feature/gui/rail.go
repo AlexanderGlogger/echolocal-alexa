@@ -4,7 +4,7 @@ package gui
 
 import (
 	"fmt"
-	"github.com/ygelfand/echolocal/internal/ui/style"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 

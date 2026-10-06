@@ -77,10 +77,24 @@ func TestALiftWithoutADownIsSilent(t *testing.T) {
 func TestTwoFingersAreTrackedApart(t *testing.T) {
 	var d decoder
 
-	got := feed(&d,
-		abs(absMTSlot, 0), abs(absMTTrackingID, 1), abs(absMTPositionX, 10), abs(absMTPositionY, 11),
-		abs(absMTSlot, 1), abs(absMTTrackingID, 2), abs(absMTPositionX, 90), abs(absMTPositionY, 91),
-		syn)
+	got := feed(
+		&d,
+		abs(
+			absMTSlot,
+			0,
+		),
+		abs(absMTTrackingID, 1),
+		abs(absMTPositionX, 10),
+		abs(absMTPositionY, 11),
+		abs(
+			absMTSlot,
+			1,
+		),
+		abs(absMTTrackingID, 2),
+		abs(absMTPositionX, 90),
+		abs(absMTPositionY, 91),
+		syn,
+	)
 	if len(got) != 2 {
 		t.Fatalf("got %d contacts, want 2", len(got))
 	}

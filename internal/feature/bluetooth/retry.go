@@ -11,7 +11,11 @@ const (
 
 // settleRadio applies each requested state and retries failures with bounded backoff. A new request
 // interrupts the wait and restarts from the shortest delay.
-func settleRadio(wanted <-chan struct{}, tune func() bool, after func(time.Duration) <-chan time.Time) {
+func settleRadio(
+	wanted <-chan struct{},
+	tune func() bool,
+	after func(time.Duration) <-chan time.Time,
+) {
 	for range wanted {
 		wait := radioRetryInitial
 		for !tune() {

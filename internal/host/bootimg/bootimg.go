@@ -171,10 +171,18 @@ func (i Image) Supports(device, build string) (string, error) {
 
 	on, err := strconv.ParseInt(strings.TrimSpace(build), 10, 64)
 	if err != nil {
-		return fmt.Sprintf("build %q cannot be ranked against the %d this image was tested on", build, i.Build), nil
+		return fmt.Sprintf(
+			"build %q cannot be ranked against the %d this image was tested on",
+			build,
+			i.Build,
+		), nil
 	}
 	if on > i.Build {
-		return fmt.Sprintf("build %d is newer than the %d this image was tested on", on, i.Build), nil
+		return fmt.Sprintf(
+			"build %d is newer than the %d this image was tested on",
+			on,
+			i.Build,
+		), nil
 	}
 	return "", nil
 }

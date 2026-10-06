@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
 	"github.com/ygelfand/echolocal/internal/setting"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 const StreamGroup setting.Group = "Streams"
@@ -71,8 +71,14 @@ func sizeLabels(values []string) []setting.Option {
 }
 
 func streamRows() []Knob {
-	mainSize := Knob{Name: "main_size", Kind: setting.Choice, Group: StreamGroup, Icon: "mdi:aspect-ratio",
-		Options: sizeLabels(mainSizes), Read: func(k *Knobs) string { return k.MainSize }}
+	mainSize := Knob{
+		Name:    "main_size",
+		Kind:    setting.Choice,
+		Group:   StreamGroup,
+		Icon:    "mdi:aspect-ratio",
+		Options: sizeLabels(mainSizes),
+		Read:    func(k *Knobs) string { return k.MainSize },
+	}
 	mainSize.Write = func(k *Knobs, v string) error {
 		if !slices.Contains(mainSizes, v) {
 			return mainSize.Bad(v, "")
@@ -81,9 +87,17 @@ func streamRows() []Knob {
 		return nil
 	}
 
-	keyframe := Knob{Name: "keyframe", Kind: setting.Number, Group: StreamGroup, Icon: "mdi:key-variant",
-		Slider: true, Min: keyframeMin, Max: keyframeMax, Unit: "s",
-		Read: func(k *Knobs) string { return strconv.Itoa(k.Keyframe) }}
+	keyframe := Knob{
+		Name:   "keyframe",
+		Kind:   setting.Number,
+		Group:  StreamGroup,
+		Icon:   "mdi:key-variant",
+		Slider: true,
+		Min:    keyframeMin,
+		Max:    keyframeMax,
+		Unit:   "s",
+		Read:   func(k *Knobs) string { return strconv.Itoa(k.Keyframe) },
+	}
 	keyframe.Write = func(k *Knobs, s string) error {
 		n, err := strconv.Atoi(s)
 		if err != nil || n < keyframeMin || n > keyframeMax {
@@ -97,7 +111,13 @@ func streamRows() []Knob {
 		toggle("main_on", "mdi:video", func(k *Knobs) *bool { return &k.MainOn }),
 		mainSize,
 		keyframe,
-		choice("quality", StreamGroup, "mdi:high-definition", words(qualities), func(k *Knobs) *string { return &k.Quality }),
+		choice(
+			"quality",
+			StreamGroup,
+			"mdi:high-definition",
+			words(qualities),
+			func(k *Knobs) *string { return &k.Quality },
+		),
 	}
 }
 

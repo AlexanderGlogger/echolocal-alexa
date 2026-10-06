@@ -10,7 +10,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/cast/playback"
+	"github.com/ygelfand/libcountertop/pkg/media/playback"
 )
 
 type ending struct {
@@ -43,7 +43,13 @@ type fakeQueue struct {
 	samples []int16
 }
 
-func (h *fakeQueue) Play(s []int16)       { h.mu.Lock(); h.samples = append(h.samples, s...); h.mu.Unlock() }
+func (h *fakeQueue) Play(
+	s []int16,
+) {
+	h.mu.Lock()
+	h.samples = append(h.samples, s...)
+	h.mu.Unlock()
+}
 func (h *fakeQueue) Drain()               { h.Take() }
 func (h *fakeQueue) Adjust(func([]int16)) {}
 

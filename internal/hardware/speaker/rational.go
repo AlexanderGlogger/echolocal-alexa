@@ -72,7 +72,12 @@ func NewSkewable(from, to, channels int) *Rational {
 	if from != to {
 		return NewRational(from, to, channels)
 	}
-	r := &Rational{up: skewGrid, down: skewGrid, channels: max(channels, 1), filter: lowpass(skewGrid, ratioTaps)}
+	r := &Rational{
+		up:       skewGrid,
+		down:     skewGrid,
+		channels: max(channels, 1),
+		filter:   lowpass(skewGrid, ratioTaps),
+	}
 	r.Reset()
 	return r
 }

@@ -87,6 +87,10 @@ func TestCheckImageRefusesAnEmptyOne(t *testing.T) {
 
 	keeps := &run{state: state{device: "rook"}}
 	if _, skip, err := checkImage(keeps); err != nil || !skip {
-		t.Errorf("board with no image of its own: skip=%t err=%v, want skipped with no error", skip, err)
+		t.Errorf(
+			"board with no image of its own: skip=%t err=%v, want skipped with no error",
+			skip,
+			err,
+		)
 	}
 }

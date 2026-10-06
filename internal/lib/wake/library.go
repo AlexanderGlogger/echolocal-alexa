@@ -112,7 +112,10 @@ func (l *Library) Advertise() ([]esphome.WakeWord, int) {
 	words := make([]esphome.WakeWord, 0, len(ours))
 	taken := make(map[string]bool, len(ours))
 	for _, m := range ours {
-		words = append(words, esphome.WakeWord{ID: m.ID, Phrase: m.Phrase, TrainedLanguages: m.Languages})
+		words = append(
+			words,
+			esphome.WakeWord{ID: m.ID, Phrase: m.Phrase, TrainedLanguages: m.Languages},
+		)
 		taken[m.Phrase] = true
 	}
 
@@ -123,7 +126,10 @@ func (l *Library) Advertise() ([]esphome.WakeWord, int) {
 			continue
 		}
 		taken[o.Phrase] = true
-		words = append(words, esphome.WakeWord{ID: o.ID, Phrase: o.Phrase, TrainedLanguages: o.TrainedLanguages})
+		words = append(
+			words,
+			esphome.WakeWord{ID: o.ID, Phrase: o.Phrase, TrainedLanguages: o.TrainedLanguages},
+		)
 	}
 	return words, shadowed
 }
@@ -138,7 +144,10 @@ func (l *Library) sorted() []esphome.ExternalWakeWord {
 	for _, o := range l.offers {
 		out = append(out, o)
 	}
-	slices.SortFunc(out, func(a, b esphome.ExternalWakeWord) int { return strings.Compare(a.ID, b.ID) })
+	slices.SortFunc(
+		out,
+		func(a, b esphome.ExternalWakeWord) int { return strings.Compare(a.ID, b.ID) },
+	)
 	return out
 }
 

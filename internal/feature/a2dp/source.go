@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
-	"github.com/ygelfand/echolocal/internal/lib/bt"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avrcp"
-	"github.com/ygelfand/echolocal/internal/lib/bt/l2cap"
-	"github.com/ygelfand/echolocal/internal/lib/bt/sdp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avrcp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/l2cap"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/sdp"
 )
 
 // A connected phone behind media.Source, so the player shows it like any other.
@@ -127,9 +127,12 @@ func tracing() bool {
 // Attributes asks about the current track, naming which attributes are wanted. The answer arrives
 // on the channel like any other, so it shows up in a trace rather than coming back from here.
 func (s *Sink) Attributes(ids ...uint32) {
-	s.tell(fmt.Sprintf("asking for attributes %v", ids), func(sink *bt.Sink) ([]l2cap.Frame, error) {
-		return sink.Attributes(ids...)
-	})
+	s.tell(
+		fmt.Sprintf("asking for attributes %v", ids),
+		func(sink *bt.Sink) ([]l2cap.Frame, error) {
+			return sink.Attributes(ids...)
+		},
+	)
 }
 
 // Browsing asks the phone for the browsing channel by hand, for a link where the one asked for

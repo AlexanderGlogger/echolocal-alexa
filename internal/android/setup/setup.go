@@ -130,7 +130,10 @@ const certDirs = "/system/etc/security/cacerts:/data/misc/keychain/certs-added"
 // Late is applied once Android reports the boot finished, for the services init starts from that
 // and no earlier. A stop sent before then is undone by the start that follows it.
 var Late = []Action{
-	stop("shblemeshd", "BLE mesh daemon left with nothing to talk to once its service package is hidden"),
+	stop(
+		"shblemeshd",
+		"BLE mesh daemon left with nothing to talk to once its service package is hidden",
+	),
 	{
 		Name: "put the firewall jumps back",
 		Reason: "the boot completing is what starts firewall.sh, which flushes INPUT: our chains keep " +
@@ -210,7 +213,13 @@ func bootCompleted(ctx context.Context) bool {
 		case <-ctx.Done():
 			return false
 		case <-giveUp:
-			slog.Warn("gave up waiting for the boot to finish", "after", bootWait, "skipped", len(Late))
+			slog.Warn(
+				"gave up waiting for the boot to finish",
+				"after",
+				bootWait,
+				"skipped",
+				len(Late),
+			)
 			return false
 		case <-tick.C:
 		}

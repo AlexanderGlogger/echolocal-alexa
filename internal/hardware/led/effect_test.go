@@ -84,7 +84,10 @@ func TestEffectsUseTheColoursTheCatalogueSaysTheyDo(t *testing.T) {
 			if len(e.Palette) > 0 {
 				for i := range red {
 					if !slices.Equal(red[i], blue[i]) {
-						t.Fatalf("frame %d differs with the ring's colour, but this effect has a palette", i)
+						t.Fatalf(
+							"frame %d differs with the ring's colour, but this effect has a palette",
+							i,
+						)
 					}
 				}
 				return
@@ -162,7 +165,11 @@ func TestTheListsOfferOnlyWhatFitsThem(t *testing.T) {
 
 func TestEffectNamesAreUnique(t *testing.T) {
 	if len(byName) != len(effects) {
-		t.Errorf("catalogue has %d effects but %d names; one is shadowing another", len(effects), len(byName))
+		t.Errorf(
+			"catalogue has %d effects but %d names; one is shadowing another",
+			len(effects),
+			len(byName),
+		)
 	}
 }
 
@@ -182,7 +189,10 @@ func TestPaletteWrapsRoundAndClampsAlong(t *testing.T) {
 		t.Errorf("At(-1/3) is %+v, want the last colour %+v", got, want)
 	}
 	// Half way between the first two, give or take where the division lands.
-	if mid := p.At(1.0 / 6); mid.R < 127 || mid.R > 128 || mid.G < 127 || mid.G > 128 || mid.B != 0 {
+	if mid := p.At(
+		1.0 / 6,
+	); mid.R < 127 || mid.R > 128 || mid.G < 127 || mid.G > 128 ||
+		mid.B != 0 {
 		t.Errorf("At(1/6) is %+v, want half of each of the first two", mid)
 	}
 

@@ -53,7 +53,10 @@ func tabStrip(at ui.Rect, tabs []dashboard.Tab, open string, pal theme.Theme) go
 			content = append([]gogui.View{gogui.Label(kind.glyph(t), mark)}, content...)
 		}
 		cfg.Content = content
-		pills = append(pills, pressable(gogui.Row, cfg, func(gogui.EventCtx) { dashboard.Show(t.Key) }))
+		pills = append(
+			pills,
+			pressable(gogui.Row, cfg, func(gogui.EventCtx) { dashboard.Show(t.Key) }),
+		)
 	}
 	return placed(at, gogui.Row(gogui.ContainerCfg{
 		Sizing:  gogui.FillFill,

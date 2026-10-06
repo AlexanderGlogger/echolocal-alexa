@@ -2,6 +2,7 @@ package voice
 
 import (
 	"context"
+	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 	"log/slog"
 	"math"
 	"sync/atomic"
@@ -22,8 +23,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // errDuplicate is what Home Assistant reports to the devices that lost a race to answer: "Duplicate
@@ -107,6 +108,7 @@ type event struct {
 // being written and an event that does not fit the phase is dropped by the transition rather than by
 // a guard flag.
 type conversation struct {
+	word    func(int) (string, bool)
 	vs      *esphome.VoiceSatellite
 	source  *mic.Source
 	speaker *speaker.Player
@@ -321,7 +323,9 @@ func (c *conversation) handle(e event) {
 		if c.phase == phaseListening {
 			wakeword.Chime(c.slot)
 			if wakeword.Tones(c.slot) {
-				c.quietUntil.Store(time.Now().Add(wakeword.ChimeLength(c.slot) + speaker.HardwareTail).UnixNano())
+				c.quietUntil.Store(
+					time.Now().Add(wakeword.ChimeLength(c.slot) + speaker.HardwareTail).UnixNano(),
+				)
 			}
 		}
 
@@ -406,7 +410,13 @@ func (c *conversation) handle(e event) {
 			// Continual conversation: the slot keeps listening after every reply, not only the ones
 			// Home Assistant asked to continue.
 			if c.pending == nil && wakeword.FollowUp(slot) > 0 {
-				slog.Info("listening again after the reply", "slot", slot+1, "for", wakeword.FollowUp(slot))
+				slog.Info(
+					"listening again after the reply",
+					"slot",
+					slot+1,
+					"for",
+					wakeword.FollowUp(slot),
+				)
 				c.pending = &nextTurn{slot: slot, followUp: true}
 			}
 			c.startPending()
@@ -480,7 +490,13 @@ func (c *conversation) handle(e event) {
 		case phaseListening:
 			slog.Warn("gave up listening", "slot", c.slot+1, "after", wakeword.MaxListen(c.slot))
 		case phaseThinking:
-			slog.Warn("gave up waiting for an answer", "slot", c.slot+1, "after", wakeword.MaxThink(c.slot))
+			slog.Warn(
+				"gave up waiting for an answer",
+				"slot",
+				c.slot+1,
+				"after",
+				wakeword.MaxThink(c.slot),
+			)
 		}
 		c.idle("timed out", activity.Timeout)
 		c.trouble()
@@ -762,13 +778,13 @@ func (c *conversation) trouble() {
 // spoken phrase, not the model's id. Which pipeline runs is resolved by comparing that phrase against
 // each slot's select, so a turn from slot n has to report slot n's own phrase.
 func (c *conversation) phraseFor(slot int) (string, bool) {
-	if slot < 0 || slot >= len(c.vs.ActiveWakeWords) {
+	if c.word == nil {
 		return "", false
 	}
-
-	// From what is on disk, because a slot is only active once its model loaded, and the advertised list
-	// is not kept anywhere to be read.
-	id := c.vs.ActiveWakeWords[slot]
+	id, ok := c.word(slot)
+	if !ok {
+		return "", false
+	}
 	if m, ok := wake.Find(wake.Lib().Ours(), id); ok {
 		return m.Phrase, true
 	}
@@ -978,30 +994,19 @@ func (c *conversation) reported(dry time.Time) {
 		"dropped", c.source.Dropped())
 }
 
-// activeWakeWords is the per-slot selection the user last made, filtered to what the device can
-// actually load. Home Assistant takes it as authoritative, so claiming a model that is not here would
-// leave a slot looking armed and deaf.
-func activeWakeWords(models []wake.Model, slots int) []string {
-	saved := config.Get().Wake
-	var active []string
-	for i := range slots {
-		if id := saved.Slot(i).ID; id != "" {
-			if _, ok := wake.Find(models, id); ok {
-				active = append(active, id)
-			}
+// wanted retains assistant positions and explicit disables. Only a fresh configuration gets a default.
+func wanted(models []wake.Model, count int) []string {
+	saved := config.Get().Wake.Words
+	var ids []string
+	if saved != nil {
+		ids = make([]string, len(saved))
+		for i, word := range saved {
+			ids[i] = word.ID
 		}
 	}
-
-	// Nothing chosen yet: start listening for something rather than nothing, or a fresh device looks
-	// broken until the user finds the select. The shipped default when it is installed, and otherwise
-	// whatever this device does have — a device carrying one model somebody copied on should listen for
-	// that one rather than for nothing.
-	if len(active) == 0 {
-		if m, ok := wake.Find(models, wake.DefaultModel); ok {
-			active = []string{m.ID}
-		} else if len(models) > 0 {
-			active = []string{models[0].ID}
-		}
+	installed := make([]string, len(models))
+	for i, m := range models {
+		installed[i] = m.ID
 	}
-	return active
+	return wakeslots.Initial(ids, installed, wake.DefaultModel, count)
 }

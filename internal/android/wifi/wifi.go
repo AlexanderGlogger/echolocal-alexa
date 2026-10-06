@@ -13,7 +13,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/wpa"
+	"github.com/ygelfand/libcountertop/pkg/network/wpa"
 )
 
 const (

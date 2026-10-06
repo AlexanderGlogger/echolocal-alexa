@@ -5,8 +5,8 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/ygelfand/echolocal/internal/lib/aec"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
+	"github.com/ygelfand/libcountertop/pkg/audio/aec"
 )
 
 // cancelTaps is the echo tail the filter reaches, 64 ms. Measured on a Dot: 13.7% of a core.

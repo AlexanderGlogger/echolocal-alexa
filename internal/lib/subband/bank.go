@@ -1,6 +1,6 @@
 package subband
 
-import "github.com/ygelfand/echolocal/internal/lib/fft"
+import "github.com/ygelfand/libcountertop/pkg/audio/fft"
 
 // The bank is the standard polyphase pair. Analysis windows the last WindowLen samples with the
 // prototype, folds them onto FFTLen by summing every FFTLen apart, and transforms; synthesis

@@ -28,7 +28,18 @@ func TestProbeQuietChannels(t *testing.T) {
 		t.Skip("set ALSA_PROBE=1 on a device with a sound card")
 	}
 	const channels, rate = 4, 16000
-	c, err := Open(0, 22, Config{Channels: channels, Rate: rate, Format: FormatS24_3LE, Bits: 24, PeriodSize: 320, Periods: 8})
+	c, err := Open(
+		0,
+		22,
+		Config{
+			Channels:   channels,
+			Rate:       rate,
+			Format:     FormatS24_3LE,
+			Bits:       24,
+			PeriodSize: 320,
+			Periods:    8,
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +65,13 @@ func TestProbeQuietChannels(t *testing.T) {
 		}
 	}
 	for ch := range channels {
-		t.Logf("channel %d: rms %.1f peak %d over %d frames", ch, math.Sqrt(sum[ch]/float64(frames)), peak[ch], frames)
+		t.Logf(
+			"channel %d: rms %.1f peak %d over %d frames",
+			ch,
+			math.Sqrt(sum[ch]/float64(frames)),
+			peak[ch],
+			frames,
+		)
 	}
 }
 
@@ -73,7 +90,12 @@ func TestProbeMixer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("elem_value is %d bytes, elem_info %d; %d controls", elemValueSize, elemInfoSize, len(controls))
+	t.Logf(
+		"elem_value is %d bytes, elem_info %d; %d controls",
+		elemValueSize,
+		elemInfoSize,
+		len(controls),
+	)
 
 	var integers, enums, multi int
 	for _, c := range controls {

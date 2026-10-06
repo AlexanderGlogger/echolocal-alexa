@@ -95,7 +95,11 @@ var (
 		config.ResampleLinear: func() Resampler { return &linear{} },
 		config.ResampleHold:   func() Resampler { return hold{} },
 	}
-	resamplerOrder = []config.Resampling{config.ResampleSinc, config.ResampleLinear, config.ResampleHold}
+	resamplerOrder = []config.Resampling{
+		config.ResampleSinc,
+		config.ResampleLinear,
+		config.ResampleHold,
+	}
 )
 
 // Register adds a way to stretch the voice stream.

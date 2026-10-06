@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ygelfand/echolocal/internal/lib/wpa"
+	"github.com/ygelfand/libcountertop/pkg/network/wpa"
 )
 
 // Network and Security are the protocol's, so a caller here does not have to know where they come

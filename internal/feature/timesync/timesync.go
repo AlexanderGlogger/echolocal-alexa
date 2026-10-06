@@ -14,8 +14,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/tz"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/timezone"
 )
 
 // Home Assistant knows the time and is already talking to this device, so it is the source: it

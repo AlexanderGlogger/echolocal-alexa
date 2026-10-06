@@ -209,7 +209,10 @@ func effect(name string, base Color, room Room) (Frame, error) {
 
 	if e.Senses != nil {
 		if room.Level == nil {
-			return nil, fmt.Errorf("led: effect %q reacts to the room and was given nothing to react to", name)
+			return nil, fmt.Errorf(
+				"led: effect %q reacts to the room and was given nothing to react to",
+				name,
+			)
 		}
 		return e.Senses(p, room), nil
 	}
@@ -218,7 +221,14 @@ func effect(name string, base Color, room Room) (Frame, error) {
 
 // RunEffect animates until ctx is cancelled. under is what to show wherever this draws nothing, or nil
 // to own the ring outright.
-func RunEffect(ctx context.Context, r *Ring, name string, base Color, room Room, under Frame) error {
+func RunEffect(
+	ctx context.Context,
+	r *Ring,
+	name string,
+	base Color,
+	room Room,
+	under Frame,
+) error {
 	frame, err := effect(name, base, room)
 	if err != nil {
 		return err
@@ -251,7 +261,14 @@ func through(frame, under Frame) Frame {
 //
 // Reversing an effect that reacts to the room is allowed and means nothing: what it shows comes from
 // the room rather than from a direction of travel.
-func RunEffectReversed(ctx context.Context, r *Ring, name string, base Color, room Room, under Frame) error {
+func RunEffectReversed(
+	ctx context.Context,
+	r *Ring,
+	name string,
+	base Color,
+	room Room,
+	under Frame,
+) error {
 	frame, err := effect(name, base, room)
 	if err != nil {
 		return err

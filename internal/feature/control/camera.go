@@ -46,7 +46,13 @@ func cameraCommand() *cobra.Command {
 			if err := os.WriteFile(at, pic, 0o644); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%d bytes in %s to %s\n", len(pic), took.Round(time.Millisecond), at)
+			fmt.Fprintf(
+				cmd.OutOrStdout(),
+				"%d bytes in %s to %s\n",
+				len(pic),
+				took.Round(time.Millisecond),
+				at,
+			)
 			return nil
 		},
 	})

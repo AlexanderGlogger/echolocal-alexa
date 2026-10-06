@@ -27,13 +27,22 @@ func profileFor(d *device.Device) (profile.Profile, error) {
 //
 // The fetch is the only part of an install that needs the network. Nothing is kept afterwards, so it
 // runs once per install rather than once per machine.
-func resolveBootImage(ctx context.Context, out io.Writer, p profile.Profile, path string) ([]byte, string, error) {
+func resolveBootImage(
+	ctx context.Context,
+	out io.Writer,
+	p profile.Profile,
+	path string,
+) ([]byte, string, error) {
 	if path != "" {
 		data, err := os.ReadFile(path)
 		return data, path, err
 	}
 
-	title := fmt.Sprintf("Fetching the %s boot image (%.1f MB)", p.Board, float64(p.Boot.Size)/(1<<20))
+	title := fmt.Sprintf(
+		"Fetching the %s boot image (%.1f MB)",
+		p.Board,
+		float64(p.Boot.Size)/(1<<20),
+	)
 
 	data, from, err := fetchImage(ctx, out, title, p.Boot.Resolve)
 	if err != nil {

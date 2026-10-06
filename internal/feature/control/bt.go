@@ -12,7 +12,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/a2dp"
-	"github.com/ygelfand/echolocal/internal/lib/bt/avrcp"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/avrcp"
 )
 
 func init() {

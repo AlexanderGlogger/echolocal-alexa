@@ -32,9 +32,9 @@ var screenOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/a2dp",
 	"github.com/ygelfand/echolocal/internal/feature/drm",
 	"github.com/ygelfand/echolocal/internal/feature/weather",
-	"github.com/ygelfand/echolocal/internal/lib/bt",
+	"github.com/ygelfand/libcountertop/pkg/bluetooth",
 	"github.com/ygelfand/echolocal/internal/feature/videoplayer",
-	"github.com/ygelfand/echolocal/pkg/gogui",
+	"github.com/ygelfand/libcountertop/pkg/display/gogui",
 	"github.com/go-gui-org/go-gui/gui",
 }
 
@@ -45,12 +45,12 @@ var castOnly = []string{
 	"github.com/ygelfand/echolocal/internal/lib/rtc",
 	"github.com/pion/webrtc/v4",
 	"github.com/ygelfand/echolocal/internal/hardware/video",
-	"github.com/ygelfand/echolocal/internal/lib/webm",
-	"github.com/ygelfand/echolocal/internal/lib/hls",
-	"github.com/ygelfand/echolocal/internal/lib/cenc",
-	"github.com/ygelfand/echolocal/internal/lib/cast",
-	"github.com/ygelfand/echolocal/internal/lib/cast/protocols/primevideo",
-	"github.com/ygelfand/echolocal/internal/lib/cast/sealed",
+	"github.com/ygelfand/libcountertop/pkg/media/webm",
+	"github.com/ygelfand/libcountertop/pkg/media/hls",
+	"github.com/ygelfand/libcountertop/pkg/media/cenc",
+	"github.com/ygelfand/libcountertop/pkg/media/cast",
+	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/primevideo",
+	"github.com/ygelfand/libcountertop/pkg/media/sealed",
 }
 
 var cameraOnly = []string{
@@ -92,7 +92,13 @@ func TestOnlyHelperBoardsEmbedTheHelper(t *testing.T) {
 		"board_checkers": true,
 		"board_cronos":   true,
 	} {
-		files := goList(t, tags, "github.com/ygelfand/echolocal/internal/parts", "-f", `{{join .EmbedPatterns " "}}`)
+		files := goList(
+			t,
+			tags,
+			"github.com/ygelfand/echolocal/internal/parts",
+			"-f",
+			`{{join .EmbedPatterns " "}}`,
+		)
 		for _, part := range []string{"payload/echolocal-surface", "payload/echolocal-camera", "payload/libecholocal-camshim.so"} {
 			if got := slices.Contains(files, part); got != want {
 				t.Errorf("%q embeds %s %t, want %t (%v)", tags, part, got, want, files)

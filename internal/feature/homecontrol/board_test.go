@@ -16,7 +16,13 @@ import (
 var lit = []homeassistant.Entity{
 	{ID: "light.k1", Name: "Kitchen Center", State: "on", AreaID: "kitchen", Area: "Kitchen"},
 	{ID: "light.k2", Name: "Kitchen Ring", State: "off", AreaID: "kitchen", Area: "Kitchen"},
-	{ID: "light.k3", Name: "Kitchen Strip", State: "unavailable", AreaID: "kitchen", Area: "Kitchen"},
+	{
+		ID:     "light.k3",
+		Name:   "Kitchen Strip",
+		State:  "unavailable",
+		AreaID: "kitchen",
+		Area:   "Kitchen",
+	},
 	{ID: "light.l1", Name: "Loft Ring", State: "off", AreaID: "loft", Area: "Loft"},
 }
 
@@ -35,7 +41,10 @@ func testBoard(t *testing.T) (*Board, chan sent) {
 	config.Use(filepath.Join(t.TempDir(), "state.json"))
 	calls := make(chan sent, 4)
 	c := &cache{
-		got: map[string]*result{"lights": {entities: lit, at: time.Now()}, "switches": {entities: plugs, at: time.Now()}},
+		got: map[string]*result{
+			"lights":   {entities: lit, at: time.Now()},
+			"switches": {entities: plugs, at: time.Now()},
+		},
 		fetch: func(context.Context, homeassistant.Filter) ([]homeassistant.Entity, []homeassistant.Label, error) {
 			return lit, nil, nil
 		},
@@ -80,7 +89,9 @@ func expect(t *testing.T, calls chan sent, want sent) {
 
 func TestTilesFollowThePick(t *testing.T) {
 	b, _ := testBoard(t)
-	if err := config.Set().Home().Pick("lights", config.HomePick{Areas: []string{"kitchen"}}); err != nil {
+	if err := config.Set().
+		Home().
+		Pick("lights", config.HomePick{Areas: []string{"kitchen"}}); err != nil {
 		t.Fatal(err)
 	}
 	areas, loading := b.Tiles(lights())
@@ -133,7 +144,9 @@ func TestTabsAndFind(t *testing.T) {
 	if tabs := b.Tabs(); len(tabs) != 0 {
 		t.Errorf("tabs %v with nothing picked", tabs)
 	}
-	if err := config.Set().Home().Pick("lights", config.HomePick{Entities: []string{"light.k1"}}); err != nil {
+	if err := config.Set().
+		Home().
+		Pick("lights", config.HomePick{Entities: []string{"light.k1"}}); err != nil {
 		t.Fatal(err)
 	}
 	if tabs := b.Tabs(); len(tabs) != 0 {

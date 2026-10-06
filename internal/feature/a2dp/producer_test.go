@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/echolocal/internal/lib/bt/sbc"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/sbc"
 )
 
 // What the arbiter asks of this, and what happens to audio while something else has the speaker.

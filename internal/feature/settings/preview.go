@@ -107,7 +107,9 @@ func camRun() {
 func camPlace(c *surface.Client, box ui.Rect, w, h int, visible bool) error {
 	fit := camFit(w, h, box)
 	fbW, fbH := display.Get().Native()
-	x, y, m, _ := display.Get().Orientation().Place(fbW, fbH, display.Rect{X: fit.X, Y: fit.Y, W: fit.W, H: fit.H}, w, h)
+	x, y, m, _ := display.Get().
+		Orientation().
+		Place(fbW, fbH, display.Rect{X: fit.X, Y: fit.Y, W: fit.W, H: fit.H}, w, h)
 	return c.VideoPlace(camLayer, x, y, m, camZ, visible)
 }
 

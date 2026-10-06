@@ -78,7 +78,8 @@ func newCtlCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf(
 					"no control socket — it is off unless asked for, see the Control socket switch: %w",
-					err)
+					err,
+				)
 			}
 			defer conn.Close()
 

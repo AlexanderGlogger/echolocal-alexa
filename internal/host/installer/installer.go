@@ -266,7 +266,9 @@ func takeOverService(r *run) (string, bool, error) {
 		}
 	}
 
-	if _, err := r.d.Shell(fmt.Sprintf("rm -f %s && ln -s %s %s", service, layout.Binary, service)); err != nil {
+	if _, err := r.d.Shell(
+		fmt.Sprintf("rm -f %s && ln -s %s %s", service, layout.Binary, service),
+	); err != nil {
 		return "", false, err
 	}
 	target, err := r.d.Shell("readlink " + service)

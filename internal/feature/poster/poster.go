@@ -19,9 +19,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/immich"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/media/immich"
 )
 
 const (
@@ -261,32 +261,56 @@ func pick(found []immich.Asset, last string) string {
 
 func (p *Poster) build() {
 	base := func(id, name, icon string) esphome.Base {
-		return esphome.Base{ObjectID: id, Name: name, Icon: icon, Category: esphome.CategoryConfig, DeviceID: component.DeviceScreen}
+		return esphome.Base{
+			ObjectID: id,
+			Name:     name,
+			Icon:     icon,
+			Category: esphome.CategoryConfig,
+			DeviceID: component.DeviceScreen,
+		}
 	}
 	p.on = &esphome.Switch{Base: base("poster", "Poster", "mdi:image-frame")}
 	p.on.OnCommand = p.SetEnabled
 
-	p.every = &esphome.Select{Base: base("poster_every", "Poster changes", "mdi:image-sync"), Options: config.Labels(config.PosterEveries())}
+	p.every = &esphome.Select{
+		Base:    base("poster_every", "Poster changes", "mdi:image-sync"),
+		Options: config.Labels(config.PosterEveries()),
+	}
 	p.every.OnCommand = func(label string) {
 		if v, ok := config.ByLabel(config.PosterEveries(), label); ok {
 			p.SetEvery(v)
 		}
 	}
 
-	p.server = &esphome.Text{Base: base("poster_server", "Immich server", "mdi:server"), MaxLength: 255}
+	p.server = &esphome.Text{
+		Base:      base("poster_server", "Immich server", "mdi:server"),
+		MaxLength: 255,
+	}
 	p.server.OnCommand = p.SetServer
-	p.key = &esphome.Text{Base: base("poster_key", "Immich API key", "mdi:key"), MaxLength: 255, Mode: api.TextMode_TEXT_MODE_PASSWORD}
+	p.key = &esphome.Text{
+		Base:      base("poster_key", "Immich API key", "mdi:key"),
+		MaxLength: 255,
+		Mode:      api.TextMode_TEXT_MODE_PASSWORD,
+	}
 	p.key.OnCommand = p.SetKey
-	p.albums = &esphome.Text{Base: base("poster_albums", "Poster albums", "mdi:image-album"), MaxLength: 255}
+	p.albums = &esphome.Text{
+		Base:      base("poster_albums", "Poster albums", "mdi:image-album"),
+		MaxLength: 255,
+	}
 	p.albums.OnCommand = p.SetAlbums
-	p.tags = &esphome.Text{Base: base("poster_tags", "Poster tags", "mdi:tag-multiple"), MaxLength: 255}
+	p.tags = &esphome.Text{
+		Base:      base("poster_tags", "Poster tags", "mdi:tag-multiple"),
+		MaxLength: 255,
+	}
 	p.tags.OnCommand = p.SetTags
 
 	p.next = &esphome.Button{Base: base("poster_next", "Next poster", "mdi:skip-next")}
 	p.next.OnPress = p.Next
 
-	p.showing = &esphome.TextSensor{Base: esphome.Base{ObjectID: "poster_showing", Name: "Poster showing", Icon: "mdi:image",
-		Category: esphome.CategoryDiagnostic, DeviceID: component.DeviceScreen}}
+	p.showing = &esphome.TextSensor{
+		Base: esphome.Base{ObjectID: "poster_showing", Name: "Poster showing", Icon: "mdi:image",
+			Category: esphome.CategoryDiagnostic, DeviceID: component.DeviceScreen},
+	}
 }
 
 func (p *Poster) saved(what string, err error) {

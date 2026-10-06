@@ -100,5 +100,9 @@ func Verity(magic []byte) (disabled bool, err error) {
 	case StockMagic:
 		return false, nil
 	}
-	return false, fmt.Errorf("sysimg: no verity metadata at %d, found %x", VerityOffset, bytes.TrimRight(magic, "\x00"))
+	return false, fmt.Errorf(
+		"sysimg: no verity metadata at %d, found %x",
+		VerityOffset,
+		bytes.TrimRight(magic, "\x00"),
+	)
 }

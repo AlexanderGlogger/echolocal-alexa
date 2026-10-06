@@ -15,8 +15,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // Hold is how long scoring continues after a detection fires, to record the peak the utterance

@@ -120,10 +120,23 @@ func newI2CCmd() *cobra.Command {
 			after, err := b.ReadReg(uint8(reg))
 			switch {
 			case readable != nil || err != nil:
-				fmt.Fprintf(out, "0x%02x reg 0x%02x: wrote %02x (write only, cannot be read back)\n", addr, reg, val)
+				fmt.Fprintf(
+					out,
+					"0x%02x reg 0x%02x: wrote %02x (write only, cannot be read back)\n",
+					addr,
+					reg,
+					val,
+				)
 			case after != uint8(val):
-				fmt.Fprintf(out, "0x%02x reg 0x%02x: %02x -> %02x  (wanted %02x, write did not stick)\n",
-					addr, reg, before, after, val)
+				fmt.Fprintf(
+					out,
+					"0x%02x reg 0x%02x: %02x -> %02x  (wanted %02x, write did not stick)\n",
+					addr,
+					reg,
+					before,
+					after,
+					val,
+				)
 			default:
 				fmt.Fprintf(out, "0x%02x reg 0x%02x: %02x -> %02x\n", addr, reg, before, after)
 			}

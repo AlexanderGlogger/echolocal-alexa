@@ -34,13 +34,25 @@ func Get() *Log {
 	once.Do(func() {
 		shared = &Log{
 			word: &esphome.TextSensor{
-				Base: esphome.Base{ObjectID: "last_wake_word", Name: "Last wake word", Icon: "mdi:account-voice"},
+				Base: esphome.Base{
+					ObjectID: "last_wake_word",
+					Name:     "Last wake word",
+					Icon:     "mdi:account-voice",
+				},
 			},
 			heard: &esphome.TextSensor{
-				Base: esphome.Base{ObjectID: "last_heard", Name: "Last heard", Icon: "mdi:ear-hearing"},
+				Base: esphome.Base{
+					ObjectID: "last_heard",
+					Name:     "Last heard",
+					Icon:     "mdi:ear-hearing",
+				},
 			},
 			reply: &esphome.TextSensor{
-				Base: esphome.Base{ObjectID: "last_reply", Name: "Last reply", Icon: "mdi:message-text"},
+				Base: esphome.Base{
+					ObjectID: "last_reply",
+					Name:     "Last reply",
+					Icon:     "mdi:message-text",
+				},
 			},
 		}
 	})

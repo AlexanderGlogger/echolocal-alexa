@@ -71,7 +71,12 @@ func newVoiceCmd() *cobra.Command {
 			// The tail is still in the hardware buffer.
 			time.Sleep(300 * time.Millisecond)
 
-			fmt.Fprintf(cmd.OutOrStdout(), "clipped %d samples, %d seams\n", p.Clipped(), p.Splices())
+			fmt.Fprintf(
+				cmd.OutOrStdout(),
+				"clipped %d samples, %d seams\n",
+				p.Clipped(),
+				p.Splices(),
+			)
 			return nil
 		},
 	}

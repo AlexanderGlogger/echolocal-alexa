@@ -97,6 +97,9 @@ func Boards() []board.Board {
 	for _, p := range profiles {
 		out = append(out, p.Board)
 	}
-	slices.SortFunc(out, func(a, b board.Board) int { return strings.Compare(a.Codename, b.Codename) })
+	slices.SortFunc(
+		out,
+		func(a, b board.Board) int { return strings.Compare(a.Codename, b.Codename) },
+	)
 	return out
 }

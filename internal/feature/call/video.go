@@ -14,8 +14,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/mtkcamera"
 	"github.com/ygelfand/echolocal/internal/lib/rtc"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 const (
@@ -52,12 +52,29 @@ func arrange(vw, vh int, remote, own livecam.Size) Layout {
 			pic := display.Rect{W: vw, H: r.H}
 			panel := display.Rect{Y: r.H, W: vw, H: vh - r.H}
 			self := display.Rect{X: panel.W / 2, Y: panel.Y + m, W: panel.W/2 - m, H: panel.H / 2}
-			return Layout{Remote: pic, Picture: pic, Panel: panel, Side: true, Self: fitOwn(self, own, true)}
+			return Layout{
+				Remote:  pic,
+				Picture: pic,
+				Panel:   panel,
+				Side:    true,
+				Self:    fitOwn(self, own, true),
+			}
 		case vw > vh && vw-r.W >= int(float64(vw)*sideShare):
 			pic := display.Rect{W: r.W, H: vh}
 			panel := display.Rect{X: r.W, W: vw - r.W, H: vh}
-			self := display.Rect{X: panel.X + m, Y: panel.H / 5, W: panel.W - 2*m, H: panel.H * 2 / 5}
-			return Layout{Remote: pic, Picture: pic, Panel: panel, Side: true, Self: fitOwn(self, own, false)}
+			self := display.Rect{
+				X: panel.X + m,
+				Y: panel.H / 5,
+				W: panel.W - 2*m,
+				H: panel.H * 2 / 5,
+			}
+			return Layout{
+				Remote:  pic,
+				Picture: pic,
+				Panel:   panel,
+				Side:    true,
+				Self:    fitOwn(self, own, false),
+			}
 		}
 		return Layout{Remote: full, Picture: r, Panel: full, Self: corner(vw, vh)}
 	}
@@ -141,7 +158,12 @@ func (c camera) Frames() (<-chan rtc.Frame, func()) {
 	return out, stop
 }
 
-func pump(ctx context.Context, s *livecam.Session, frames <-chan mtkcamera.Frame, out chan<- rtc.Frame) {
+func pump(
+	ctx context.Context,
+	s *livecam.Session,
+	frames <-chan mtkcamera.Frame,
+	out chan<- rtc.Frame,
+) {
 	var config []byte
 	for {
 		select {
@@ -195,7 +217,13 @@ func (l *layer) stats() LayerStats {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return LayerStats{Open: l.open, Width: l.size.Width, Height: l.size.Height, Frames: l.frames, Failed: l.failed}
+	return LayerStats{
+		Open:   l.open,
+		Width:  l.size.Width,
+		Height: l.size.Height,
+		Frames: l.frames,
+		Failed: l.failed,
+	}
 }
 
 func (l *layer) Show(f rtc.Frame) {
@@ -209,12 +237,38 @@ func (l *layer) Show(f rtc.Frame) {
 		if !f.Key || l.size.Width == 0 {
 			return
 		}
-		if err := c.VideoOpen(l.id, surface.AVC, l.size.Width, l.size.Height, l.z, 0, ""); err != nil {
-			slog.Warn("call video open", "layer", l.id, "width", l.size.Width, "height", l.size.Height, "err", err)
+		if err := c.VideoOpen(
+			l.id,
+			surface.AVC,
+			l.size.Width,
+			l.size.Height,
+			l.z,
+			0,
+			"",
+		); err != nil {
+			slog.Warn(
+				"call video open",
+				"layer",
+				l.id,
+				"width",
+				l.size.Width,
+				"height",
+				l.size.Height,
+				"err",
+				err,
+			)
 			l.failed = err
 			return
 		}
-		slog.Info("call video opened", "layer", l.id, "width", l.size.Width, "height", l.size.Height)
+		slog.Info(
+			"call video opened",
+			"layer",
+			l.id,
+			"width",
+			l.size.Width,
+			"height",
+			l.size.Height,
+		)
 		l.open, l.failed = true, nil
 	}
 	if err := feed(c, l.id, f); err != nil {
@@ -354,8 +408,21 @@ func (c *Calls) requestKey(s *session) {
 	}
 }
 
-func (p *pictures) start(ctx context.Context, c *Calls, s *session, at int, own livecam.Size, visible bool) {
-	p.self = &layer{id: selfLayer, z: selfZ, size: own, hidden: !visible, box: func(vw, vh int) display.Rect { return c.layout(vw, vh).Self }}
+func (p *pictures) start(
+	ctx context.Context,
+	c *Calls,
+	s *session,
+	at int,
+	own livecam.Size,
+	visible bool,
+) {
+	p.self = &layer{
+		id:     selfLayer,
+		z:      selfZ,
+		size:   own,
+		hidden: !visible,
+		box:    func(vw, vh int) display.Rect { return c.layout(vw, vh).Self },
+	}
 	self := p.self
 	frames, stop := camera{at: at, sized: func(sz livecam.Size) { c.ownSized(s, sz) }}.Frames()
 	p.stop = stop

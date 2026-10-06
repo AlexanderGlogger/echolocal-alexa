@@ -60,7 +60,10 @@ func (r *run) initRC(at string) ([]string, error) {
 		link = ""
 	}
 
-	globs := []string{at + "/system/etc/init/*.rc", vendorUnder(at, strings.TrimSpace(link)) + "/etc/init/*.rc"}
+	globs := []string{
+		at + "/system/etc/init/*.rc",
+		vendorUnder(at, strings.TrimSpace(link)) + "/etc/init/*.rc",
+	}
 	if r.board().SystemAsRoot {
 		globs = append([]string{at + "/*.rc"}, globs...)
 	}
@@ -445,8 +448,14 @@ func (r *run) patchAdbd(dir string) (string, error) {
 
 // peek reads n bytes at a byte offset, of a file or a block device.
 func (r *run) peek(path string, at int64, n int) ([]byte, error) {
-	raw, err := r.d.Shell(fmt.Sprintf("toybox dd if=%s bs=1 skip=%d count=%d 2>/dev/null | od -An -tx1 | tr -d ' \\n'",
-		path, at, n))
+	raw, err := r.d.Shell(
+		fmt.Sprintf(
+			"toybox dd if=%s bs=1 skip=%d count=%d 2>/dev/null | od -An -tx1 | tr -d ' \\n'",
+			path,
+			at,
+			n,
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -469,8 +478,10 @@ func (r *run) poke(path string, at int64, b []byte) error {
 		fmt.Fprintf(&escaped, `\%03o`, c)
 	}
 
-	_, err := r.d.Shell(fmt.Sprintf("printf '%s' | toybox dd of=%s bs=1 seek=%d conv=notrunc 2>/dev/null",
-		escaped.String(), path, at))
+	_, err := r.d.Shell(
+		fmt.Sprintf("printf '%s' | toybox dd of=%s bs=1 seek=%d conv=notrunc 2>/dev/null",
+			escaped.String(), path, at),
+	)
 	return err
 }
 
@@ -557,8 +568,11 @@ func (r *run) takeService(at string, layout sysimg.Layout) (string, error) {
 	}
 
 	b := r.board()
-	rc := fmt.Sprintf("service %s %s\n    class main\n    priority -20\n    user root\n    group root\n",
-		b.ServiceName, b.Service)
+	rc := fmt.Sprintf(
+		"service %s %s\n    class main\n    priority -20\n    user root\n    group root\n",
+		b.ServiceName,
+		b.Service,
+	)
 
 	if err := r.writeInPlace(at+"/"+layout.ServiceRC, []byte(rc)); err != nil {
 		return "", err

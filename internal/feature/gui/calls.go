@@ -15,8 +15,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
 )
 
 //go:embed devices/*.svg
@@ -25,7 +25,10 @@ var devices embed.FS
 const pictureAspect = 190.0 / 320.0
 
 func init() {
-	tabKinds[discovery.TabKind] = tabKind{glyph: func(dashboard.Tab) string { return gogui.IconPhone }, board: callsBoard}
+	tabKinds[discovery.TabKind] = tabKind{
+		glyph: func(dashboard.Tab) string { return gogui.IconPhone },
+		board: callsBoard,
+	}
 }
 
 func devicePicture(codename string) (string, string) {
@@ -52,10 +55,31 @@ func callsBoard(at ui.Rect, _ dashboard.Tab, pal theme.Theme) gogui.View {
 	}
 	var columns []gogui.View
 	for _, stack := range stacks {
-		columns = append(columns, gogui.Column(gogui.ContainerCfg{Width: side, Sizing: gogui.FixedFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(gap), Content: stack}))
+		columns = append(
+			columns,
+			gogui.Column(
+				gogui.ContainerCfg{
+					Width:   side,
+					Sizing:  gogui.FixedFit,
+					Padding: gogui.NoPadding,
+					Spacing: gogui.SpacingPx(gap),
+					Content: stack,
+				},
+			),
+		)
 	}
 	if len(peers) > 0 {
-		views = append(views, gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingPx(gap), Content: columns}))
+		views = append(
+			views,
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Padding: gogui.NoPadding,
+					Spacing: gogui.SpacingPx(gap),
+					Content: columns,
+				},
+			),
+		)
 	}
 	return placed(at, gogui.Column(gogui.ContainerCfg{
 		ID:         "peers",
@@ -99,10 +123,31 @@ func peerTile(id string, side float32, p discovery.Peer, pal theme.Theme) gogui.
 		Color:   color(pal.Surface),
 		Content: []gogui.View{
 			gogui.Label(p.Name, t.TextStyleDef),
-			gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, HAlign: gogui.HAlignCenter, Content: []gogui.View{
-				gogui.Svg(gogui.SvgCfg{ID: id + "-" + key, SvgData: svg, Width: tall / pictureAspect, Height: tall}),
-			}}),
-			gogui.Row(gogui.ContainerCfg{Sizing: gogui.FillFit, Padding: gogui.NoPadding, Spacing: gogui.SpacingSmall, Content: buttons}),
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Padding: gogui.NoPadding,
+					HAlign:  gogui.HAlignCenter,
+					Content: []gogui.View{
+						gogui.Svg(
+							gogui.SvgCfg{
+								ID:      id + "-" + key,
+								SvgData: svg,
+								Width:   tall / pictureAspect,
+								Height:  tall,
+							},
+						),
+					},
+				},
+			),
+			gogui.Row(
+				gogui.ContainerCfg{
+					Sizing:  gogui.FillFit,
+					Padding: gogui.NoPadding,
+					Spacing: gogui.SpacingSmall,
+					Content: buttons,
+				},
+			),
 		},
 	}
 	controls().Tile(&cfg, style.Rest)

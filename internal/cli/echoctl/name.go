@@ -18,7 +18,12 @@ import (
 // and that is worth saying out loud rather than doing quietly. Failing that, a name already on the
 // device is kept, and only a device with neither is asked about. Off a terminal there is nobody to
 // ask, so the flag is required rather than guessing a name that is then permanent.
-func resolveName(ctx context.Context, out io.Writer, d *device.Device, flag string) (string, error) {
+func resolveName(
+	ctx context.Context,
+	out io.Writer,
+	d *device.Device,
+	flag string,
+) (string, error) {
 	existing, err := installer.ReadName(d)
 	if err != nil {
 		return "", err
@@ -26,7 +31,10 @@ func resolveName(ctx context.Context, out io.Writer, d *device.Device, flag stri
 	if flag != "" {
 		if existing != "" && existing != flag {
 			fmt.Fprintf(out, "%s\n", styleDetail.Render(fmt.Sprintf(
-				"renaming %s to %s: Home Assistant will see a new device and keep the old one", existing, flag)))
+				"renaming %s to %s: Home Assistant will see a new device and keep the old one",
+				existing,
+				flag,
+			)))
 		}
 		return flag, nil
 	}
@@ -40,8 +48,13 @@ func resolveName(ctx context.Context, out io.Writer, d *device.Device, flag stri
 }
 
 func promptName(ctx context.Context, out io.Writer, suggested string) (string, error) {
-	fmt.Fprintf(out, "%s\n",
-		styleDetail.Render("Home Assistant keys the device on its name, so changing it later creates a new one."))
+	fmt.Fprintf(
+		out,
+		"%s\n",
+		styleDetail.Render(
+			"Home Assistant keys the device on its name, so changing it later creates a new one.",
+		),
+	)
 
 	return line(ctx, out, "Name this device", suggested, false)
 }

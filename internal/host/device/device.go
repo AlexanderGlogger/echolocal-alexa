@@ -120,7 +120,11 @@ func probe(serial string) Info {
 
 	model, _ := d.run(ctx, "shell", "getprop ro.product.model")
 	product, _ := d.run(ctx, "shell", "getprop ro.product.device")
-	return Info{Serial: serial, Model: strings.TrimSpace(model), Product: strings.TrimSpace(product)}
+	return Info{
+		Serial:  serial,
+		Model:   strings.TrimSpace(model),
+		Product: strings.TrimSpace(product),
+	}
 }
 
 // InRecovery reports whether adb lists this device in recovery right now, which decides whether an
@@ -211,7 +215,9 @@ func rooted(d *Device) (*Device, error) {
 		return nil, err
 	}
 	if !root {
-		return nil, errors.New("device: adbd is not running as root; write the boot image first (echoctl install --flash-only)")
+		return nil, errors.New(
+			"device: adbd is not running as root; write the boot image first (echoctl install --flash-only)",
+		)
 	}
 	return d, nil
 }
@@ -531,9 +537,10 @@ func Dropped(err error) bool {
 		return true
 	}
 	msg := err.Error()
-	return exit.ExitCode() == 1 && (strings.Contains(msg, "adb: device '") && strings.Contains(msg, "' not found") ||
-		strings.Contains(msg, "device offline") ||
-		strings.Contains(msg, "no devices/emulators found"))
+	return exit.ExitCode() == 1 &&
+		(strings.Contains(msg, "adb: device '") && strings.Contains(msg, "' not found") ||
+			strings.Contains(msg, "device offline") ||
+			strings.Contains(msg, "no devices/emulators found"))
 }
 
 // withRetry runs a command again once if the transport went away rather than the command failing.

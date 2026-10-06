@@ -169,7 +169,8 @@ func configure(n *netd, iface string, was, l *Lease) error {
 		return nil
 	}
 
-	if err := n.cmd(append([]string{"resolver", "setnetdns", netID, l.Domain}, dns...)...); err != nil {
+	if err := n.cmd(
+		append([]string{"resolver", "setnetdns", netID, l.Domain}, dns...)...); err != nil {
 		return errors.Join(setupErr, err)
 	}
 	if err := n.cmd("network", "default", "set", netID); err != nil {

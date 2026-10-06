@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/ygelfand/echolocal/internal/feature/media"
-	"github.com/ygelfand/echolocal/internal/lib/bt"
-	"github.com/ygelfand/echolocal/internal/lib/bt/l2cap"
-	"github.com/ygelfand/echolocal/internal/lib/bt/obex"
-	"github.com/ygelfand/echolocal/internal/lib/bt/sdp"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/l2cap"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/obex"
+	"github.com/ygelfand/libcountertop/pkg/bluetooth/sdp"
 )
 
 // The artwork, which is three protocols deep: a channel of its own, OBEX on top of it, and the

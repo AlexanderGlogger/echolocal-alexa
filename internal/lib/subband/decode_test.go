@@ -22,7 +22,15 @@ func TestDecodeV2(t *testing.T) {
 		t.Skip("set ECHOLOCAL_FBF and ECHOLOCAL_WINDOW")
 	}
 
-	base := geometry{Bands: 128, FFTLen: 256, Hop: 128, WindowLen: 768, Beams: 8, Taps: 4, boostDB: 7.2}
+	base := geometry{
+		Bands:     128,
+		FFTLen:    256,
+		Hop:       128,
+		WindowLen: 768,
+		Beams:     8,
+		Taps:      4,
+		boostDB:   7.2,
+	}
 
 	win, err := readFloats(window, base.WindowLen)
 	if err != nil {
@@ -53,7 +61,14 @@ func TestDecodeV2(t *testing.T) {
 					}
 					won, beams := steers(w)
 					if won >= 6 {
-						fmt.Printf("  %5.3f  %s down=%v mics=%v %v\n", won, order, down, mics, beams)
+						fmt.Printf(
+							"  %5.3f  %s down=%v mics=%v %v\n",
+							won,
+							order,
+							down,
+							mics,
+							beams,
+						)
 					}
 					out = append(out, result{
 						fmt.Sprintf("%s down=%-5v flip=%-5v mics=%v", order, down, flip, mics),
@@ -121,7 +136,15 @@ func TestBeamEnergiesPairUp(t *testing.T) {
 	if weights == "" || window == "" {
 		t.Skip("set ECHOLOCAL_FBF and ECHOLOCAL_WINDOW")
 	}
-	base := geometry{Bands: 128, FFTLen: 256, Hop: 128, WindowLen: 768, Beams: 8, Taps: 4, boostDB: 7.2}
+	base := geometry{
+		Bands:     128,
+		FFTLen:    256,
+		Hop:       128,
+		WindowLen: 768,
+		Beams:     8,
+		Taps:      4,
+		boostDB:   7.2,
+	}
 	win, err := readFloats(window, base.WindowLen)
 	if err != nil {
 		t.Fatal(err)

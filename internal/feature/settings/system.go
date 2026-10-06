@@ -18,9 +18,19 @@ func systemPage() *shell.Page {
 		Title: say.T("system.title"),
 		Build: func() ([]widget.Row, []func(int)) {
 			return []widget.Row{
-					{Glyph: gogui.IconTextSize, Label: say.T("settings.language"), Kind: widget.Chevron, Value: say.Name(say.Chosen())},
+					{
+						Glyph: gogui.IconTextSize,
+						Label: say.T("settings.language"),
+						Kind:  widget.Chevron,
+						Value: say.Name(say.Chosen()),
+					},
 					{Glyph: gogui.IconClock, Label: say.T("datetime.title"), Kind: widget.Chevron},
-					{Glyph: gogui.IconKeyboard, Label: say.T("keyboard.size"), Kind: widget.Chevron, Value: config.Get().Screen.Keyboard.Label()},
+					{
+						Glyph: gogui.IconKeyboard,
+						Label: say.T("keyboard.size"),
+						Kind:  widget.Chevron,
+						Value: config.Get().Screen.Keyboard.Label(),
+					},
 					{Glyph: gogui.IconSync, Label: say.T("settings.power"), Kind: widget.Chevron},
 				}, []func(int){
 					open(languagePage()),
@@ -61,7 +71,11 @@ func dateTimePage() *shell.Page {
 		Build: func() ([]widget.Row, []func(int)) {
 			cfg := config.Get()
 			return []widget.Row{
-					{Label: say.T("clock.hours"), Kind: widget.Toggle, On: cfg.Screen.Hours == config.TwentyFourHour},
+					{
+						Label: say.T("clock.hours"),
+						Kind:  widget.Toggle,
+						On:    cfg.Screen.Hours == config.TwentyFourHour,
+					},
 				}, []func(int){
 					func(int) { toggleHours(cfg.Screen.Hours) },
 				}

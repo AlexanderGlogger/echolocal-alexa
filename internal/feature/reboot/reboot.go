@@ -9,8 +9,8 @@ import (
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/update"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {

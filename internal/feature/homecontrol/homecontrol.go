@@ -106,7 +106,14 @@ func SelectionPage(s Selection) *shell.Page {
 			rows := []widget.Row{
 				{Label: say.T("home.enable"), Kind: widget.Toggle, On: on},
 				{Label: say.T("home.devices"), Kind: widget.Chevron, Value: Summary(s.Pick())},
-				{Label: say.T("home.group"), Hint: groupHint(from), Kind: widget.Slider, Level: groupLevel(from), Snap: groupSnap, Value: strconv.Itoa(from)},
+				{
+					Label: say.T("home.group"),
+					Hint:  groupHint(from),
+					Kind:  widget.Slider,
+					Level: groupLevel(from),
+					Snap:  groupSnap,
+					Value: strconv.Itoa(from),
+				},
 			}
 			taps := []func(int){
 				func(int) { s.SetControlled(!on) },
@@ -115,7 +122,10 @@ func SelectionPage(s Selection) *shell.Page {
 			}
 			if s.Key == Selections[0].Key {
 				combine := config.Get().Home.Combine
-				rows = append(rows, widget.Row{Label: say.T("home.combine"), Kind: widget.Toggle, On: combine})
+				rows = append(
+					rows,
+					widget.Row{Label: say.T("home.combine"), Kind: widget.Toggle, On: combine},
+				)
 				taps = append(taps, func(int) { SetCombined(!combine) })
 			}
 			return rows, taps

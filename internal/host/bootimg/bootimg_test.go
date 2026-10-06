@@ -104,7 +104,13 @@ func TestSupportsRefusesTheDeviceAndOnlyRemarksOnTheBuild(t *testing.T) {
 			t.Errorf("Supports(%q, %q) = %v, want ok=%t", tc.device, tc.build, err, tc.ok)
 		}
 		if err == nil && (said != "") != tc.sayingSomething {
-			t.Errorf("Supports(%q, %q) said %q, want anything=%t", tc.device, tc.build, said, tc.sayingSomething)
+			t.Errorf(
+				"Supports(%q, %q) said %q, want anything=%t",
+				tc.device,
+				tc.build,
+				said,
+				tc.sayingSomething,
+			)
 		}
 	}
 }
@@ -171,7 +177,12 @@ func TestEveryImageIsInTheTreeAndIsWhatWeSayItIs(t *testing.T) {
 			t.Errorf("%s is committed as %q and published at %q", img.Device, base, img.Asset())
 		}
 		if !strings.Contains(img.URL, "/"+Tag+"/") {
-			t.Errorf("%s is published at %q, which is not under the %s tag", img.Device, img.URL, Tag)
+			t.Errorf(
+				"%s is published at %q, which is not under the %s tag",
+				img.Device,
+				img.URL,
+				Tag,
+			)
 		}
 	}
 }

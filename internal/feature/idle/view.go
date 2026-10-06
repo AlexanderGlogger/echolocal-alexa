@@ -152,7 +152,8 @@ func (v *View) run() {
 			v.mu.Unlock()
 			return
 		}
-		if fps := config.Get().Visual.MaxFPS; fps <= 0 || now.Sub(shaded) >= time.Second/time.Duration(fps)-2*time.Millisecond {
+		if fps := config.Get().Visual.MaxFPS; fps <= 0 ||
+			now.Sub(shaded) >= time.Second/time.Duration(fps)-2*time.Millisecond {
 			shaded = now
 			v.shade()
 		}

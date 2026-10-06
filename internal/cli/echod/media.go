@@ -90,7 +90,8 @@ func newMediaCmd() *cobra.Command {
 	}
 
 	c.Flags().IntVar(&volume, "volume", -1, "volume step to play at, or -1 to use the saved one")
-	c.Flags().DurationVar(&duck, "duck", 0, "take the speaker away this far in, as a voice turn does")
+	c.Flags().
+		DurationVar(&duck, "duck", 0, "take the speaker away this far in, as a voice turn does")
 	c.Flags().DurationVar(&hold, "hold", 5*time.Second, "how long to keep it")
 	return c
 }

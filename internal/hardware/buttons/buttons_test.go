@@ -8,7 +8,10 @@ import (
 
 func press(c *Controller, down map[uint16]*held, code uint16, at, until uint64) {
 	c.key(input.Event{Type: input.EvKey, Code: code, Value: 1, Sec: at / 1e6, Usec: at % 1e6}, down)
-	c.key(input.Event{Type: input.EvKey, Code: code, Value: 0, Sec: until / 1e6, Usec: until % 1e6}, down)
+	c.key(
+		input.Event{Type: input.EvKey, Code: code, Value: 0, Sec: until / 1e6, Usec: until % 1e6},
+		down,
+	)
 }
 
 func TestAnInstantMutePressIsPower(t *testing.T) {

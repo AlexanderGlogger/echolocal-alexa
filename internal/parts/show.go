@@ -18,8 +18,32 @@ var camshim []byte
 var camera []byte
 
 func init() {
-	register(Part{Name: "SurfaceFlinger helper", Path: layout.Surface, Data: surface, Mode: 0o755, Service: layout.SurfaceService})
-	register(Part{Name: "camera service preload", Path: layout.CamShim, Data: camshim, Mode: 0o644, Service: layout.CameraServerService})
-	register(Part{Name: "camera helper", Path: layout.Camera, Data: camera, Mode: 0o755, Service: layout.CameraService})
+	register(
+		Part{
+			Name:    "SurfaceFlinger helper",
+			Path:    layout.Surface,
+			Data:    surface,
+			Mode:    0o755,
+			Service: layout.SurfaceService,
+		},
+	)
+	register(
+		Part{
+			Name:    "camera service preload",
+			Path:    layout.CamShim,
+			Data:    camshim,
+			Mode:    0o644,
+			Service: layout.CameraServerService,
+		},
+	)
+	register(
+		Part{
+			Name:    "camera helper",
+			Path:    layout.Camera,
+			Data:    camera,
+			Mode:    0o755,
+			Service: layout.CameraService,
+		},
+	)
 	register(InitRC)
 }

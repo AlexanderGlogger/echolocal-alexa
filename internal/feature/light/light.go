@@ -53,7 +53,11 @@ func Get() *Light {
 func build() *Light {
 	l := &Light{
 		light: &esphome.Light{
-			Base:                esphome.Base{ObjectID: "ring", Name: "LED ring", DeviceID: component.DeviceRing},
+			Base: esphome.Base{
+				ObjectID: "ring",
+				Name:     "LED ring",
+				DeviceID: component.DeviceRing,
+			},
 			SupportedColorModes: []esphome.ColorMode{esphome.ColorModeRGB},
 
 			// None comes first, because an effect list with no way out of it is a light that can be

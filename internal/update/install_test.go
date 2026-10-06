@@ -23,7 +23,10 @@ func release(t *testing.T, bodies map[string][]byte) Manifest {
 	m := Manifest{Version: "0.0.1", Binaries: make(map[string]Binary, len(bodies))}
 
 	for a, body := range bodies {
-		mux.HandleFunc("/echod-"+a, func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write(body) })
+		mux.HandleFunc(
+			"/echod-"+a,
+			func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write(body) },
+		)
 		sum := sha256.Sum256(body)
 		m.Binaries[a] = Binary{SHA256: hex.EncodeToString(sum[:]), Size: int64(len(body))}
 	}

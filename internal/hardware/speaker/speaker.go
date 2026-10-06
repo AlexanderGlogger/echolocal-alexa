@@ -17,9 +17,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 	"github.com/ygelfand/echolocal/internal/lib/asp"
-	"github.com/ygelfand/echolocal/internal/lib/hook"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
 	"github.com/ygelfand/echolocal/internal/service"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 // The playback codec accepts one format only: 48 kHz, S16_LE, stereo.
@@ -59,9 +59,10 @@ const (
 type Player struct {
 	// The hardware, taken by Start and let go by Close. Nil in between: the handle outlives the
 	// device so that a restart can take it again without everything holding a Player being rebuilt.
-	devMu sync.Mutex
-	pb    *alsa.Playback
-	mixer *alsa.Mixer
+	startup atomic.Pointer[component.Progress]
+	devMu   sync.Mutex
+	pb      *alsa.Playback
+	mixer   *alsa.Mixer
 
 	// Output changed: a headphone was plugged in or pulled out.
 	OnOutput hook.Hook[Output]
@@ -467,7 +468,11 @@ func (p *Player) fill(buf []byte) {
 			r += int32(rendered[i+1])
 		}
 		if tap != nil {
-			p.tapBuf[i], p.tapBuf[i+1] = clamp(int32(float32(l)*gain)), clamp(int32(float32(r)*gain))
+			p.tapBuf[i], p.tapBuf[i+1] = clamp(
+				int32(float32(l)*gain),
+			), clamp(
+				int32(float32(r)*gain),
+			)
 		}
 		if mono {
 			l = (l + r) / 2

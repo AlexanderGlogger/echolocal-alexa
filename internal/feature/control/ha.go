@@ -88,7 +88,8 @@ func haCommand() *cobra.Command {
 				}
 				ctx, cancel := context.WithTimeout(context.Background(), haWait)
 				defer cancel()
-				if err := homeassistant.Get().Call(ctx, action, map[string]string{"entity_id": args[1]}); err != nil {
+				if err := homeassistant.Get().
+					Call(ctx, action, map[string]string{"entity_id": args[1]}); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), args[1]+" "+args[0])

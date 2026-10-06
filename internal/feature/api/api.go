@@ -26,7 +26,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -123,7 +123,8 @@ func (a *API) Start(context.Context) error {
 
 		// The handlers components answer for themselves rather than through an entity: the voice
 		// satellite's pipeline traffic, and the Bluetooth proxy's subscribe and set-mode messages.
-		Handler: esphome.Chain(append([]esphome.Handler{ents}, component.Default().Handlers()...)...),
+		Handler: esphome.Chain(
+			append([]esphome.Handler{ents}, component.Default().Handlers()...)...),
 	}
 	return nil
 }
@@ -182,6 +183,7 @@ func deviceOf(e esphome.Entity) uint32 {
 // Run listens until ctx is cancelled, advertising over mDNS so Home Assistant finds the device
 // without being told an address.
 func (a *API) Run(ctx context.Context) error {
+	defer a.listening.Store(false)
 	safe.Go("logs", func() { a.pipeLogs(ctx) })
 
 	// A second way in to the port the install's hook already opens. It costs nothing, and it means a
@@ -213,6 +215,7 @@ func (a *API) Run(ctx context.Context) error {
 
 		err = a.srv.Serve(serving, ln)
 		stop()
+		a.listening.Store(false)
 
 		if err != nil || ctx.Err() != nil {
 			return err
