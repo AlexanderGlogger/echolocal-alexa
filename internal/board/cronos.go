@@ -10,7 +10,7 @@ var Cronos = Board{
 	DefaultName:   "Echo Show 5",
 	Caps:          Panel | Wifi | Shutter | Camera,
 	PanelRotation: 270,
-	UISize:        "compact",
+	UISize:        "mini",
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",

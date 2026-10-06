@@ -90,7 +90,7 @@ type Board struct {
 	// same rotation it was drawn with, so it looks correct either way.
 	PanelRotation int
 
-	// UISize is how big the screen's text and controls are drawn by default: large or compact.
+	// UISize is how big the screen's text and controls are drawn by default.
 	UISize string
 
 	// SecureDecoders names the decoder for protected video, by MIME type, as media_codecs lists it.
