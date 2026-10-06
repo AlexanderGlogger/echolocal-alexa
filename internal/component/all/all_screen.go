@@ -24,6 +24,7 @@ import (
 	_ "github.com/ygelfand/echolocal/internal/feature/states"
 	_ "github.com/ygelfand/echolocal/internal/feature/visuals"
 	_ "github.com/ygelfand/echolocal/internal/feature/volume"
+	_ "github.com/ygelfand/echolocal/internal/feature/weather"
 	_ "github.com/ygelfand/echolocal/internal/feature/web"
 	_ "github.com/ygelfand/echolocal/internal/hardware/display"
 	_ "github.com/ygelfand/echolocal/internal/hardware/touch"

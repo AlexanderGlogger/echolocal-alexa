@@ -18,6 +18,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
+	"github.com/ygelfand/echolocal/internal/feature/weather"
 	"github.com/ygelfand/echolocal/internal/ui/style"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
@@ -77,6 +78,16 @@ func screenSettings() []setting {
 		{"screen.visual.seed", func(c config.Config) string { return strconv.Itoa(c.Visual.Seed) }, number(0, visual.SeedMost, v.SetSeed)},
 		{"screen.visual.label", func(c config.Config) string { return orNone(c.Visual.Label) }, words(v.SetLabel)},
 		{"screen.visual.lift", func(c config.Config) string { return strconv.Itoa(c.Microphone.VisualizerLift) }, number(0, visuals.LiftMax, v.SetLift)},
+
+		{"weather.entity", func(c config.Config) string { return orNone(c.Weather.Entity) }, words(weather.SetEntity)},
+		{"weather.look", func(c config.Config) string { return string(c.Weather.Look) }, choose(config.WeatherLooks(), weather.SetLook)},
+		{"weather.dashboard", func(c config.Config) string { return onOff(c.Weather.Dashboard) }, toggle(weather.SetDashboard)},
+		{"weather.idle", func(c config.Config) string { return onOff(c.Weather.Idle) }, toggle(weather.SetIdle)},
+		{"weather.animate", func(c config.Config) string { return onOff(c.Weather.Animate) }, toggle(weather.SetAnimate)},
+		{"weather.themed", func(c config.Config) string { return onOff(c.Weather.Themed) }, toggle(weather.SetThemed)},
+		{"weather.position", func(c config.Config) string { return string(c.Weather.Position) }, choose(config.Positions(), weather.SetPosition)},
+		{"weather.align", func(c config.Config) string { return string(c.Weather.Align) }, choose(config.Aligns(), weather.SetAlign)},
+		{"weather.size", func(c config.Config) string { return string(c.Weather.Size) }, choose(config.Sizes(), weather.SetSize)},
 	}
 }
 

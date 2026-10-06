@@ -1,3 +1,5 @@
+//go:build board_checkers || board_cronos || board_rook
+
 // Package settings is what the device can be set to, on the device itself.
 //
 // A screen is a title and a list of rows, and a row that leads somewhere pushes another screen.
