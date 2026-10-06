@@ -44,10 +44,24 @@ func Get() *Detect {
 	return shared
 }
 
+var pauses []func() bool
+
+func PauseWhen(f func() bool) { pauses = append(pauses, f) }
+
+func paused() bool {
+	for _, f := range pauses {
+		if f() {
+			return true
+		}
+	}
+	return false
+}
+
 func newDetect() *Detect {
 	// Sized to reach the stop word's reserved index. The slots between it and Home Assistant's are never
 	// loaded, and an unloaded slot is one comparison a frame.
 	e := New(StopSlot+1, mic.Get())
+	e.Paused = paused
 
 	e.Threshold = func(slot int) float64 {
 		if slot == StopSlot {

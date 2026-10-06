@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build board_checkers || board_cronos
 
 package control
 
@@ -7,8 +7,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 )
+
+func init() {
+	boardCommands = append(boardCommands, func() *cobra.Command {
+		return says(&cobra.Command{
+			Use:   "peers",
+			Short: "Other devices on the network",
+			Args:  cobra.NoArgs,
+		}, peers)
+	})
+}
 
 func peers([]string) (string, error) {
 	var out strings.Builder

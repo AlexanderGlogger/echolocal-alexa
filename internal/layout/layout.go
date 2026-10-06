@@ -90,6 +90,7 @@ const (
 const (
 	WifiDir     = "/data/misc/wifi"
 	WifiConf    = WifiDir + "/wpa_supplicant.conf"
+	WifiBgscan  = "simple:30:-65:300"
 	WifiSockets = WifiDir + "/sockets"
 	WifiIface   = "wlan0"
 	WifiUser    = 1010

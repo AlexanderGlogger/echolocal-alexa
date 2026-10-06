@@ -49,8 +49,15 @@ func (a *App) screenFor(v shell.View) *Screen {
 	case drawer.Get():
 		return a.railScreen(v)
 	}
+	for _, f := range screenMakers {
+		if s := f(v); s != nil {
+			return s
+		}
+	}
 	return nil
 }
+
+var screenMakers []func(shell.View) *Screen
 
 func pageScreen(p *shell.Page) *Screen {
 	return &Screen{Title: p.Title, View: p, Build: func(w *gogui.Window) gogui.View { return pageBody(w, p) }}

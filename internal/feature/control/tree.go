@@ -3,6 +3,7 @@ package control
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -109,4 +110,34 @@ func waiting() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+func says(cmd *cobra.Command, do func([]string) (string, error)) *cobra.Command {
+	cmd.RunE = func(c *cobra.Command, args []string) error {
+		out, err := do(args)
+		if out != "" {
+			fmt.Fprint(c.OutOrStdout(), strings.TrimRight(out, "\n")+"\n")
+		}
+		return err
+	}
+	return cmd
+}
+
+func group(use, short, long string) *cobra.Command {
+	return &cobra.Command{
+		Use:   use,
+		Short: short,
+		Long:  long,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return fmt.Errorf("%s: %q is not one of its commands", cmd.Name(), args[0])
+			}
+			return cmd.Help()
+		},
+	}
+}
+
+func does(cmd *cobra.Command, do func([]string) error) *cobra.Command {
+	cmd.RunE = func(_ *cobra.Command, args []string) error { return do(args) }
+	return cmd
 }

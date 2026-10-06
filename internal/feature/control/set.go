@@ -87,8 +87,7 @@ func screenSettings() []setting {
 		{"weather.themed", func(c config.Config) string { return onOff(c.Weather.Themed) }, toggle(weather.SetThemed)},
 		{"weather.position", func(c config.Config) string { return string(c.Weather.Position) }, choose(config.Positions(), weather.SetPosition)},
 		{"weather.align", func(c config.Config) string { return string(c.Weather.Align) }, choose(config.Aligns(), weather.SetAlign)},
-		{"weather.size", func(c config.Config) string { return string(c.Weather.Size) }, choose(config.Sizes(), weather.SetSize)},
-	}
+		{"weather.size", func(c config.Config) string { return string(c.Weather.Size) }, choose(config.Sizes(), weather.SetSize)},	}
 }
 
 func setCommand() *cobra.Command {

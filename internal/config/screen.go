@@ -73,6 +73,16 @@ const (
 	ModeManual ScreenMode = "manual"
 )
 
+func (m ScreenMode) Label() string {
+	switch m {
+	case ModeAuto:
+		return say.T("mode.auto")
+	case ModeManual:
+		return say.T("mode.manual")
+	}
+	return string(m)
+}
+
 type HourFormat string
 
 const (

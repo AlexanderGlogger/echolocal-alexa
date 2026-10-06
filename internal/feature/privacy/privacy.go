@@ -103,6 +103,14 @@ func (p *Privacy) Start(context.Context) error {
 	return nil
 }
 
+func (p *Privacy) MicMuted() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.marks.MicMuted
+}
+
+func (p *Privacy) CameraCovered() bool { return p.camera.Get() }
+
 func (p *Privacy) covered(on bool) {
 	p.camera.Set(on)
 

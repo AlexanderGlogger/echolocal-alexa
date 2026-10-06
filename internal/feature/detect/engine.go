@@ -74,6 +74,8 @@ type Engine struct {
 	// because an engine that came back empty would leave the device deaf while claiming otherwise.
 	// Which words those are depends on what the user last chose, which is not this package's business.
 	Load func() error
+
+	Paused func() bool
 }
 
 // slot is one wake word and how its scores are being read. The tracking is per slot: two wake words
@@ -304,6 +306,9 @@ func (e *Engine) Run(ctx context.Context) error {
 		case frame, ok := <-frames:
 			if !ok {
 				return errors.New("wake: the microphones stopped")
+			}
+			if e.Paused != nil && e.Paused() {
+				continue
 			}
 
 			began := time.Now()

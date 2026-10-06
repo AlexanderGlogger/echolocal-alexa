@@ -32,7 +32,6 @@ var screenOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/a2dp",
 	"github.com/ygelfand/echolocal/internal/feature/drm",
 	"github.com/ygelfand/echolocal/internal/feature/weather",
-	"github.com/ygelfand/echolocal/internal/feature/discovery",
 	"github.com/ygelfand/echolocal/internal/lib/bt",
 	"github.com/ygelfand/echolocal/internal/feature/videoplayer",
 	"github.com/ygelfand/echolocal/pkg/gogui",
@@ -41,6 +40,10 @@ var screenOnly = []string{
 
 var castOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/chromecast",
+	"github.com/ygelfand/echolocal/internal/feature/discovery",
+	"github.com/ygelfand/echolocal/internal/feature/call",
+	"github.com/ygelfand/echolocal/internal/lib/rtc",
+	"github.com/pion/webrtc/v4",
 	"github.com/ygelfand/echolocal/internal/hardware/video",
 	"github.com/ygelfand/echolocal/internal/lib/webm",
 	"github.com/ygelfand/echolocal/internal/lib/hls",

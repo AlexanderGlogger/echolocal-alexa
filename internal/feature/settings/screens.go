@@ -677,6 +677,7 @@ func networkPage() *shell.Page {
 	}
 }
 
+
 func aboutPage() *shell.Page {
 	return &shell.Page{
 		Title: say.T("about.title"),

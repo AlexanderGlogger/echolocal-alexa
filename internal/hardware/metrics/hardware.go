@@ -68,6 +68,38 @@ func (r Reader) Load() (one, five Reading) {
 	return parse(fields[0]), parse(fields[1])
 }
 
+func (r Reader) CPU() (busy, total Reading) {
+	body, err := os.ReadFile(r.path("proc/stat"))
+	if err != nil {
+		return Reading{}, Reading{}
+	}
+
+	for line := range strings.SplitSeq(string(body), "\n") {
+		if !strings.HasPrefix(line, "cpu ") {
+			continue
+		}
+
+		fields := strings.Fields(line)[1:]
+		if len(fields) < 5 {
+			return Reading{}, Reading{}
+		}
+
+		var all, idle float64
+		for i, f := range fields {
+			v, err := strconv.ParseFloat(f, 64)
+			if err != nil {
+				return Reading{}, Reading{}
+			}
+			all += v
+			if i == 3 || i == 4 {
+				idle += v
+			}
+		}
+		return known(all - idle), known(all)
+	}
+	return Reading{}, Reading{}
+}
+
 // Memory is what the kernel says is available and what the board has, in kilobytes. Available rather
 // than free: free counts only untouched pages and reads alarmingly low on a machine that is working
 // properly.

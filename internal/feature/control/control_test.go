@@ -26,7 +26,7 @@ func sock(t *testing.T) string {
 
 // dial brings a socket up on a path of its own and connects to it. The real address is a fixed
 // name, and two tests binding it at once is a race with the device.
-func dial(t *testing.T) net.Conn {
+func connect(t *testing.T) net.Conn {
 	t.Helper()
 
 	c := &Control{addr: sock(t)}
@@ -72,7 +72,7 @@ func say(t *testing.T, conn net.Conn, in *bufio.Scanner, line string) (string, b
 }
 
 func TestACommandIsAnsweredAndTerminated(t *testing.T) {
-	conn := dial(t)
+	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
 	out, ok := say(t, conn, in, "version")
@@ -87,7 +87,7 @@ func TestACommandIsAnsweredAndTerminated(t *testing.T) {
 // Every reply ends in exactly one of ok or error:, or a caller reading a sequence hangs waiting for
 // a command that already finished.
 func TestAnUnknownCommandIsAnError(t *testing.T) {
-	conn := dial(t)
+	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
 	out, ok := say(t, conn, in, "nonesuch")
@@ -102,7 +102,7 @@ func TestAnUnknownCommandIsAnError(t *testing.T) {
 // A blank line is what a sequence file full of comments sends, and it must not be an error or the
 // rest of the sequence stops.
 func TestABlankLineIsAnswered(t *testing.T) {
-	conn := dial(t)
+	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
 	if _, ok := say(t, conn, in, ""); !ok {
@@ -113,7 +113,7 @@ func TestABlankLineIsAnswered(t *testing.T) {
 // One connection takes commands until the caller goes away, which is what lets a sequence run in
 // order without reconnecting between each.
 func TestOneConnectionTakesSeveralCommands(t *testing.T) {
-	conn := dial(t)
+	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
 	for _, cmd := range []string{"version", "state", "version"} {
