@@ -121,8 +121,10 @@ func build() *Mute {
 	if m.line, err = privacy.Microphone(); err != nil {
 		slog.Error("mute unavailable", "err", err)
 	}
-	if m.led, err = privacy.Light(); err != nil {
-		slog.Error("mute LED unavailable", "err", err)
+	if component.Board().Has(board.MuteLight) {
+		if m.led, err = privacy.Light(); err != nil {
+			slog.Error("mute LED unavailable", "err", err)
+		}
 	}
 
 	buttons.Get().Events.Listen(m.pressed)

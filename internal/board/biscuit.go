@@ -19,7 +19,7 @@ var Biscuit = Board{
 	SignalsBoot:  true,
 	Model:        "Echo Dot 2 (biscuit)",
 	DefaultName:  "Echo Dot",
-	Caps:         Ring,
+	Caps:         Ring | MuteLight | ASP,
 
 	Service:     "/system/bin/ledcontroller",
 	ServiceName: "ledcontroller",

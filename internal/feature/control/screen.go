@@ -82,7 +82,22 @@ func showing() []*cobra.Command {
 
 	panel.AddCommand(shot, tap, swipe, thumbsCommand())
 	panel.AddCommand(panelCommands()...)
-	return []*cobra.Command{panel, setCommand()}
+
+	others := &cobra.Command{
+		Use:   "peers",
+		Short: "Other devices on the network",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			out, err := peers(args)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(cmd.OutOrStdout(), out)
+			return nil
+		},
+	}
+
+	return []*cobra.Command{panel, setCommand(), others}
 }
 
 const (

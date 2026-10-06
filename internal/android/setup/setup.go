@@ -63,7 +63,12 @@ var Actions = []Action{
 		//
 		// Every boot: sysfs modes are the kernel's defaults again after a restart, and the vendor
 		// script re-grants it.
-		Do: func() error { return os.Chmod(pinControl, 0o644) },
+		Do: func() error {
+			if component.Board().MuteDir != "" {
+				return nil
+			}
+			return os.Chmod(pinControl, 0o644)
+		},
 	},
 	{
 		Name:   "silence AmazonUsageStatsService",

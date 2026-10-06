@@ -32,6 +32,12 @@ const (
 
 	// Camera is a vendor camera reached through cameraserver.
 	Camera
+
+	// MuteLight is the mute button's own LED, driven over GPIO.
+	MuteLight
+
+	// ASP is the vendor's speaker tuning in /vendor/etc/audio-algorithms.
+	ASP
 )
 
 // Key is a physical control. The same button is a different code on different boards.

@@ -9,6 +9,7 @@ import (
 	_ "github.com/ygelfand/echolocal/internal/feature/assistant"
 	_ "github.com/ygelfand/echolocal/internal/feature/brightness"
 	_ "github.com/ygelfand/echolocal/internal/feature/dashboard"
+	_ "github.com/ygelfand/echolocal/internal/feature/discovery"
 	_ "github.com/ygelfand/echolocal/internal/feature/drawer"
 	_ "github.com/ygelfand/echolocal/internal/feature/drm"
 	_ "github.com/ygelfand/echolocal/internal/feature/gui"

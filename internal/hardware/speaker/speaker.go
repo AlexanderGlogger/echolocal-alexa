@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
@@ -139,6 +140,9 @@ func New() *Player {
 	p.SetVolume(VolumeSteps)
 	p.on.Store(config.DefaultASP)
 
+	if !component.Board().Has(board.ASP) {
+		return p
+	}
 	t, err := asp.Load(asp.VendorDir)
 	if err != nil {
 		slog.Error("the driver tuning is not available, playing untuned", "err", err)
