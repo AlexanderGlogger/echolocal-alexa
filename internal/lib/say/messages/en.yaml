@@ -121,6 +121,7 @@ idle.face: Clock face
 idle.vertical: Vertical position
 idle.horizontal: Horizontal position
 idle.size: Clock size
+idle.label: Visual label
 idle.none: None
 
 clock.title: Clock
@@ -156,7 +157,8 @@ features.rtsp.hint: RTSP on port 8554
 features.speaker: Bluetooth speaker
 features.speaker.hint: Play from a phone over Bluetooth
 
-keyboard.done: Done
+keyboard.save: Save
+keyboard.cancel: Cancel
 upgrade.line: Updating to {{.Version}} · {{.Status}}
 upgrade.installing: Installing…
 upgrade.percent: "{{.N}}%"

@@ -150,7 +150,7 @@ func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
 					gogui.Label(p.Title, t.TextStyleDisplay),
 				},
 			}),
-			gogui.Column(gogui.ContainerCfg{Sizing: gogui.FillFill, Scrollable: !p.Fixed, OnGesture: holdStill, Content: []gogui.View{p.Build(w)}}),
+			gogui.Column(gogui.ContainerCfg{ID: "page", Sizing: gogui.FillFill, Scrollable: !p.Fixed, OnGesture: holdStill, Content: append([]gogui.View{p.Build(w)}, room(w)...)}),
 		},
 	})
 }
@@ -162,4 +162,12 @@ func logo(vw, vh int, pal theme.Theme) gogui.View {
 		img, name = ui.Night(), "logo/night"
 	}
 	return placed(mark, picture(imageSrc(name, img), mark.W, mark.H))
+}
+
+func room(w *gogui.Window) []gogui.View {
+	_, vh := w.WindowSize()
+	if !typing(w) || keyTop <= 0 {
+		return nil
+	}
+	return []gogui.View{gogui.Column(gogui.ContainerCfg{Height: float32(vh) - keyTop, Sizing: gogui.FillFixed, Padding: gogui.NoPadding})}
 }

@@ -44,7 +44,7 @@ const (
 const (
 	frame    = time.Second / 60
 	traceBy  = 2000 * time.Millisecond
-	traceFor = 1400 * time.Millisecond
+	traceFor = 6 * time.Second
 	stepFor  = 350 * time.Millisecond
 	moveFor  = 700 * time.Millisecond
 	finish   = 1100 * time.Millisecond
