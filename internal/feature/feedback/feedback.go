@@ -37,6 +37,7 @@ var failureColor = led.Color{R: 0xC0, G: 0x00, B: 0x00}
 // Feedback owns the settings for what these occasions look like. What they sound like is not a
 // setting: the tones are short and few, and telling them apart is the point of them.
 type Feedback struct {
+	*sharedtone.Feedback
 	failure *esphome.Select
 }
 
@@ -48,6 +49,7 @@ var (
 func Get() *Feedback {
 	once.Do(func() {
 		shared = &Feedback{
+			Feedback: sharedtone.NewFeedback(config.FeedbackSection, speaker.Sound(), component.DevicePlayback),
 			failure: &esphome.Select{
 				Base: esphome.Base{
 					ObjectID: "failure_effect",
@@ -69,12 +71,13 @@ func (f *Feedback) Name() string { return "feedback" }
 // with it is the speaker's and sounds on every board, so a failure is still reported either way.
 func (f *Feedback) Entities() []esphome.Entity {
 	if !component.Board().Has(board.Ring) {
-		return nil
+		return f.Feedback.Entities()
 	}
-	return []esphome.Entity{f.failure}
+	return append(f.Feedback.Entities(), f.failure)
 }
 
 func (f *Feedback) Restore(c config.Config) {
+	f.Feedback.Restore()
 	component.RestoreEffect(f.failure, c.Ring.Trouble, nil, config.Set().Ring().Trouble)
 }
 
@@ -85,7 +88,7 @@ func (f *Feedback) Restore(c config.Config) {
 // take the indication away with it. Which animation is the user's choice, and None is one of the
 // answers: some rooms would rather the ring stayed out of it.
 func Failure() {
-	speaker.Sound().Chime(sharedtone.ToneTrouble)
+	Get().Sound(sharedtone.ToneTrouble)
 
 	name := config.Get().Ring.Trouble
 	if name == "" {
@@ -96,4 +99,6 @@ func Failure() {
 
 // Cancelled is a request dropped on purpose, which is neither a failure nor an answer. It only
 // sounds: the ring is already showing the turn ending.
-func Cancelled() { speaker.Sound().Chime(sharedtone.ToneCancel) }
+func Cancelled() { Get().Sound(sharedtone.ToneCancel) }
+
+func Volume() { Get().Preview() }

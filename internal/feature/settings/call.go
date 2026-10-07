@@ -21,15 +21,5 @@ func callStreamPage() *shell.Page { return callPages().CallStream() }
 func callsPage() *shell.Page { return callPages().Calls() }
 
 func callPages() *sharedsettings.CallPages {
-	return sharedsettings.NewCallPages(
-		sharedsettings.CallOptions{
-			Read:          func() config.Call { return config.Get().Call },
-			Push:          shell.Get().Push,
-			SetStream:     call.Get().SetStream,
-			SetIncoming:   call.Get().SetIncoming,
-			SetAutoAnswer: call.Get().SetAutoAnswer,
-			SetAutoVideo:  call.Get().SetAutoVideo,
-			SetPauseWake:  call.Get().SetPauseWake,
-		},
-	)
+	return sharedsettings.NewCallPages(sharedsettings.CallDependencies{Settings: config.CallSection, Shell: shell.Get(), Controller: call.Get()})
 }

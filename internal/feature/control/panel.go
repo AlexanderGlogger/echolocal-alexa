@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	screens "github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/echolocal/internal/feature/splash"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
 
@@ -81,6 +81,10 @@ func panelCommands() []*cobra.Command {
 				wait = time.Duration(ms) * time.Millisecond
 			}
 			for deadline := time.Now().Add(wait); ; time.Sleep(readyEvery) {
+				if splash.Get().Finished() {
+					fmt.Fprintln(cmd.OutOrStdout(), "screen")
+					return nil
+				}
 				if at, showing := display.Get().Showing(); showing && at < display.PriorityBoot {
 					fmt.Fprintln(cmd.OutOrStdout(), shown(at))
 					return nil

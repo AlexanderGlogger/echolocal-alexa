@@ -22,6 +22,7 @@ import (
 	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/audio/noise"
 	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/media/ownership"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
@@ -124,16 +125,7 @@ func build() *Player {
 				Category: esphome.CategoryConfig,
 			},
 		},
-		duck: &esphome.Number{
-			Base: esphome.Base{
-				ObjectID: "media_duck_level",
-				Name:     "Music ducking",
-				Icon:     "mdi:volume-medium",
-				Category: esphome.CategoryConfig,
-			},
-			Min: -40, Max: -3, Step: 1, Unit: "dB",
-			Mode: esphome.NumberBox,
-		},
+		duck: sharedvolume.NewDuck(config.MediaSection, component.DevicePlayback),
 		asp: &esphome.Switch{
 			Base: esphome.Base{
 				ObjectID: "speaker_eq",
@@ -187,13 +179,6 @@ func build() *Player {
 		}
 	}
 
-	p.duck.OnCommand = func(v float32) {
-		if err := config.Set().Media().DuckDB(float64(v)); err != nil {
-			slog.Error("saving the ducking level failed", "err", err)
-			return
-		}
-		p.duck.Set(float32(config.Get().Media.DuckDB))
-	}
 	p.stream = NewStream(speaker.Sound(), speaker.Get(), p.refresh)
 
 	// Volume acts on every tap and on every repeat, so a held button ramps.

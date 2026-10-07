@@ -225,7 +225,7 @@ func (d *Diag) remote() {
 			d.adb.Set(!on)
 			return
 		}
-		if err := config.Set().Diag().RemoteADB(on); err != nil {
+		if err := config.Set().Diag().ADB(on); err != nil {
 			slog.Error("saving a setting failed", "setting", d.adb.ObjectID, "err", err)
 		}
 	}
@@ -243,9 +243,9 @@ func (d *Diag) remote() {
 	d.address()
 }
 
-func (d *Diag) RemoteADB() bool { return d.adb.Get() }
+func (d *Diag) ADB() bool { return d.adb.Get() }
 
-func (d *Diag) SetRemoteADB(on bool) {
+func (d *Diag) SetADB(on bool) {
 	d.adb.Set(on)
 	d.adb.OnCommand(on)
 }
@@ -505,8 +505,8 @@ func (d *Diag) Restore(c config.Config) {
 
 	// The chain is empty after a reboot but not after an echod restart, so the rule is put back or
 	// taken away rather than either being assumed.
-	if err := d.reachable(c.Diag.RemoteADB); err == nil {
-		slog.Info("restored", "what", d.adb.ObjectID, "using", c.Diag.RemoteADB)
+	if err := d.reachable(c.Diag.ADB); err == nil {
+		slog.Info("restored", "what", d.adb.ObjectID, "using", c.Diag.ADB)
 	}
 
 	if err := setup.MinCores(c.Diag.MinCores); err != nil {

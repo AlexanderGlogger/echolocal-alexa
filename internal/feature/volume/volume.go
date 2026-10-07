@@ -3,6 +3,7 @@ package volume
 
 import (
 	"log/slog"
+	"slices"
 	"sync"
 
 	"github.com/ygelfand/echolocal/internal/board"
@@ -12,6 +13,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	esphome "github.com/ygelfand/go-esphome-device"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
@@ -26,10 +29,11 @@ type Change struct {
 }
 
 type Volume struct {
+	entities *sharedvolume.Entities
 	// Changed carries every change, however it was made.
 	Changed hook.Hook[Change]
 
-	card    card
+	card    *sharedview.Card
 	numbers map[config.Stream]*esphome.Number
 }
 
@@ -41,6 +45,7 @@ var (
 func Get() *Volume {
 	once.Do(func() {
 		shared = &Volume{numbers: map[config.Stream]*esphome.Number{}}
+		shared.card = sharedview.NewCard(shell.Get())
 		shared.build()
 
 		media.Get().Volume.Listen(func(int) { shared.changed(config.StreamMain) })
@@ -51,19 +56,11 @@ func Get() *Volume {
 
 func (v *Volume) Name() string { return "volume" }
 
-func (v *Volume) Entities() []esphome.Entity {
-	out := make([]esphome.Entity, 0, len(v.numbers))
-	for _, s := range config.Streams() {
-		if s == config.StreamMain {
-			continue
-		}
-		out = append(out, v.numbers[s])
-	}
-	return out
-}
+func (v *Volume) Entities() []esphome.Entity { return v.entities.Entities() }
 
 // Restore puts the levels back where they were left.
 func (v *Volume) Restore(c config.Config) {
+	v.entities.RestoreDuck()
 	for _, s := range config.Streams() {
 		if s == config.StreamMain {
 			continue
@@ -105,7 +102,7 @@ const Step = 5
 
 // turn moves whichever level is being shown, and leaves the device's own to the player.
 func (v *Volume) turn(delta int) bool {
-	s, ok := v.card.selected()
+	s, ok := v.card.Selected()
 	if !ok {
 		s, ok = wanted()
 	}
@@ -141,39 +138,14 @@ func (v *Volume) changed(s config.Stream) {
 		shell.Get().Redraw()
 		return
 	}
-	v.card.show(s)
+	v.card.Show(s)
 }
 
 func (v *Volume) build() {
-	for _, s := range config.Streams() {
-		if s == config.StreamMain {
-			continue
-		}
-		stream := s
-
-		n := &esphome.Number{
-			Base: esphome.Base{
-				ObjectID: "volume_" + string(stream),
-				DeviceID: component.DevicePlayback,
-				Name:     stream.Label() + " volume",
-				Icon:     "mdi:volume-high",
-				Category: esphome.CategoryConfig,
-			},
-			Min: 0, Max: 100, Step: 1, Unit: "%",
-			Mode: esphome.NumberSlider,
-		}
-		n.OnCommand = func(level float32) { shared.Set(stream, int(level)) }
-
-		v.numbers[stream] = n
-	}
-}
-
-// shows is a view that already has a level on it.
-type shows interface{ Shows(config.Stream) bool }
-
-func showing(s config.Stream) bool {
-	v, ok := shell.Get().Top().(shows)
-	return ok && v.Shows(s)
+	streams := config.Streams()
+	streams = slices.DeleteFunc(streams, func(s config.Stream) bool { return s == config.StreamMain })
+	v.entities = sharedvolume.NewEntities(v, streams, nil, component.DevicePlayback)
+	v.numbers = v.entities.Numbers
 }
 
 func clamp(level int) int {

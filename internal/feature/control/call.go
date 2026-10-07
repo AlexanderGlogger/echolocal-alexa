@@ -10,20 +10,19 @@ import (
 	sharedcmd "github.com/ygelfand/libcountertop/pkg/runtime/control/callcmd"
 )
 
-func calling() []*cobra.Command {
+func init() { boardCommands = append(boardCommands, callCommand) }
+func callCommand() *cobra.Command {
 	c := call.Get()
-	return []*cobra.Command{
-		harness.CallCommand(
-			harness.CallActions{
-				Dial:   dial,
-				State:  callState,
-				Answer: c.Answer,
-				Hangup: c.Hangup,
-				Mute:   c.Mute,
-				Camera: c.Camera,
-			},
-		),
-	}
+	return harness.CallCommand(
+		harness.CallActions{
+			Dial:   dial,
+			State:  callState,
+			Answer: c.Answer,
+			Hangup: c.Hangup,
+			Mute:   c.Mute,
+			Camera: c.Camera,
+		},
+	)
 }
 func dial(a []string) (string, error) {
 	return sharedcmd.Dial(call.Get(), discovery.Get().Peers(), a)

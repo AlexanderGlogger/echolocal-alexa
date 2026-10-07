@@ -7,7 +7,7 @@ type Diag struct {
 	// Interval is how often the readings that drift are collected, in seconds.
 	Interval int `json:"interval"`
 
-	RemoteADB bool `json:"remote_adb"`
+	ADB bool `json:"remote_adb"`
 
 	// MinCores holds cores online that the governor would otherwise park.
 	MinCores int `json:"min_cores"`
@@ -30,8 +30,8 @@ func (w DiagWriter) Interval(v int) error {
 	return w.st.Update(func(c *Config) { c.Diag.Interval = v })
 }
 
-func (w DiagWriter) RemoteADB(v bool) error {
-	return w.st.Update(func(c *Config) { c.Diag.RemoteADB = v })
+func (w DiagWriter) ADB(v bool) error {
+	return w.st.Update(func(c *Config) { c.Diag.ADB = v })
 }
 
 func (w DiagWriter) MinCores(v int) error {

@@ -32,7 +32,12 @@ func init() {
 
 const frame = startup.Frame
 
-type Splash struct{ hold *display.Claim }
+type Splash struct {
+	hold     *display.Claim
+	finished atomic.Bool
+}
+
+func (s *Splash) Finished() bool { return s.finished.Load() }
 
 var (
 	once   sync.Once
@@ -45,6 +50,7 @@ func (s *Splash) Name() string { return "splash" }
 
 // Start takes the panel before anything else has run, clear so the reveal underneath shows through.
 func (s *Splash) Start(context.Context) error {
+	s.finished.Store(false)
 	s.hold = display.Get().Claim(display.PriorityBoot)
 	s.hold.Show(func(p *display.Panel) error {
 		surface := ui.Of(p)
@@ -143,6 +149,7 @@ func (s *Splash) Run(ctx context.Context) error {
 	if !completed {
 		return nil
 	}
+	s.finished.Store(true)
 
 	s.hold.Show(func(p *display.Panel) error {
 		ui.Fill(ui.Of(p), chosen().Background)

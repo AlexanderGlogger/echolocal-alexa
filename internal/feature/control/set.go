@@ -4,17 +4,16 @@ package control
 
 import (
 	"fmt"
-	"github.com/ygelfand/echolocal/internal/feature/network"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/media"
+	"github.com/ygelfand/echolocal/internal/feature/network"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
@@ -177,47 +176,47 @@ func screenSettings() []setting {
 		{
 			"weather.entity",
 			func(c config.Config) string { return orNone(c.Weather.Entity) },
-			words(weather.SetEntity),
+			words(weather.Get().SetEntity),
 		},
 		{
 			"weather.look",
 			func(c config.Config) string { return string(c.Weather.Look) },
-			choose(config.WeatherLooks(), weather.SetLook),
+			choose(config.WeatherLooks(), weather.Get().SetLook),
 		},
 		{
 			"weather.dashboard",
 			func(c config.Config) string { return onOff(c.Weather.Dashboard) },
-			toggle(weather.SetDashboard),
+			toggle(weather.Get().SetDashboard),
 		},
 		{
 			"weather.idle",
 			func(c config.Config) string { return onOff(c.Weather.Idle) },
-			toggle(weather.SetIdle),
+			toggle(weather.Get().SetIdle),
 		},
 		{
 			"weather.animate",
 			func(c config.Config) string { return onOff(c.Weather.Animate) },
-			toggle(weather.SetAnimate),
+			toggle(weather.Get().SetAnimate),
 		},
 		{
 			"weather.themed",
 			func(c config.Config) string { return onOff(c.Weather.Themed) },
-			toggle(weather.SetThemed),
+			toggle(weather.Get().SetThemed),
 		},
 		{
 			"weather.position",
 			func(c config.Config) string { return string(c.Weather.Position) },
-			choose(config.Positions(), weather.SetPosition),
+			choose(config.Positions(), weather.Get().SetPosition),
 		},
 		{
 			"weather.align",
 			func(c config.Config) string { return string(c.Weather.Align) },
-			choose(config.Aligns(), weather.SetAlign),
+			choose(config.Aligns(), weather.Get().SetAlign),
 		},
 		{
 			"weather.size",
 			func(c config.Config) string { return string(c.Weather.Size) },
-			choose(config.Sizes(), weather.SetSize),
+			choose(config.Sizes(), weather.Get().SetSize),
 		},
 	}
 }

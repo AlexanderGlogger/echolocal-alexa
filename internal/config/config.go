@@ -28,6 +28,7 @@ import (
 
 // Config is what the device is set to.
 type Config struct {
+	Feedback   Feedback   `json:"feedback"`
 	Time       Time       `json:"time"`
 	Device     Device     `json:"-"`
 	Speaker    Speaker    `json:"speaker"`
@@ -64,6 +65,7 @@ func Defaults() Config {
 	d := defaults.Current()
 
 	return Config{
+		Feedback:   defaultFeedback(),
 		Network:    defaultNetwork(),
 		Speaker:    defaultSpeaker(),
 		Volume:     defaultVolume(),

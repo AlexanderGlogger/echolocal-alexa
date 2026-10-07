@@ -4,49 +4,21 @@ import (
 	"sync"
 
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/feedback"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/ui/widget"
-	"github.com/ygelfand/libcountertop/pkg/say"
+	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
 )
 
-// Page is the screen for setting every level, one slider each.
-func Page() shell.View {
-	pageOnce.Do(func() { page = levels{build()} })
-	return page
-}
+var page = sync.OnceValue(func() *sharedview.Page { return sharedview.NewPage(Get(), config.Streams(), chimes{}, shell.Get()) })
 
-var (
-	pageOnce sync.Once
-	page     levels
-)
+func Page() shell.View { return page() }
 
-// levels is the page, saying it shows them.
-type levels struct{ *shell.Page }
+type shows interface{ Shows(config.Stream) bool }
 
-func (levels) Shows(config.Stream) bool { return true }
+func showing(s config.Stream) bool { v, ok := shell.Get().Top().(shows); return ok && v.Shows(s) }
 
-func build() *shell.Page {
-	return &shell.Page{
-		Title: say.T("settings.volume"),
-		Build: func() ([]widget.Row, []func(int)) {
-			streams := config.Streams()
+type chimes struct{}
 
-			rows := make([]widget.Row, 0, len(streams))
-			acts := make([]func(int), 0, len(streams))
-
-			for _, s := range streams {
-				rows = append(rows, widget.Row{
-					Label: s.Label(),
-					Kind:  widget.Slider,
-					Level: Get().Level(s),
-				})
-				acts = append(acts, set(s))
-			}
-			return rows, acts
-		},
-	}
-}
-
-func set(s config.Stream) func(int) {
-	return func(level int) { Get().Set(s, level) }
-}
+func (chimes) Chime() config.Chime     { return config.Get().Feedback.Chime }
+func (chimes) SetChime(c config.Chime) { feedback.Get().SetChime(c) }
+func (chimes) Preview()                { feedback.Volume() }

@@ -5,11 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
+	esphome "github.com/ygelfand/go-esphome-device"
 )
 
 // registered is every entity the components put up, by object id.
@@ -29,6 +28,7 @@ var registered = []string{
 	"cpu_cores",
 	"cpu_cores_online",
 	"cpu_temperature",
+	"device_chime",
 	"failure_effect",
 	"firmware",
 	"follow_up_1",
@@ -118,6 +118,20 @@ var registered = []string{
 	"wifi_received",
 	"wifi_sent",
 	"wifi_signal",
+}
+
+func TestSupportedBoardsHaveUniqueEntityKeys(t *testing.T) {
+	was := component.Board()
+	t.Cleanup(func() { component.Default().Use(was) })
+	for _, b := range []board.Board{board.Biscuit, board.Checkers, board.Cronos} {
+		t.Run(b.Codename, func(t *testing.T) {
+			component.Default().Use(b)
+			entities := esphome.NewEntities()
+			if err := entities.Add(component.Default().Entities()...); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
 }
 
 func TestEveryComponentStillRegisters(t *testing.T) {

@@ -15,6 +15,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
 	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
@@ -91,7 +92,7 @@ func callsBoard(at ui.Rect, _ dashboard.Tab, pal theme.Theme) gogui.View {
 	}))
 }
 
-func peerTile(id string, side float32, p discovery.Peer, pal theme.Theme) gogui.View {
+func peerTile(id string, side float32, p sharedpeer.Peer, pal theme.Theme) gogui.View {
 	t := gogui.CurrentTheme().Cfg
 	inner := side - 2*t.PaddingMedium.Left
 	key, svg := devicePicture(p.Board)
@@ -153,7 +154,7 @@ func peerTile(id string, side float32, p discovery.Peer, pal theme.Theme) gogui.
 	return gogui.Column(cfg)
 }
 
-func dial(p discovery.Peer, video bool) {
+func dial(p sharedpeer.Peer, video bool) {
 	if err := call.Get().Start(p, video); err != nil {
 		slog.Warn("call not placed", "to", p.Name, "err", err)
 	}
