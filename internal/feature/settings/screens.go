@@ -34,12 +34,32 @@ func open(v shell.View) func(int) { return func(int) { shell.Get().Push(v) } }
 
 func root() *shell.Page {
 	return sharedsettings.RootPage(sharedsettings.RootOptions{
-		Network: func() string { return wifi.Get().Network() }, Theme: func() string { return themeSays(config.Get().Screen.Theme) }, Assistants: phrases, MediaLevel: func() int { return config.Get().Volume.Level(config.StreamMedia) }, Version: layout.Version, Push: shell.Get().Push,
-		NetworkPage: func() shell.View { return networkPage() }, FeaturesPage: func() shell.View { return featuresPage() }, DisplayPage: func() shell.View { return displayPage() }, HomePage: func() shell.View { return homecontrol.Page() }, VolumePage: func() shell.View { return volume.Page() }, AssistantsPage: func() shell.View { return assistantsPage() }, SystemPage: func() shell.View { return systemPage() }, DebugPage: func() shell.View { return debugPage() }, AboutPage: func() shell.View { return aboutPage() },
+		Network:        func() string { return wifi.Get().Network() },
+		Theme:          func() string { return themeSays(config.Get().Screen.Theme) },
+		Assistants:     phrases,
+		MediaLevel:     func() int { return config.Get().Volume.Level(config.StreamMedia) },
+		Version:        layout.Version,
+		Push:           shell.Get().Push,
+		NetworkPage:    func() shell.View { return networkPage() },
+		FeaturesPage:   func() shell.View { return featuresPage() },
+		DisplayPage:    func() shell.View { return displayPage() },
+		HomePage:       func() shell.View { return homecontrol.Page() },
+		VolumePage:     func() shell.View { return volume.Page() },
+		AssistantsPage: func() shell.View { return assistantsPage() },
+		SystemPage:     func() shell.View { return systemPage() },
+		DebugPage:      func() shell.View { return debugPage() },
+		AboutPage:      func() shell.View { return aboutPage() },
 		Sections: func() []sharedsettings.Section {
 			out := make([]sharedsettings.Section, 0, len(sections))
 			for _, s := range sections {
-				out = append(out, sharedsettings.Section{Label: s.label, Glyph: s.glyph, Page: func() shell.View { return s.page() }})
+				out = append(
+					out,
+					sharedsettings.Section{
+						Label: s.label,
+						Glyph: s.glyph,
+						Page:  func() shell.View { return s.page() },
+					},
+				)
 			}
 			return out
 		},
@@ -105,7 +125,12 @@ func visualPage() *shell.Page {
 	})
 }
 
-func visualPicker(title, empty string, none func(), chosen func() string, pick func(visual.Kind)) *shell.Page {
+func visualPicker(
+	title, empty string,
+	none func(),
+	chosen func() string,
+	pick func(visual.Kind),
+) *shell.Page {
 	return sharedsettings.VisualPicker(title, empty, none, chosen, pick, visual.ThumbnailFit)
 }
 
@@ -223,7 +248,12 @@ func use(name string) func(int) {
 
 func networkPage() *shell.Page {
 	return sharedsettings.NetworkPage(func() sharedsettings.NetworkState {
-		c := sharedsettings.NetworkState{SSID: wifi.Get().Network(), Address: address(), MAC: wifi.Get().MAC(), Verify: config.Get().Network.Verify}
+		c := sharedsettings.NetworkState{
+			SSID:    wifi.Get().Network(),
+			Address: address(),
+			MAC:     wifi.Get().MAC(),
+			Verify:  config.Get().Network.Verify,
+		}
 		if l := dhcp.Get().Lease(); l != nil {
 			c.Router = l.Router.String()
 			c.Renew = l.Renew
@@ -234,7 +264,12 @@ func networkPage() *shell.Page {
 
 func aboutPage() *shell.Page {
 	return sharedsettings.AboutPage(func() sharedsettings.About {
-		return sharedsettings.About{Name: config.Get().Device.Name, Version: layout.Version, Built: layout.BuildDate, Commit: layout.GitCommit}
+		return sharedsettings.About{
+			Name:    config.Get().Device.Name,
+			Version: layout.Version,
+			Built:   layout.BuildDate,
+			Commit:  layout.GitCommit,
+		}
 	})
 }
 
@@ -312,7 +347,12 @@ func deliveryPage(slot int) *shell.Page { return assistantPages().Delivery(slot)
 // in the name.
 var delivering = sharedsettings.Delivering
 
-func useDelivery(slot int, d config.Delivery) func(int) { return assistantPages().UseDelivery(slot, d) }
+func useDelivery(
+	slot int,
+	d config.Delivery,
+) func(int) {
+	return assistantPages().UseDelivery(slot, d)
+}
 
 // languagePage picks the text the panel shows.
 //

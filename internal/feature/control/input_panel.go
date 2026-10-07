@@ -9,6 +9,7 @@ import (
 
 func configureTouch(options *harness.InputOptions) {
 	options.Deliver = func(c harness.Contact) {
-		touch.Get().Feed(touch.Contact{ID: c.ID, X: c.X, Y: c.Y, Phase: touch.Phase(c.Phase), At: c.At})
+		touch.Get().
+			Feed(touch.Contact{ID: c.ID, X: c.X, Y: c.Y, Phase: touch.Phase(c.Phase), At: c.At})
 	}
 }

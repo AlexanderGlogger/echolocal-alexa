@@ -46,7 +46,11 @@ func screenSettings() []setting {
 	c, i, v := dashboard.Get(), idle.Get(), visuals.Get()
 
 	return []setting{
-		{"network.verify", func(c config.Config) string { return onOff(c.Network.Verify) }, toggle(network.Get().SetVerify)},
+		{
+			"network.verify",
+			func(c config.Config) string { return onOff(c.Network.Verify) },
+			toggle(network.Get().SetVerify),
+		},
 		{
 			"clock.face",
 			func(c config.Config) string { return string(c.Clock.Face) },
@@ -237,7 +241,10 @@ func set(args []string) (string, error) {
 	all := settings()
 	rows := make([]harness.Setting[config.Config], 0, len(all))
 	for _, s := range all {
-		rows = append(rows, harness.Setting[config.Config]{Name: s.name, Read: s.says, Write: s.use})
+		rows = append(
+			rows,
+			harness.Setting[config.Config]{Name: s.name, Read: s.says, Write: s.use},
+		)
 	}
 	return harness.Settings(config.Get, rows, args)
 }

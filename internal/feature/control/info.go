@@ -12,5 +12,14 @@ import (
 
 func deviceInfo() harness.DeviceInfo {
 	d := config.Get().Device
-	return harness.DeviceInfo{Version: layout.Version, Commit: layout.GitCommit, Built: layout.BuildDate, Board: component.Board().Codename, Name: d.Name, Address: d.Addr, Model: d.Board.Model, Uptime: time.Duration(metrics.Uptime() * float64(time.Second))}
+	return harness.DeviceInfo{
+		Version: layout.Version,
+		Commit:  layout.GitCommit,
+		Built:   layout.BuildDate,
+		Board:   component.Board().Codename,
+		Name:    d.Name,
+		Address: d.Addr,
+		Model:   d.Board.Model,
+		Uptime:  time.Duration(metrics.Uptime() * float64(time.Second)),
+	}
 }

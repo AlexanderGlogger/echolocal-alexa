@@ -34,24 +34,40 @@ const (
 type voiceSound struct{ *speaker.Driver }
 
 func (s voiceSound) Claim(name string, fn func(context.Context, turn.Speaker) error) turn.Claim {
-	return s.Driver.Claim(name, func(ctx context.Context, p *speaker.Player) error { return fn(ctx, p) })
+	return s.Driver.Claim(
+		name,
+		func(ctx context.Context, p *speaker.Player) error { return fn(ctx, p) },
+	)
 }
 func newConversation(vs *esphome.VoiceSatellite) *conversation {
 	var effect *led.Claim
 	return turn.NewConversation(vs, turn.Options{
 		Source:  mic.Get(),
 		Speaker: speaker.Get(),
-		Sound:   voiceSound{speaker.Sound()}, Player: media.Get(), Log: activity.Get(), Recorder: recording.Get(),
-		Models:   func() []wake.Model { return wake.Lib().Ours() },
-		Adapting: mic.Get().SetAdapting, Duck: speaker.Sound().Backgrounds().Duck,
-		HardwareTail: speaker.HardwareTail, Shown: Shown.Emit,
-		Failure: feedback.Failure,
-		Words: turn.Words{
-			MaxListen: wakeword.MaxListen, MaxThink: wakeword.MaxThink, FollowUp: wakeword.FollowUp,
-			Buffer: wakeword.Buffer, ChimeLength: wakeword.ChimeLength, Tones: wakeword.Tones, Chime: wakeword.Chime,
-			Delivery: func(slot int) string { return string(wakeword.Delivery(slot)) },
+		Sound: voiceSound{
+			speaker.Sound(),
 		},
-		Muted: mute.Get().Muted, Cancelled: feedback.Cancelled,
+		Player:       media.Get(),
+		Log:          activity.Get(),
+		Recorder:     recording.Get(),
+		Models:       func() []wake.Model { return wake.Lib().Ours() },
+		Adapting:     mic.Get().SetAdapting,
+		Duck:         speaker.Sound().Backgrounds().Duck,
+		HardwareTail: speaker.HardwareTail,
+		Shown:        Shown.Emit,
+		Failure:      feedback.Failure,
+		Words: turn.Words{
+			MaxListen:   wakeword.MaxListen,
+			MaxThink:    wakeword.MaxThink,
+			FollowUp:    wakeword.FollowUp,
+			Buffer:      wakeword.Buffer,
+			ChimeLength: wakeword.ChimeLength,
+			Tones:       wakeword.Tones,
+			Chime:       wakeword.Chime,
+			Delivery:    func(slot int) string { return string(wakeword.Delivery(slot)) },
+		},
+		Muted:     mute.Get().Muted,
+		Cancelled: feedback.Cancelled,
 		Begin:     func() { effect = led.Get().Claim(led.PriorityTurn) },
 		End:       func() { effect.Release() },
 		Elsewhere: func() { led.Get().Busy().Flash(led.WorkElsewhere, 900*time.Millisecond) },

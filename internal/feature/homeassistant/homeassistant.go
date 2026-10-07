@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
 	"log/slog"
 	"sync"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-	"github.com/ygelfand/go-esphome-device/api"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	esphome "github.com/ygelfand/go-esphome-device"
+	"github.com/ygelfand/go-esphome-device/api"
+	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	"google.golang.org/protobuf/proto"
 )
 
 func init() {

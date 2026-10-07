@@ -17,7 +17,12 @@ func init() {
 }
 
 var get = sync.OnceValue(func() *Assistant {
-	a := sharedscreen.New(sharedscreen.Options{Level: func() float64 { return mic.Get().Level() }, Stop: func() bool { return voice.Get().Stop() }})
+	a := sharedscreen.New(
+		sharedscreen.Options{
+			Level: func() float64 { return mic.Get().Level() },
+			Stop:  func() bool { return voice.Get().Stop() },
+		},
+	)
 	voice.Shown.Listen(a.Show)
 	touch.Contacts.Listen(func(c touch.Contact) {
 		if c.Phase == touch.Down {

@@ -156,7 +156,17 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 var placed = widgets.Placed
 
 func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
-	return toolkit.PageFrame(w, widgets.FrameOptions{Title: p.Title, Fixed: p.Fixed, Build: p.Build, Back: func() { shell.Get().Pop() }, Gesture: holdStill, Room: editor.Room(w)})
+	return toolkit.PageFrame(
+		w,
+		widgets.FrameOptions{
+			Title:   p.Title,
+			Fixed:   p.Fixed,
+			Build:   p.Build,
+			Back:    func() { shell.Get().Pop() },
+			Gesture: holdStill,
+			Room:    editor.Room(w),
+		},
+	)
 }
 
 func room(w *gogui.Window) []gogui.View { return editor.Room(w) }

@@ -4,15 +4,13 @@ package discovery
 
 import (
 	"context"
-	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
+	"github.com/libp2p/zeroconf/v2"
 	"log/slog"
 	"net"
 	"slices"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/libp2p/zeroconf/v2"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -23,6 +21,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/wifi"
 	"github.com/ygelfand/echolocal/internal/layout"
+	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 	"github.com/ygelfand/libcountertop/pkg/say"
 )

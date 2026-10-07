@@ -11,7 +11,6 @@ import (
 	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"

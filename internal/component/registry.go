@@ -23,7 +23,9 @@ type Registry struct {
 
 func New() *Registry {
 	r := &Registry{}
-	r.Registry = sharedlib.New[config.Config](func(needs uint64) bool { return needs & ^uint64(r.Board().Caps) == 0 })
+	r.Registry = sharedlib.New[config.Config](
+		func(needs uint64) bool { return needs & ^uint64(r.Board().Caps) == 0 },
+	)
 	return r
 }
 func Needs(c board.Cap) Option        { return sharedlib.Needs(uint64(c)) }

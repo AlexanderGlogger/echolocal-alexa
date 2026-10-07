@@ -138,7 +138,13 @@ func (t *Time) Restore(config.Config)      { t.policy().Restore() }
 func (t *Time) Entities() []esphome.Entity { return []esphome.Entity{t.policy().Select} }
 func (t *Time) policy() *zonepolicy.Policy {
 	t.zoneOnce.Do(func() {
-		t.zonePolicy = zonepolicy.NewPolicy(zonepolicy.PolicyOptions{Read: func() config.Time { return config.Get().Time }, Home: func(s string) error { return config.Set().Time().Home(s) }, Chosen: func(s string) error { return config.Set().Time().Chosen(s) }})
+		t.zonePolicy = zonepolicy.NewPolicy(
+			zonepolicy.PolicyOptions{
+				Read:   func() config.Time { return config.Get().Time },
+				Home:   func(s string) error { return config.Set().Time().Home(s) },
+				Chosen: func(s string) error { return config.Set().Time().Chosen(s) },
+			},
+		)
 	})
 	return t.zonePolicy
 }

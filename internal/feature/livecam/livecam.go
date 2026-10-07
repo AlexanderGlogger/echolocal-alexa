@@ -24,7 +24,7 @@ var ErrRestarted = errors.New("livecam: the streams changed")
 
 type Picture = camerasession.Picture
 type Session = camerasession.Session
-type Size struct{ Width, Height int }
+type Size = camerasession.Size
 
 // Sizes is each stream as it is encoded.
 func Sizes() []Size {
@@ -68,9 +68,13 @@ func cameraSnapshot() camerasession.Snapshot {
 }
 func Join(at int) (*Session, <-chan mtkcamera.Frame, error) { return hub.Join(at) }
 func Leave(s *Session, frames <-chan mtkcamera.Frame)       { hub.Leave(s, frames) }
-func RequestKey() error                                     { return hub.RequestKey() }
-func Still(within time.Duration) (Picture, error)           { return hub.Still(within) }
-func Muted() bool                                           { return muted() }
+
+// Sessions returns the camera owner used by streaming consumers.
+func Sessions() *camerasession.Hub { return hub }
+
+func RequestKey() error                           { return hub.RequestKey() }
+func Still(within time.Duration) (Picture, error) { return hub.Still(within) }
+func Muted() bool                                 { return muted() }
 func muted() bool {
 	if !component.Board().Has(board.MicMutesCamera) {
 		return false

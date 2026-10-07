@@ -30,7 +30,12 @@ func hearing() []*cobra.Command {
 			defer stop()
 
 			var got []int16
-			err = capture.Listen(cmd.Context(), d, frames, func(f []int16) { got = append(got, f...) })
+			err = capture.Listen(
+				cmd.Context(),
+				d,
+				frames,
+				func(f []int16) { got = append(got, f...) },
+			)
 			if err != nil {
 				return err
 			}

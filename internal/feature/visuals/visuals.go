@@ -27,15 +27,26 @@ var get = sync.OnceValue(func() *Visuals {
 })
 
 func Get() *Visuals { return get() }
-func newVisuals(listen func() (<-chan []int16, func()), muted func() bool, tap func(speaker.Tap)) *Visuals {
+
+func newVisuals(
+	listen func() (<-chan []int16, func()),
+	muted func() bool,
+	tap func(speaker.Tap),
+) *Visuals {
 	return &Visuals{sharedinput.New(sharedinput.Options{
-		Read:    func() config.Visual { return config.Get().Visual },
-		MicRate: 16000, SpeakerRate: speaker.Rate, SpeakerChannels: speaker.Channels, Lift: config.Get().Microphone.VisualizerLift, DeviceID: component.DeviceScreen,
-		Listen: listen, Muted: muted, Tap: func(t sharedinput.Tap) { tap(t) },
-		Kind:   func(v string) error { return config.Set().Visual().Kind(v) },
-		Label:  func(v string) error { return config.Set().Visual().Label(v) },
-		Seed:   func(v int) error { return config.Set().Visual().Seed(v) },
-		MaxFPS: func(v int) error { return config.Set().Visual().MaxFPS(v) },
+		Read:            func() config.Visual { return config.Get().Visual },
+		MicRate:         16000,
+		SpeakerRate:     speaker.Rate,
+		SpeakerChannels: speaker.Channels,
+		Lift:            config.Get().Microphone.VisualizerLift,
+		DeviceID:        component.DeviceScreen,
+		Listen:          listen,
+		Muted:           muted,
+		Tap:             func(t sharedinput.Tap) { tap(t) },
+		Kind:            func(v string) error { return config.Set().Visual().Kind(v) },
+		Label:           func(v string) error { return config.Set().Visual().Label(v) },
+		Seed:            func(v int) error { return config.Set().Visual().Seed(v) },
+		MaxFPS:          func(v int) error { return config.Set().Visual().MaxFPS(v) },
 	})}
 }
 func (v *Visuals) Restore(c config.Config) { v.Visuals.Restore(c.Visual) }

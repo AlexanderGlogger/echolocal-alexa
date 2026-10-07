@@ -135,7 +135,14 @@ func tileView(w *gogui.Window, id, page string, c widget.Cell, tap func(int)) go
 func preview(page string, r widget.Row) gogui.View { return widgets.RowPreview(page, r, palette()) }
 
 func rowView(id, page string, r widget.Row, tap func(int), glyphs bool) gogui.View {
-	return toolkit.Row(id, page, r, tap, glyphs, widgets.RowRenderer{Field: fieldRow, Preview: preview, Grip: grip})
+	return toolkit.Row(
+		id,
+		page,
+		r,
+		tap,
+		glyphs,
+		widgets.RowRenderer{Field: fieldRow, Preview: preview, Grip: grip},
+	)
 }
 
 var outline = widgets.Outline

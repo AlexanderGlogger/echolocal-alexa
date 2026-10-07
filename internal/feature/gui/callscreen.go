@@ -19,22 +19,23 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	sharedcall "github.com/ygelfand/libcountertop/pkg/media/call"
 	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {
 	screenMakers = append(screenMakers, func(v shell.View) *Screen {
 		switch t := v.(type) {
-		case *call.View:
+		case *sharedcall.View:
 			return callScreen(t)
-		case *call.Profile:
+		case *sharedcall.Profile:
 			return profileScreen(t)
 		}
 		return nil
 	})
 }
 
-func callScreen(v *call.View) *Screen {
+func callScreen(v *sharedcall.View) *Screen {
 	return &Screen{Fixed: true, Clear: true, View: v, Build: callBody}
 }
 
@@ -52,7 +53,7 @@ func callBody(w *gogui.Window) gogui.View {
 	status.Size *= 1.3
 
 	controls := []gogui.View{callButtons(vw, c)}
-	if c.State == call.Talking {
+	if c.State == sharedcall.Talking {
 		level := volume.Get().Level(config.StreamVoice)
 		controls = append([]gogui.View{rowView("call-volume", "call",
 			widget.Row{Label: say.T("call.volume"), Kind: widget.Slider, Level: level},
@@ -71,7 +72,7 @@ func callBody(w *gogui.Window) gogui.View {
 	pad := gogui.NewPadding(reach(), reach(), reach(), reach())
 	ink := t.TextStyleDef.Color
 	heading := []gogui.View{gogui.Label(c.Peer.Name, name)}
-	if c.State == call.Talking && c.RemoteMuted && !c.Video {
+	if c.State == sharedcall.Talking && c.RemoteMuted && !c.Video {
 		heading = append(
 			heading,
 			mark("call-remote-muted", "micoff", ink, t.ColorBackground, name.Size),
@@ -87,8 +88,8 @@ func callBody(w *gogui.Window) gogui.View {
 		},
 	)
 
-	if c.Video && c.State == call.Talking {
-		l := call.Arrange(vw, vh)
+	if c.Video && c.State == sharedcall.Talking {
+		l := call.Get().Arrange(vw, vh)
 		rect := func(r display.Rect) ui.Rect { return ui.Rect{X: r.X, Y: r.Y, W: r.W, H: r.H} }
 		var layers []gogui.View
 		if c.RemoteCameraOff {
@@ -229,7 +230,7 @@ func callBody(w *gogui.Window) gogui.View {
 	})
 }
 
-func callButtons(vw int, c call.Call) gogui.View {
+func callButtons(vw int, c sharedcall.Call) gogui.View {
 	t := gogui.CurrentTheme().Cfg
 	glyph := iconStyle(t.TextStyleDef.Color)
 	glyph.Size = reach() * 0.6
@@ -238,7 +239,7 @@ func callButtons(vw int, c call.Call) gogui.View {
 	calls := call.Get()
 	var buttons []gogui.View
 	switch c.State {
-	case call.Ringing:
+	case sharedcall.Ringing:
 		buttons = []gogui.View{
 			wideKey(
 				"call-decline",
@@ -282,7 +283,7 @@ func callButtons(vw int, c call.Call) gogui.View {
 				),
 			)
 		}
-	case call.Calling:
+	case sharedcall.Calling:
 		buttons = []gogui.View{
 			wideKey(
 				"call-cancel",
@@ -347,11 +348,11 @@ func callButtons(vw int, c call.Call) gogui.View {
 	)
 }
 
-func callStatus(c call.Call) string {
+func callStatus(c sharedcall.Call) string {
 	switch c.State {
-	case call.Calling:
+	case sharedcall.Calling:
 		return say.T("call.calling")
-	case call.Ringing:
+	case sharedcall.Ringing:
 		if c.Video {
 			return say.T("call.incoming.video")
 		}
@@ -361,7 +362,7 @@ func callStatus(c call.Call) string {
 	return fmt.Sprintf("%d:%02d", int(d.Minutes()), int(d.Seconds())%60)
 }
 
-func profileScreen(p *call.Profile) *Screen {
+func profileScreen(p *sharedcall.Profile) *Screen {
 	title := p.ID
 	if peer, ok := discovery.Get().Find(p.ID); ok {
 		title = peer.Name
@@ -373,7 +374,7 @@ func profileScreen(p *call.Profile) *Screen {
 	}
 }
 
-func profileBody(w *gogui.Window, prof *call.Profile) gogui.View {
+func profileBody(w *gogui.Window, prof *sharedcall.Profile) gogui.View {
 	p, ok := discovery.Get().Find(prof.ID)
 	if !ok {
 		return column([]gogui.View{gogui.Label(say.T("call.gone"), secondary())})

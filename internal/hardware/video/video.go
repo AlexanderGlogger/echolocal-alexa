@@ -108,7 +108,14 @@ type Screen interface {
 }
 
 func Play(ctx context.Context, s Stream) (Report, error) {
-	return On(ctx, &Beneath{Rotation: func() display.Orientation { return display.Get().Orientation() }, Size: func() (int, int) { return display.Get().Native() }}, s)
+	return On(
+		ctx,
+		&Beneath{
+			Rotation: func() display.Orientation { return display.Get().Orientation() },
+			Size:     func() (int, int) { return display.Get().Native() },
+		},
+		s,
+	)
 }
 
 func On(ctx context.Context, p Screen, s Stream) (Report, error) {

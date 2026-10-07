@@ -4,13 +4,10 @@ package diag
 
 import (
 	"context"
-	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
 	"log/slog"
 	"strings"
 	"sync"
 	"time"
-
-	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/android/setup"
@@ -23,6 +20,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
+	esphome "github.com/ygelfand/go-esphome-device"
+	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
 )
 
 func init() {
@@ -181,7 +180,12 @@ func (d *Diag) soon() {
 // until Home Assistant asks, so a device that waited would report nothing at all until then — and a
 // restart is exactly when somebody is looking.
 func (d *Diag) Run(ctx context.Context) error {
-	return collector.Run(ctx, func() time.Duration { return time.Duration(config.Get().Diag.Interval) * time.Second }, d.wake, d.Sample)
+	return collector.Run(
+		ctx,
+		func() time.Duration { return time.Duration(config.Get().Diag.Interval) * time.Second },
+		d.wake,
+		d.Sample,
+	)
 }
 
 // playback is a known signal through the reply path with nothing in front of it. A reply is 16 kHz
