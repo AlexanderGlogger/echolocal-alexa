@@ -568,7 +568,7 @@ func verifyPryon(r *run) (string, bool, error) {
 		}
 	}
 	return "", false, fmt.Errorf(
-		"Pryon and its shared live microphone did not report ready within %s; recent state: %s",
+		"the Pryon detector and its shared live microphone did not report ready within %s; recent state: %s",
 		pryonReadyTimeout,
 		strings.TrimSpace(logs),
 	)
