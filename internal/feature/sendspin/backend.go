@@ -1,12 +1,12 @@
 package sendspin
 
 import (
-	"github.com/Sendspin/sendspin-go/pkg/protocol"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
 	core "github.com/ygelfand/libcountertop/pkg/audio/sendspin"
+	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
 )
 
 const Port = core.Port
@@ -29,28 +29,14 @@ func newOutput() *core.Output {
 		HardwareTail: speaker.HardwareTail,
 	})
 }
-func newListener(p *Player) *core.Listener {
-	return core.NewListener(
-		p.out,
-		arbitration{speaker.Sound().Backgrounds()},
-		func() core.Identity {
-			mac, _ := layout.FactoryMAC()
-			model := config.Get().Device.Board.Model
-			return core.Identity{
-				ID:           mac,
-				Model:        model,
-				Manufacturer: layout.Manufacturer,
-				Version:      layout.Version,
-				ArtworkSize:  artworkSize,
-			}
-		},
-		core.Callbacks{
-			State:      p.setState,
-			Connection: p.holds,
-			Began:      func() { media.Get().Began(p) },
-			Grouped:    p.grouped,
-			Artwork:    p.drew,
-			Metadata:   func(m *protocol.MetadataState, now func() int64) { p.plays(p.track().merge(m)) },
-		},
-	)
+func identity() core.Identity {
+	mac, _ := layout.FactoryMAC()
+	model := config.Get().Device.Board.Model
+	return core.Identity{
+		ID:           mac,
+		Model:        model,
+		Manufacturer: layout.Manufacturer,
+		Version:      layout.Version,
+		ArtworkSize:  sharedplayer.ArtworkSize,
+	}
 }

@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	ringFor       = 45 * time.Second
 	ringEvery     = 3 * time.Second
 	ringLevel     = 0.5
 	ringbackEvery = 4 * time.Second

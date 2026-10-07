@@ -4,6 +4,7 @@ package discovery
 
 import (
 	"context"
+	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
 	"log/slog"
 	"net"
 	"slices"
@@ -45,19 +46,7 @@ const (
 	missed  = 6
 )
 
-type Peer struct {
-	ID      string
-	Name    string
-	Model   string
-	Board   string
-	Project string
-	Version string
-	Caps    []string
-	Host    string
-	Addrs   []net.IP
-	Port    int
-	Seen    time.Time
-}
+type Peer = sharedpeer.Peer
 
 type Discovery struct {
 	mu    sync.Mutex
@@ -89,8 +78,6 @@ func (d *Discovery) Peers() []Peer {
 	)
 	return out
 }
-
-func (p Peer) Video() bool { return slices.Contains(p.Caps, "video") }
 
 func (d *Discovery) Touch(id string) {
 	d.mu.Lock()

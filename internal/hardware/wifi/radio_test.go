@@ -2,6 +2,17 @@ package wifi
 
 import "testing"
 
+func TestRepeatedConnectedDoesNotQuerySupplicant(t *testing.T) {
+	r := &Radio{up: true, ssid: "home", ctl: &Control{}}
+	// This connection would panic if the handler tried to send STATUS.
+	for range 100 {
+		r.connected()
+	}
+	if !r.up || r.ssid != "home" {
+		t.Fatal("repeated completion changed the association")
+	}
+}
+
 func TestConnectedEventCompletesStartupWithoutVendorStateEvent(t *testing.T) {
 	r := &Radio{ssid: "home"}
 	r.connected()
