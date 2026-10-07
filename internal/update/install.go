@@ -26,6 +26,9 @@ func Install(ctx context.Context, m Manifest, progress func(float32)) error {
 	}
 	defer installing.Unlock()
 
+	if err := refusePryon(); err != nil {
+		return err
+	}
 	if err := m.Valid(); err != nil {
 		return err
 	}
