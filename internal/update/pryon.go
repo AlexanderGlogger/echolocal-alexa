@@ -13,8 +13,11 @@ import (
 var errPryon = errors.New("update: this device runs the Pryon/Alexa build; " +
 	"update it with `echolocal pryon install --echod` instead")
 
-func refusePryon() error {
-	if st, err := os.Stat(layout.AndroidMediaJar); err == nil && st.Mode().IsRegular() {
+func refusePryon() error { return refusePryonAt(layout.AndroidMediaJar) }
+
+// refusePryonAt is refusePryon for a bridge at jar, which in practice means a test.
+func refusePryonAt(jar string) error {
+	if st, err := os.Stat(jar); err == nil && st.Mode().IsRegular() {
 		return errPryon
 	}
 	return nil

@@ -141,7 +141,7 @@ func newPryonInstallCmd() *cobra.Command {
 // rebootForPryon has the boot happen that makes Android scan the companion. Finalizing cannot run
 // before it, so declining ends the run with what to do next rather than half an install.
 func rebootForPryon(ctx context.Context, out io.Writer, d *adb.Device, choice rebootChoice) error {
-	again := errors.New("Pryon is staged but Android has not scanned the companion yet; " +
+	again := errors.New("the Pryon companion is staged but Android has not scanned it yet; " +
 		"reboot the device and run `echolocal pryon install` again to finish")
 
 	switch choice {
@@ -176,7 +176,7 @@ func rebootForPryon(ctx context.Context, out io.Writer, d *adb.Device, choice re
 		return err
 	}
 	if !scanned {
-		return fmt.Errorf("Android did not scan %s during the reboot", layout.PryonAPK)
+		return fmt.Errorf("the reboot did not get %s scanned by Android", layout.PryonAPK)
 	}
 	return nil
 }
