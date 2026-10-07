@@ -74,6 +74,10 @@ room-reactive behavior, and a color per segment. The ring can follow the room's 
 **Buttons** as Home Assistant events: press and hold on every button, and double and triple taps
 on the action button.
 
+**Alexa wake word.** On an Echo Dot still running Fire OS 5, `echolocal pryon install` also enables
+the Dot's own native Amazon Pryon detector as a selectable **Alexa** wake word — see
+[docs/pryon.md](docs/pryon.md).
+
 ### Echo Show
 
 - A native dashboard with a clock in one of eight faces, the weather, and your Home Assistant
