@@ -28,6 +28,7 @@ import (
 
 // Config is what the device is set to.
 type Config struct {
+	Time       Time       `json:"time"`
 	Device     Device     `json:"-"`
 	Speaker    Speaker    `json:"speaker"`
 	Volume     Volume     `json:"volume"`
@@ -112,6 +113,7 @@ type Device struct {
 // write the file — and returns whether the file was written.
 type Writer struct{ st *Store }
 
+func (w Writer) Time() TimeWriter             { return TimeWriter(w) }
 func (w Writer) Speaker() SpeakerWriter       { return SpeakerWriter(w) }
 func (w Writer) Volume() VolumeWriter         { return VolumeWriter(w) }
 func (w Writer) Microphone() MicrophoneWriter { return MicrophoneWriter(w) }

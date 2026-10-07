@@ -1,24 +1,16 @@
 package config
 
-// Visual is the audio visual the screen shows.
-type Visual struct {
-	Kind   string `json:"kind"`
-	Label  string `json:"label"`
-	MaxFPS int    `json:"max_fps"`
-	Seed   int    `json:"seed"`
-}
+import "github.com/ygelfand/libcountertop/pkg/settings/schema"
 
-var MaxFPSSteps = []int{10, 15, 20, 30, 45, 60}
+type Visual = schema.Visual
 
-const (
-	DefaultVisual = "orb"
-	DefaultLabel  = "ECHOLOCAL"
-	DefaultMaxFPS = 60
-)
+var MaxFPSSteps = schema.MaxFPSSteps
 
-func defaultVisual() Visual {
-	return Visual{Kind: DefaultVisual, Label: DefaultLabel, MaxFPS: DefaultMaxFPS}
-}
+const DefaultVisual = schema.DefaultVisual
+const DefaultLabel = schema.DefaultLabel
+const DefaultMaxFPS = schema.DefaultMaxFPS
+
+var defaultVisual = schema.DefaultVisualSettings
 
 type VisualWriter struct{ st *Store }
 

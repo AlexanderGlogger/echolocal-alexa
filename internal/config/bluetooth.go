@@ -1,19 +1,12 @@
 package config
 
-// Bluetooth is whether the device also acts as a BLE proxy for Home Assistant.
-type Bluetooth struct {
-	Proxy bool `json:"proxy"`
+import "github.com/ygelfand/libcountertop/pkg/settings/schema"
 
-	// Speaker is whether a phone may connect and play to it.
-	Speaker bool `json:"speaker"`
-}
+type Bluetooth = schema.Bluetooth
 
-// Off unless asked for: it keeps a radio scanning that shares an antenna with wifi.
-const DefaultBluetoothProxy = false
+const DefaultBluetoothProxy = schema.DefaultBluetoothProxy
 
-func defaultBluetooth() Bluetooth {
-	return Bluetooth{Proxy: DefaultBluetoothProxy}
-}
+var defaultBluetooth = schema.DefaultBluetooth
 
 type BluetoothWriter struct{ st *Store }
 

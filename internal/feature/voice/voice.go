@@ -72,7 +72,7 @@ func build() *Voice {
 	}
 	v.selection.Set(slots)
 	v.turn = newConversation(v.vs)
-	v.turn.word = v.selection.ID
+	v.turn.Word = v.selection.ID
 	slog.Info("wake words", "ours", len(ours), "slots", slots)
 
 	v.vs.OnTimer = timer.Get().Event

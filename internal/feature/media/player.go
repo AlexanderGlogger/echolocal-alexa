@@ -8,6 +8,7 @@ package media
 import (
 	"context"
 	"fmt"
+	"github.com/ygelfand/libcountertop/pkg/media/ownership"
 	"log/slog"
 	"math"
 	"sync"
@@ -61,13 +62,11 @@ type Player struct {
 	speaking atomic.Bool
 
 	// external is whatever else is driving the speaker, and nil when nothing is.
-	external atomic.Pointer[Source]
+	owner     *ownership.Owner[Source]
+	ownerInit sync.Once
 
 	// Begun carries each source that has just started playing.
 	Begun hook.Hook[Source]
-
-	claimMu sync.Mutex
-	live    Source
 
 	// Volume carries the level whenever it moves in a way somebody should see.
 	Volume hook.Hook[int]
@@ -81,12 +80,6 @@ type Player struct {
 // Source is audio this player did not start: a group the room has joined, playing through the same
 // speaker. Home Assistant has one media player entity for the device either way, so the transport
 // controls have to reach whoever is actually playing.
-type Source interface {
-	Play()
-	Pause()
-	Stop()
-	Playing() (playing, paused bool)
-}
 
 var (
 	once   sync.Once
@@ -376,9 +369,9 @@ func (p *Player) Sounding(on bool) {
 // External hands the speaker to something this player did not start, and takes it back with nil.
 func (p *Player) External(s Source) {
 	if s == nil {
-		p.external.Store(nil)
+		p.sourceOwner().Clear()
 	} else {
-		p.external.Store(&s)
+		p.sourceOwner().Set(s)
 	}
 	p.refresh()
 }
@@ -392,19 +385,15 @@ func (p *Player) SetIdle(v config.Delay) {
 	}
 }
 
-func (p *Player) source() Source {
-	if s := p.external.Load(); s != nil {
-		return *s
-	}
-	return nil
-}
+func (p *Player) source() Source { s, _ := p.sourceOwner().Get(); return s }
 
 // Playing reports what is playing, which is what decides whether a turn has anything to take the
 // speaker from and whether the stop word has anything to stop.
 func (p *Player) Playing() (playing, paused bool) {
 	playing, paused = p.stream.Playing()
 	if s := p.source(); s != nil {
-		ext, extPaused := s.Playing()
+		now := s.Now()
+		ext, extPaused := now.Playing && !now.Paused, now.Paused
 		playing, paused = playing || ext, paused || extPaused
 	}
 	return playing, paused
@@ -531,4 +520,15 @@ func (p *Player) show(step int) {
 
 	frame := led.Volume(float64(step) / VolumeSteps)
 	leds.Claim(led.PriorityNotice).PaintFor(frame, volumeFlash)
+}
+
+func (p *Player) Start(ctx context.Context) error { p.stream.Start(ctx); return nil }
+func (p *Player) Run(ctx context.Context) error   { <-ctx.Done(); return nil }
+func (p *Player) Close() error                    { return p.stream.Close() }
+
+func (p *Player) sourceOwner() *ownership.Owner[Source] {
+	p.ownerInit.Do(func() {
+		p.owner = ownership.New(func(s Source) uint8 { return uint8(kindOf(s)) })
+	})
+	return p.owner
 }

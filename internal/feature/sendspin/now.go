@@ -26,7 +26,7 @@ func (p *Player) Now() media.Now {
 	p.mu.Unlock()
 
 	return media.Now{
-		Playing: playing || paused,
+		Playing: playing,
 		Paused:  paused,
 		Title:   t.Title,
 		Artist:  t.Artist,

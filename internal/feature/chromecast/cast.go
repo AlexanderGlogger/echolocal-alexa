@@ -22,8 +22,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -37,6 +35,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/echolocal/internal/ui"
+	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/fetch"
 	"github.com/ygelfand/libcountertop/pkg/media/cast"
 	_ "github.com/ygelfand/libcountertop/pkg/media/cast/protocols/all"
@@ -182,14 +181,14 @@ func (r *Receiver) Name() string { return "cast receiver" }
 
 func (r *Receiver) output() *output {
 	o := newOutput()
-	o.ended = func() {
+	o.SetEnded(func() {
 		r.mu.Lock()
 		s := r.service
 		r.mu.Unlock()
 		if s != nil {
 			s.End()
 		}
-	}
+	})
 	return o
 }
 

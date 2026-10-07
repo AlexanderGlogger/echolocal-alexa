@@ -1,26 +1,9 @@
 package videoplayer
 
 import (
-	"time"
-
-	"github.com/ygelfand/echolocal/internal/feature/media"
-	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/videopage"
 )
 
-type Controls interface {
-	media.Source
-	media.Details
-	Seek(to time.Duration)
-	CanSeek() bool
-}
-
-type Mark struct {
-	From, To time.Duration
-	Color    theme.Color
-}
-
-type Marked interface {
-	Marks() []Mark
-}
-
-const linger = 4 * time.Second
+type Controls = videopage.Controls
+type Mark = videopage.Mark
+type Marked = videopage.Marked

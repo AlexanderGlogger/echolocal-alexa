@@ -184,7 +184,7 @@ func (r *Radio) settle() {
 		return
 	}
 
-	if known, err := wpa.Configured(socket{ctl}); err == nil {
+	if known, err := wpa.Configured(wpa.Commands{Connection: ctl}); err == nil {
 		r.mu.Lock()
 		r.configured = len(known) > 0
 		r.configuredKnown = true

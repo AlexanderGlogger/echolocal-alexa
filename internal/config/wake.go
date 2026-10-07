@@ -1,5 +1,9 @@
 package config
 
+import (
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+)
+
 // Wake is the wake word configuration, indexed by Home Assistant's wake word slot.
 type Wake struct {
 	Words []WakeWord `json:"words"`
@@ -190,67 +194,21 @@ func (w WakeWriter) word(f func(*WakeWord)) error {
 	})
 }
 
-// Delivery is how a spoken reply reaches the device. It is per slot because a local pipeline and a
-// cloud one differ in how long the audio takes to start, so the trade between starting sooner and
-// not gapping is not the same for both.
-type Delivery string
+type Delivery = schema.Delivery
 
 const (
-	// DeliveryWhole fetches the reply from the url Home Assistant serves it at. It cannot gap and it
-	// says when the audio has ended, which the stream does not.
-	DeliveryWhole Delivery = "whole"
-
-	// DeliveryStream takes the reply over the API as it is generated. It starts sooner and it can gap:
-	// the chunks arrive at about the rate they play, so any hiccup splices silence into a word.
-	DeliveryStream Delivery = "stream"
+	DeliveryWhole  = schema.DeliveryWhole
+	DeliveryStream = schema.DeliveryStream
 )
 
-func Deliveries() []Delivery { return []Delivery{DeliveryWhole, DeliveryStream} }
+var Deliveries = schema.Deliveries
 
-// Label is how the setting is shown.
-func (d Delivery) Label() string {
-	switch d {
-	case DeliveryWhole:
-		return "Whole file"
-	case DeliveryStream:
-		return "Streamed"
-	}
-	return string(d)
-}
-
-// Tone is the sound a wake word makes when it fires.
-type Tone string
+type Tone = schema.Chime
 
 const (
-	// ToneNone is silence: the ring is feedback enough for some people.
-	ToneNone Tone = "none"
-
-	// ToneChirp is two quick rising notes.
-	ToneChirp Tone = "chirp"
-
-	// ToneDing is one longer note, for somewhere noisy.
-	ToneDing Tone = "ding"
-
-	// ToneRise is three ascending notes, the most conspicuous of them.
-	ToneRise Tone = "rise"
-
-	// ToneMuteSwitch is a falling pair for muting and a rising one for unmuting.
-	ToneMuteSwitch Tone = "mute"
+	ToneNone       = schema.ChimeNone
+	ToneChirp      = schema.ChimeChirp
+	ToneDing       = schema.ChimeDing
+	ToneRise       = schema.ChimeRise
+	ToneMuteSwitch = schema.ChimeMuteSwitch
 )
-
-// Label is how the setting is shown.
-func (t Tone) Label() string {
-	switch t {
-	case ToneNone:
-		return "None"
-	case ToneChirp:
-		return "Chirp"
-	case ToneDing:
-		return "Ding"
-	case ToneRise:
-		return "Rise"
-	case ToneMuteSwitch:
-		return "Mute tones"
-	}
-	return string(t)
-}

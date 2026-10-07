@@ -8,14 +8,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/layout"
 	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/go-esphome-device/api"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/libcountertop/pkg/hook"
-	"github.com/ygelfand/libcountertop/pkg/timezone"
+	zonepolicy "github.com/ygelfand/libcountertop/pkg/settings/timezone"
+	"google.golang.org/protobuf/proto"
 )
 
 // Home Assistant knows the time and is already talking to this device, so it is the source: it
@@ -44,9 +44,10 @@ type Time struct {
 	// Synced carries every answer from Home Assistant.
 	Synced hook.Hook[Sync]
 
-	mu    sync.Mutex
-	asked *esphome.Conn
-	tz    string
+	mu         sync.Mutex
+	asked      *esphome.Conn
+	zoneOnce   sync.Once
+	zonePolicy *zonepolicy.Policy
 
 	set atomic.Bool
 }
@@ -123,28 +124,23 @@ func (t *Time) fromHome(epoch uint32) {
 
 // zoneFromHome takes the zone Home Assistant reported, which is what turns a clock face from UTC
 // into the time on the wall.
-func (t *Time) zoneFromHome(said string) {
-	if said == "" || said == t.Zone() {
-		return
-	}
-
-	if err := tz.Use(said); err != nil {
-		slog.Warn("could not take the time zone from home assistant", "zone", said, "err", err)
-		return
-	}
-
-	t.mu.Lock()
-	t.tz = said
-	t.mu.Unlock()
-
-	slog.Info("time zone set", "zone", said)
-}
-
-// Zone is the time zone Home Assistant last reported, empty before it has.
+func (t *Time) zoneFromHome(said string) { t.policy().FromHome(said) }
 func (t *Time) Zone() string {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.tz
+	c := config.Get().Time
+	if c.Chosen != "" {
+		return c.Chosen
+	}
+	return c.Home
+}
+func (t *Time) ChosenZone() string         { return t.policy().Zone() }
+func (t *Time) SetZone(s string)           { t.policy().SetZone(s) }
+func (t *Time) Restore(config.Config)      { t.policy().Restore() }
+func (t *Time) Entities() []esphome.Entity { return []esphome.Entity{t.policy().Select} }
+func (t *Time) policy() *zonepolicy.Policy {
+	t.zoneOnce.Do(func() {
+		t.zonePolicy = zonepolicy.NewPolicy(zonepolicy.PolicyOptions{Read: func() config.Time { return config.Get().Time }, Home: func(s string) error { return config.Set().Time().Home(s) }, Chosen: func(s string) error { return config.Set().Time().Chosen(s) }})
+	})
+	return t.zonePolicy
 }
 
 // Valid reports whether the time is worth showing: Home Assistant has set it, or it is already later

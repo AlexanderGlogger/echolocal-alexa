@@ -1,38 +1,21 @@
 package config
 
-// Stream is a kind of sound, each with its own level.
-type Stream string
-
-const (
-	// StreamMain is the device's loudness, which the others are set against.
-	StreamMain Stream = "main"
-
-	StreamMedia    Stream = "media"
-	StreamVoice    Stream = "voice"
-	StreamAlerts   Stream = "alerts"
-	StreamFeedback Stream = "feedback"
+import (
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 )
 
-// Streams is every level, in the order they are offered.
+type Stream = schema.Stream
+
+const (
+	StreamMain     = schema.StreamMain
+	StreamMedia    = schema.StreamMedia
+	StreamAlerts   = schema.StreamAlerts
+	StreamVoice    = schema.StreamVoice
+	StreamFeedback = schema.StreamFeedback
+)
+
 func Streams() []Stream {
 	return []Stream{StreamMain, StreamMedia, StreamVoice, StreamAlerts, StreamFeedback}
-}
-
-// Label is how a level is named on the panel and in Home Assistant.
-func (s Stream) Label() string {
-	switch s {
-	case StreamMain:
-		return "Main"
-	case StreamMedia:
-		return "Music"
-	case StreamVoice:
-		return "Voice"
-	case StreamAlerts:
-		return "Alerts"
-	case StreamFeedback:
-		return "Beeps"
-	}
-	return string(s)
 }
 
 // Volume is how loud each kind of sound is, as a percentage. Main lives in Speaker.Volume, which

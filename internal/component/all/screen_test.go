@@ -88,7 +88,7 @@ func echodDeps(t *testing.T, tags string) []string {
 func TestOnlyHelperBoardsEmbedTheHelper(t *testing.T) {
 	for tags, want := range map[string]bool{
 		"":               false,
-		"board_rook":     false,
+		"board_biscuit":  false,
 		"board_checkers": true,
 		"board_cronos":   true,
 	} {
@@ -107,25 +107,23 @@ func TestOnlyHelperBoardsEmbedTheHelper(t *testing.T) {
 	}
 }
 
-func TestTheSharedBuildLinksNoScreen(t *testing.T) {
-	deps := echodDeps(t, "")
-	for _, pkg := range slices.Concat(screenOnly, castOnly, cameraOnly) {
-		if slices.Contains(deps, pkg) {
-			t.Errorf("the shared echod links %s", pkg)
+func TestBiscuitLinksNoShowFeatures(t *testing.T) {
+	for _, tag := range []string{"", "board_biscuit"} {
+		deps := echodDeps(t, tag)
+		for _, pkg := range slices.Concat(screenOnly, castOnly, cameraOnly) {
+			if slices.Contains(deps, pkg) {
+				t.Errorf("%q links Show feature %s", tag, pkg)
+			}
 		}
 	}
 }
 
-func TestOnlyTheShowsCast(t *testing.T) {
-	for tag, want := range map[string]bool{
-		"board_checkers": true,
-		"board_cronos":   true,
-		"board_rook":     false,
-	} {
+func TestShowsLinkCastAndCamera(t *testing.T) {
+	for _, tag := range []string{"board_checkers", "board_cronos"} {
 		deps := echodDeps(t, tag)
 		for _, pkg := range slices.Concat(castOnly, cameraOnly) {
-			if got := slices.Contains(deps, pkg); got != want {
-				t.Errorf("%s links %s %t, want %t", tag, pkg, got, want)
+			if !slices.Contains(deps, pkg) {
+				t.Errorf("%s does not link %s", tag, pkg)
 			}
 		}
 	}

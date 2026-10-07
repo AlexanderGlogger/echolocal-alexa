@@ -91,7 +91,7 @@ SURFACE_SRC = $(LIBCOUNTERTOP_DIR)/native/surface
 SURFACE_BIN := $(BUILD_DIR)/echolocal-surface-api$(SURFACE_API)
 CAMSHIM_BIN := $(BUILD_DIR)/libecholocal-camshim-api$(SURFACE_API).so
 CAMERA_BIN := $(BUILD_DIR)/echolocal-camera-api$(SURFACE_API)
-COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(SURFACE_API) PREFIX=echolocal SHOW=1 OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
+COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(SURFACE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
 PARTS_DIR := internal/parts/payload
 PART_BOARDS := $(shell grep -h '^//go:build' internal/parts/*.go 2>/dev/null | \
 	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)

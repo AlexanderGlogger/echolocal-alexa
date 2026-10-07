@@ -1,40 +1,20 @@
 package voice
 
-import "github.com/ygelfand/libcountertop/pkg/hook"
-
-// Phase is what a turn is doing, for whatever shows it.
-type Phase int
-
-const (
-	Idle Phase = iota
-	Listening
-	Thinking
-	Replying
+import (
+	"github.com/ygelfand/libcountertop/pkg/assistant/turn"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
-func (p Phase) String() string {
-	switch p {
-	case Listening:
-		return "listening"
-	case Thinking:
-		return "thinking"
-	case Replying:
-		return "replying"
-	}
-	return "idle"
-}
+type Phase = turn.Phase
+type Showing = turn.Showing
 
-// Showing is a turn as something to look at: the phase, the slot whose assistant it belongs to, and
-// the words either side of it.
-type Showing struct {
-	Phase Phase
-	Slot  int
+const (
+	Idle      = turn.Idle
+	Listening = turn.Listening
+	Thinking  = turn.Thinking
+	Replying  = turn.Replying
+)
 
-	Said  string
-	Reply string
-}
-
-// Shown carries every phase change.
 var Shown hook.Hook[Showing]
 
 func shown(p phase) Phase {

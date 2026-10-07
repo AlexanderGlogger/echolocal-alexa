@@ -100,6 +100,7 @@ var registered = []string{
 	"test_playback",
 	"thinking_effect_1",
 	"thinking_effect_2",
+	"time_zone",
 	"timers",
 	"update_channel",
 	"update_outcome",
