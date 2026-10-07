@@ -5,7 +5,7 @@ package settings
 import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/a2dp"
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {

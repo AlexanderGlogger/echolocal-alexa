@@ -66,11 +66,6 @@ type Stream struct {
 	down   bool
 	paused bool
 
-	// quiet is whether a turn wants silence rather than a lower level, which is what the setting says
-	// when it says pause. It is its own reason to be gated, so ending a turn says nothing about a
-	// reply that is also waiting to be answered.
-	quiet bool
-
 	// gate is closed to let the stream carry on, and non-nil for as long as it may not.
 	gate chan struct{}
 
@@ -111,37 +106,18 @@ func NewStream(sound *speaker.Driver, out *speaker.Player, changed func()) *Stre
 // already talking over the track at full volume.
 const rampSamples = speaker.Rate * speaker.Channels * 60 / 1000
 
-// Duck implements speaker.Background: a turn has started or ended.
-//
-// What it does about it is this end's decision, because only this end knows the difference between a
-// song and a doorbell. A track lowers itself and keeps playing; anyone who would rather have silence
-// under a reply sets it to pause, and then this is the same suspend a claim would have done.
+// Duck lowers background music during a voice turn without pausing playback.
 func (m *Stream) Duck(on bool) {
 	if m == nil {
 		return
 	}
-
-	// Read once: the setting can be changed in the middle of a turn, and a turn has to end the way it
-	// began or the level it set is left on.
-	pause := on && config.Get().Media.OnTurn == config.OnTurnPause
-
 	level := float32(1)
-	if on && !pause {
-		level = ducking.Gain(float64(config.Get().Media.DuckDB))
+	if on {
+		level = ducking.Gain(config.Get().Media.DuckDB)
 	}
 	m.write.Lock()
 	m.target = level
 	m.write.Unlock()
-
-	m.mu.Lock()
-	take := pause && !m.quiet && m.track != nil
-	m.quiet = pause
-	m.regate()
-	m.mu.Unlock()
-
-	if take {
-		m.keep()
-	}
 }
 
 // Play starts a url, replacing whatever was playing.
@@ -337,7 +313,7 @@ func (m *Stream) Playing() (playing, paused bool) {
 // reason is a state of its own, so this can be worked out again at any time rather than having to be
 // arrived at by the right sequence of steps. Called with mu held.
 func (m *Stream) regate() {
-	if m.down || m.quiet || m.paused {
+	if m.down || m.paused {
 		m.block()
 		return
 	}

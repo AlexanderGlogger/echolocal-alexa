@@ -5,8 +5,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	bootview "github.com/ygelfand/libcountertop/pkg/display/boot"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func openBootScene(w, h int) *bootview.Scene {

@@ -10,7 +10,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/aec"
 )
 
-// ECHO_REPLAY is a capture from `echod ctl record echo`. Each variant runs the pipeline over its
+// ECHO_REPLAY is a capture from `echod ctl audio record echo`. Each variant runs the pipeline over its
 // microphone and loopback twice, the first time to train the canceller, and writes the second to
 // ECHO_REPLAY_OUT as one WAV per variant.
 func TestReplayPipeline(t *testing.T) {

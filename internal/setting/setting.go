@@ -2,7 +2,7 @@
 package setting
 
 import (
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 	shared "github.com/ygelfand/libcountertop/pkg/settings"
 )
 

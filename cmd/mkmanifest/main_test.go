@@ -31,10 +31,16 @@ func write(t *testing.T) (deployed, update.Manifest) {
 	}
 
 	out := filepath.Join(dir, "manifest.json")
-	err := run(update.Manifest{Version: "0.0.7"}, "https://example/download/0.0.7", map[string]string{
-		"arm64": filepath.Join(dir, "echod-arm64"),
-		"arm":   filepath.Join(dir, "echod-arm"),
-	}, nil, out)
+	err := run(
+		update.Manifest{Version: "0.0.7"},
+		"https://example/download/0.0.7",
+		map[string]string{
+			"arm64": filepath.Join(dir, "echod-arm64"),
+			"arm":   filepath.Join(dir, "echod-arm"),
+		},
+		nil,
+		out,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +118,12 @@ func TestEverySupportedBoardGetsABuild(t *testing.T) {
 			}
 		}
 		if len(builds) != len(now.Binaries) {
-			t.Errorf("%s carries %d builds, want the %d the release made", b.Codename, len(builds), len(now.Binaries))
+			t.Errorf(
+				"%s carries %d builds, want the %d the release made",
+				b.Codename,
+				len(builds),
+				len(now.Binaries),
+			)
 		}
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 

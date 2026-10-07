@@ -63,6 +63,7 @@ func Defaults() Config {
 	d := defaults.Current()
 
 	return Config{
+		Network:    defaultNetwork(),
 		Speaker:    defaultSpeaker(),
 		Volume:     defaultVolume(),
 		Microphone: defaultMicrophone(d),

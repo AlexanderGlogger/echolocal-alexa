@@ -14,9 +14,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 //go:embed esphome.svg

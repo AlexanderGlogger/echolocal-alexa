@@ -28,8 +28,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/rtc"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {

@@ -12,13 +12,11 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard/face"
-	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/theme"
-	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 )
 
 func (a *App) root(w *gogui.Window) gogui.View {
@@ -79,17 +77,7 @@ func (a *App) root(w *gogui.Window) gogui.View {
 	)
 }
 
-func floating(z int, v gogui.View) gogui.View {
-	return gogui.Column(
-		gogui.ContainerCfg{
-			Float:       true,
-			FloatZIndex: z + 1,
-			Sizing:      gogui.FillFill,
-			Padding:     gogui.NoPadding,
-			Content:     []gogui.View{v},
-		},
-	)
-}
+var floating = widgets.Floating
 
 func (a *App) dashboard(w *gogui.Window) gogui.View {
 	vw, vh := w.WindowSize()
@@ -120,11 +108,8 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 			placed(ui.Rect{W: vw, H: vh}, picture(imageSrc("poster/"+behind, backdrop), vw, vh)),
 		)
 	}
-	if now := media.Get().Now(); cfg.Screen.Logo && !(now.Playing || now.Paused) {
-		layers = append(layers, logo(vw, vh, pal))
-	}
 
-	switch build, ok := faces[cfg.Clock.Face]; {
+	switch build, ok := clockView(cfg.Clock.Face); {
 	case tabbed && drawn:
 		below := strip.Y + strip.H + margin
 		layers = append(
@@ -168,80 +153,10 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 	)
 }
 
-func placed(at ui.Rect, v gogui.View) gogui.View {
-	return gogui.Column(gogui.ContainerCfg{
-		Float:        true,
-		FloatOffsetX: float32(at.X),
-		FloatOffsetY: float32(at.Y),
-		Width:        float32(at.W),
-		Height:       float32(at.H),
-		Sizing:       gogui.FixedFixed,
-		Padding:      gogui.NoPadding,
-		Content:      []gogui.View{v},
-	})
-}
+var placed = widgets.Placed
 
 func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
-	t := gogui.CurrentTheme()
-	back := iconStyle(t.TextStyleDisplay.Color)
-	back.Size = t.TextStyleDisplay.Size * 0.6
-	return gogui.Column(gogui.ContainerCfg{
-		Sizing:  gogui.FillFill,
-		Padding: gogui.PaddingLarge,
-		Spacing: gogui.SpacingMedium,
-		Content: []gogui.View{
-			gogui.Row(gogui.ContainerCfg{
-				Sizing:  gogui.FillFit,
-				VAlign:  gogui.VAlignMiddle,
-				Spacing: gogui.SpacingMedium,
-				Content: []gogui.View{
-					keyButton(
-						"back",
-						gogui.IconArrowLeft,
-						back,
-						style.Rest,
-						func(e gogui.EventCtx) {
-							shell.Get().Pop()
-							e.Window.InvalidateLayout()
-						},
-					),
-					gogui.Label(p.Title, t.TextStyleDisplay),
-				},
-			}),
-			gogui.Column(
-				gogui.ContainerCfg{
-					ID:         "page",
-					Sizing:     gogui.FillFill,
-					Scrollable: !p.Fixed,
-					OnGesture:  holdStill,
-					Content:    append([]gogui.View{p.Build(w)}, room(w)...),
-				},
-			),
-		},
-	})
+	return toolkit.PageFrame(w, widgets.FrameOptions{Title: p.Title, Fixed: p.Fixed, Build: p.Build, Back: func() { shell.Get().Pop() }, Gesture: holdStill, Room: editor.Room(w)})
 }
 
-func logo(vw, vh int, pal theme.Theme) gogui.View {
-	mark := dashboard.Mark(vw, vh)
-	img, name := ui.Logo(), "logo/light"
-	if theme.Dark(pal.Background) {
-		img, name = ui.Night(), "logo/night"
-	}
-	return placed(mark, picture(imageSrc(name, img), mark.W, mark.H))
-}
-
-func room(w *gogui.Window) []gogui.View {
-	_, vh := w.WindowSize()
-	if !typing(w) || keyTop <= 0 {
-		return nil
-	}
-	return []gogui.View{
-		gogui.Column(
-			gogui.ContainerCfg{
-				Height:  float32(vh) - keyTop,
-				Sizing:  gogui.FillFixed,
-				Padding: gogui.NoPadding,
-			},
-		),
-	}
-}
+func room(w *gogui.Window) []gogui.View { return editor.Room(w) }

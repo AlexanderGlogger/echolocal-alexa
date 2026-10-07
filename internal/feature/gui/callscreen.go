@@ -16,10 +16,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {

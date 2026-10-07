@@ -22,8 +22,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/wifi"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {

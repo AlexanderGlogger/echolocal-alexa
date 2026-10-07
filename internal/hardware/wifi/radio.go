@@ -31,7 +31,8 @@ type Radio struct {
 
 	// configured is whether the supplicant has a network to join at all. Without one the radio is
 	// not coming up on its own, and the device says so rather than waiting for a person.
-	configured bool
+	configured      bool
+	configuredKnown bool
 
 	// ctl is the control connection Run holds, for asking what the supplicant is doing.
 	ctl *Control
@@ -66,7 +67,7 @@ func (r *Radio) Startup() component.Progress {
 		p.Doing = "on " + r.ssid
 	case r.ssid != "":
 		p.Doing = "joining " + r.ssid
-	case !r.configured:
+	case r.configuredKnown && !r.configured:
 		p.Failed, p.Doing = true, "no network set up"
 	default:
 		p.Doing = "looking for the network"
@@ -148,13 +149,14 @@ func (r *Radio) Run(ctx context.Context) error {
 		r.mu.Lock()
 		r.ctl = nil
 		r.mu.Unlock()
+		r.apply(false, "")
 	}()
 
-	// The first event may be a long way off, so start from what it is already doing.
-	r.settle()
-
-	return Listen(ctx, func(e Event) {
+	// Subscribe before the snapshot so a completed association cannot be missed.
+	return listen(ctx, r.settle, func(e Event) {
 		switch {
+		case e.Is(EventConnected):
+			r.connected()
 		case e.Is(EventStateChange):
 			if s, ok := state(e.Text); ok {
 				r.apply(s.Completed, s.SSID)
@@ -162,6 +164,7 @@ func (r *Radio) Run(ctx context.Context) error {
 		case e.Is(EventDisconnected):
 			r.apply(false, "")
 		case e.Is(EventTerminating):
+			r.apply(false, "")
 			slog.Warn("the supplicant is going away")
 		}
 	})
@@ -184,6 +187,7 @@ func (r *Radio) settle() {
 	if known, err := wpa.Configured(socket{ctl}); err == nil {
 		r.mu.Lock()
 		r.configured = len(known) > 0
+		r.configuredKnown = true
 		r.mu.Unlock()
 	}
 
@@ -195,11 +199,28 @@ func (r *Radio) settle() {
 	r.apply(s["wpa_state"] == "COMPLETED", s["ssid"])
 }
 
+// connected follows the standard completion event even when a vendor omits STATE-CHANGE.
+// STATUS supplies the SSID on the command connection, never the event connection.
+func (r *Radio) connected() {
+	r.mu.Lock()
+	ctl, ssid := r.ctl, r.ssid
+	r.mu.Unlock()
+	if ctl != nil {
+		if status, err := ctl.Status(); err == nil && status["ssid"] != "" {
+			ssid = status["ssid"]
+		}
+	}
+	r.apply(true, ssid)
+}
+
 // apply records what the radio is doing and says so if it changed.
 func (r *Radio) apply(up bool, ssid string) {
 	r.mu.Lock()
 	changed := up != r.up || ssid != r.ssid
 	r.up, r.ssid = up, ssid
+	if up {
+		r.configured, r.configuredKnown = true, true
+	}
 	r.mu.Unlock()
 
 	if !changed {

@@ -84,15 +84,14 @@ NDK ?= $(firstword $(ANDROID_NDK_HOME) $(ANDROID_NDK_LATEST_HOME) $(wildcard /op
 NDK_HOST := $(if $(filter Darwin,$(shell uname -s)),darwin-x86_64,linux-x86_64)
 SURFACE_API ?= 25
 NDK_CC = $(NDK)/toolchains/llvm/prebuilt/$(NDK_HOST)/bin/armv7a-linux-androideabi$(SURFACE_API)-clang
-SURFACE_SRC := native/echolocal-surface
+LIBCOUNTERTOP_MODULE := github.com/ygelfand/libcountertop
+# Lazy: biscuit builds never resolve native sources or need the NDK.
+LIBCOUNTERTOP_DIR = $(shell go list -m -f '{{.Dir}}' $(LIBCOUNTERTOP_MODULE))
+SURFACE_SRC = $(LIBCOUNTERTOP_DIR)/native/surface
 SURFACE_BIN := $(BUILD_DIR)/echolocal-surface-api$(SURFACE_API)
-SURFACE_STUBS := $(BUILD_DIR)/surface-stubs-api$(SURFACE_API)
-CAMSHIM_SRC := native/echolocal-camshim
 CAMSHIM_BIN := $(BUILD_DIR)/libecholocal-camshim-api$(SURFACE_API).so
-CAMERA_SRC := native/echolocal-camera
 CAMERA_BIN := $(BUILD_DIR)/echolocal-camera-api$(SURFACE_API)
-CAMERA_STUBS := $(BUILD_DIR)/camstubs-api$(SURFACE_API)
-
+COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(SURFACE_API) PREFIX=echolocal SHOW=1 OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
 PARTS_DIR := internal/parts/payload
 PART_BOARDS := $(shell grep -h '^//go:build' internal/parts/*.go 2>/dev/null | \
 	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)
@@ -102,39 +101,26 @@ PART_BOARDS := $(shell grep -h '^//go:build' internal/parts/*.go 2>/dev/null | \
 .PHONY: build
 build: build-echoctl build-echod ## Build both binaries
 
+# go list may know the version before its source archive has been downloaded.
+.PHONY: countertop-native-source
+countertop-native-source:
+	@test -n "$(LIBCOUNTERTOP_DIR)" || go mod download $(LIBCOUNTERTOP_MODULE)
+
 .PHONY: build-surface
-build-surface: ## Build the SurfaceFlinger helper with the NDK (SURFACE_API=25 for Fire OS 6)
-	@test -x "$(NDK_CC)" || { echo "no NDK clang at $(NDK_CC); set NDK or ANDROID_NDK_HOME"; exit 1; }
-	@mkdir -p $(SURFACE_STUBS)
-	@for lib in gui utils binder; do \
-		up=$$(echo $$lib | tr a-z A-Z); \
-		$(NDK_CC) -shared -DLIB$$up -Wl,-soname,lib$$lib.so -o $(SURFACE_STUBS)/lib$$lib.so $(SURFACE_SRC)/stubs.c || exit 1; \
-	done
-	$(NDK_CC) -O2 -Wall -Werror -o $(SURFACE_BIN) $(SURFACE_SRC)/surface.c $(SURFACE_SRC)/video.c $(SURFACE_SRC)/gl.c $(SURFACE_SRC)/ui.c $(SURFACE_SRC)/drm.c $(SURFACE_SRC)/audio.c $(SURFACE_SRC)/wire.c \
-		-L$(SURFACE_STUBS) -lgui -lutils -lbinder -landroid -lmediandk -lEGL -lGLESv2 -llog -lm -Wl,--allow-shlib-undefined
+build-surface: countertop-native-source ## Build the SurfaceFlinger helper with the NDK (SURFACE_API=25 for Fire OS 6)
+	+$(COUNTERTOP_NATIVE) surface
 
 .PHONY: build-camshim
-build-camshim: ## Build the camera service preload with the NDK
-	@test -x "$(NDK_CC)" || { echo "no NDK clang at $(NDK_CC); set NDK or ANDROID_NDK_HOME"; exit 1; }
-	@mkdir -p $(BUILD_DIR)
-	$(NDK_CC) -O2 -Wall -Werror -Wno-unused-parameter -shared -fPIC -o $(CAMSHIM_BIN) $(CAMSHIM_SRC)/camshim.c
+build-camshim: countertop-native-source ## Build the camera service preload with the NDK
+	+$(COUNTERTOP_NATIVE) camshim
 
 .PHONY: build-camera
-build-camera: ## Build the camera helper with the NDK
-	@test -x "$(NDK_CC)" || { echo "no NDK clang at $(NDK_CC); set NDK or ANDROID_NDK_HOME"; exit 1; }
-	@mkdir -p $(CAMERA_STUBS)
-	@for lib in camera_client gui utils binder stagefright; do \
-		up=$$(echo $$lib | tr a-z A-Z); \
-		$(NDK_CC) -shared -DLIB$$up -Wl,-soname,lib$$lib.so -o $(CAMERA_STUBS)/lib$$lib.so $(CAMERA_SRC)/stubs.c || exit 1; \
-	done
-	$(NDK_CC) -O2 -Wall -Werror -o $(CAMERA_BIN) $(CAMERA_SRC)/camera.c $(CAMERA_SRC)/still.c $(CAMERA_SRC)/turn_none.c $(CAMERA_SRC)/cam2.c \
-		-L$(CAMERA_STUBS) -lcamera_client -lgui -lutils -lbinder -lstagefright -lcamera2ndk -lmediandk -landroid -llog -lm -Wl,--allow-shlib-undefined
+build-camera: countertop-native-source ## Build the camera helper with the NDK
+	+$(COUNTERTOP_NATIVE) camera
 
 .PHONY: test-surface
-test-surface: ## Run the SurfaceFlinger helper tests that need no device, with the host compiler
-	@mkdir -p $(BUILD_DIR)
-	$(or $(HOST_CC),cc) -O1 -g -Wall -Werror -fsanitize=undefined -fno-sanitize-recover=all -I$(SURFACE_SRC) -o $(BUILD_DIR)/wire_test $(SURFACE_SRC)/wire.c $(SURFACE_SRC)/test/wire_test.c
-	$(BUILD_DIR)/wire_test
+test-surface: countertop-native-source ## Run the shared native wire tests with the host compiler
+	+$(COUNTERTOP_NATIVE) test HOST_CC="$(or $(HOST_CC),cc)"
 
 .PHONY: build-echoctl
 build-echoctl: ## Build the host CLI into ./bin
@@ -257,7 +243,7 @@ install-echod: ## Install echod into /system/app/echod, built for whatever board
 thumbs: ## Render the visual picker's thumbnails on the attached screen into what the binary embeds
 	@$(MAKE) --no-print-directory device
 	$(ADB) shell rm -rf $(DEVICE_TMP)/echolocal-thumbs
-	$(ADB) shell $(ECHOD_DIR)/echod ctl screen thumbs $(DEVICE_TMP)/echolocal-thumbs
+	$(ADB) shell $(ECHOD_DIR)/echod ctl display thumbs $(DEVICE_TMP)/echolocal-thumbs
 	rm -f $(CURDIR)/internal/ui/visual/thumbs/*.jpg
 	$(ADB) pull $(DEVICE_TMP)/echolocal-thumbs/. $(CURDIR)/internal/ui/visual/thumbs/
 	$(ADB) shell rm -rf $(DEVICE_TMP)/echolocal-thumbs

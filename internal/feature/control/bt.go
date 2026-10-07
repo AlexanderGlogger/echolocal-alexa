@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/a2dp"
@@ -20,21 +21,7 @@ func init() {
 	boardSettings = append(boardSettings, speakerRows)
 }
 
-func btCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "bt trace|look|art|browse|queue|dump|attrs [args...]",
-		Short: "Ask the Bluetooth speaker side for what nothing on screen shows",
-		Args:  cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			said, err := sink(args)
-			if err != nil {
-				return err
-			}
-			fmt.Fprint(cmd.OutOrStdout(), said)
-			return nil
-		},
-	}
-}
+func btCommand() *cobra.Command { return harness.BluetoothCommand(sink) }
 
 func speakerRows() []setting {
 	return []setting{{

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"

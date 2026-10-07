@@ -13,7 +13,6 @@ import (
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	screens "github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/hardware/touch"
 )
 
 const (
@@ -93,26 +92,7 @@ func panelCommands() []*cobra.Command {
 		},
 	}
 
-	hold := &cobra.Command{
-		Use:   "hold <x> <y> <milliseconds>",
-		Short: "Touch the panel and keep touching",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(_ *cobra.Command, args []string) error {
-			at, err := places(args)
-			if err != nil {
-				return err
-			}
-			if at[2] < 0 {
-				return fmt.Errorf("milliseconds must not be negative")
-			}
-			touch.Get().Feed(touch.Contact{X: at[0], Y: at[1], Phase: touch.Down, At: time.Now()})
-			time.Sleep(time.Duration(at[2]) * time.Millisecond)
-			touch.Get().Feed(touch.Contact{X: at[0], Y: at[1], Phase: touch.Up, At: time.Now()})
-			return nil
-		},
-	}
-
-	return []*cobra.Command{open, stack, ready, hold}
+	return []*cobra.Command{open, stack, ready}
 }
 
 func shown(at display.Priority) string {

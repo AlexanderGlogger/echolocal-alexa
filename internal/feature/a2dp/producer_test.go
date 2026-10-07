@@ -3,7 +3,7 @@
 package a2dp
 
 import (
-	"os"
+fixtures "github.com/ygelfand/libcountertop/pkg/bluetooth/sbc/testdata"
 	"testing"
 	"time"
 
@@ -17,7 +17,7 @@ import (
 func fed(t *testing.T, s *Sink) int {
 	t.Helper()
 
-	coded, err := os.ReadFile(vectors + "tone.sbc")
+	coded, err := fixtures.Read("tone.sbc")
 	if err != nil {
 		t.Fatal(err)
 	}

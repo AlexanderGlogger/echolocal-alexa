@@ -13,10 +13,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/call"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 //go:embed devices/*.svg

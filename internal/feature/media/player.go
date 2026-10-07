@@ -46,7 +46,6 @@ type Player struct {
 	// rate and the speaker runs at the codec's, so something has to bridge them and which filter does
 	// it is audible.
 	resampling *esphome.Select
-	onTurn     *esphome.Select
 	duck       *esphome.Number
 
 	// asp is the driver's tuning: on applies it, off sends the signal as it came.
@@ -132,14 +131,6 @@ func build() *Player {
 				Category: esphome.CategoryConfig,
 			},
 		},
-		onTurn: &esphome.Select{
-			Base: esphome.Base{
-				ObjectID: "media_on_turn",
-				Name:     "Music during a turn",
-				Icon:     "mdi:music-note-eighth",
-				Category: esphome.CategoryConfig,
-			},
-		},
 		duck: &esphome.Number{
 			Base: esphome.Base{
 				ObjectID: "media_duck_level",
@@ -164,7 +155,6 @@ func build() *Player {
 	// The player itself stays on the device: it is what people reach for. These are how it behaves.
 	bases := []*esphome.Base{
 		&p.resampling.Base,
-		&p.onTurn.Base,
 		&p.duck.Base,
 		&p.jack.Base,
 		&p.asp.Base,
@@ -190,11 +180,6 @@ func build() *Player {
 		slog.Info("setting changed", "setting", p.asp.ObjectID, "using", settled, "asked", want)
 	}
 
-	// Nothing to apply: the stream reads the setting when a turn begins, so changing it takes effect on
-	// the next one rather than in the middle of this one.
-	component.Bind(p.onTurn, onTurns(), func(v config.OnTurn) config.OnTurn { return v },
-		config.Set().Media().OnTurn)
-
 	// Not saved and not restored: it is a sound somebody asked for, and a device that came back from an
 	// update hissing in a dark room would be a fault as far as anyone in it is concerned.
 	for _, sel := range p.layers {
@@ -210,7 +195,7 @@ func build() *Player {
 	}
 
 	p.duck.OnCommand = func(v float32) {
-		if err := config.Set().Media().DuckDB(int(v)); err != nil {
+		if err := config.Set().Media().DuckDB(float64(v)); err != nil {
 			slog.Error("saving the ducking level failed", "err", err)
 			return
 		}
@@ -245,7 +230,7 @@ func build() *Player {
 func (p *Player) Name() string { return "media player" }
 
 func (p *Player) Entities() []esphome.Entity {
-	out := []esphome.Entity{p.mp, p.jack, p.resampling, p.onTurn, p.duck, p.asp}
+	out := []esphome.Entity{p.mp, p.jack, p.resampling, p.duck, p.asp}
 	for _, sel := range p.layers {
 		out = append(out, sel)
 	}
@@ -260,8 +245,6 @@ func (p *Player) Restore(c config.Config) {
 
 	component.Restore(p.resampling, c.Speaker.Resampling, speaker.Get().SetResampling)
 
-	component.Restore(p.onTurn, c.Media.OnTurn, func(v config.OnTurn) config.OnTurn { return v })
-
 	p.duck.Set(float32(c.Media.DuckDB))
 	slog.Info("restored", "what", p.duck.ObjectID, "using", c.Media.DuckDB)
 
@@ -269,9 +252,6 @@ func (p *Player) Restore(c config.Config) {
 	p.asp.Set(settled)
 	slog.Info("restored", "what", p.asp.ObjectID, "using", settled, "asked", c.Speaker.ASP)
 }
-
-// onTurns is what music may do about a turn.
-func onTurns() []config.OnTurn { return []config.OnTurn{config.OnTurnDuck, config.OnTurnPause} }
 
 // noiseOff is the way out of the list, and what the entities read whenever the speaker is doing
 // anything else.

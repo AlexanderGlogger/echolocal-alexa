@@ -9,9 +9,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/chromecast"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
 	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 func init() {
@@ -130,7 +130,7 @@ func skipPage() *shell.Page {
 				on := slices.Contains(skip, cat)
 				rows = append(
 					rows,
-					widget.Row{Label: say.T("skip." + cat), Kind: widget.Toggle, On: on},
+					widget.Row{Label: say.T("youtube.category." + cat), Kind: widget.Toggle, On: on},
 				)
 				acts = append(
 					acts,

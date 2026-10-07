@@ -181,7 +181,6 @@ func screen(c config.Config) Group {
 		{"Backlight", percent(c.Screen.Backlight)},
 		{"Clock", c.Screen.Hours.Label()},
 		{"Drawer", c.Screen.Drawer.Label()},
-		{"Logo", yes(c.Screen.Logo)},
 	}}
 }
 

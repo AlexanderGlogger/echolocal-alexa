@@ -75,7 +75,14 @@ func run(in, out string, w, h int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s -> %s  %dx%d, %d KB\n", in, out, dst.Bounds().Dx(), dst.Bounds().Dy(), fi.Size()/1024)
+	fmt.Printf(
+		"%s -> %s  %dx%d, %d KB\n",
+		in,
+		out,
+		dst.Bounds().Dx(),
+		dst.Bounds().Dy(),
+		fi.Size()/1024,
+	)
 	return nil
 }
 

@@ -20,8 +20,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const check = 200 * time.Millisecond

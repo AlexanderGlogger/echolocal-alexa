@@ -5,8 +5,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 // Page is the screen for setting every level, one slider each.

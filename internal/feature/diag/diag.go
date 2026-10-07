@@ -4,7 +4,6 @@ package diag
 
 import (
 	"context"
-	"github.com/ygelfand/libcountertop/pkg/fetch"
 	"log/slog"
 	"strings"
 	"sync"
@@ -26,7 +25,6 @@ import (
 )
 
 func init() {
-	fetch.UseAsDefault()
 	component.Register(component.Network, Get, component.Order(90))
 }
 
@@ -60,7 +58,6 @@ type Diag struct {
 	luxPath string
 
 	adb   *esphome.Switch
-	tls   *esphome.Switch
 	ip    *esphome.TextSensor
 	color *esphome.TextSensor
 
@@ -116,7 +113,7 @@ func (d *Diag) Entities() []esphome.Entity {
 		d.cached, d.free, d.purge,
 		d.temperature, d.radioTemp, d.cores, d.coresOnline, d.load, d.memory, d.lux,
 		d.roomLevel, d.roomFloor,
-		d.adb, d.tls, d.ip, d.color, d.boardName, d.signal, d.rxRate, d.txRate, d.ads,
+		d.adb, d.ip, d.color, d.boardName, d.signal, d.rxRate, d.txRate, d.ads,
 		d.testPlayback, d.interval, d.minCores,
 	}
 }
@@ -238,23 +235,6 @@ func (d *Diag) remote() {
 		}
 	}
 
-	d.tls = &esphome.Switch{
-		Base: esphome.Base{
-			ObjectID: "insecure_tls",
-			Name:     "Skip certificate checks",
-			Icon:     "mdi:lock-off-outline",
-			Category: esphome.CategoryDiagnostic,
-		},
-	}
-
-	d.tls.OnCommand = func(on bool) {
-		insecureTLS(on)
-		d.tls.Set(on)
-		if err := config.Set().Diag().InsecureTLS(on); err != nil {
-			slog.Error("saving a setting failed", "setting", d.tls.ObjectID, "err", err)
-		}
-	}
-
 	// The protocol's device info carries the mac and no address, so this is the only place Home
 	// Assistant can learn where the device actually is.
 	d.ip = &esphome.TextSensor{
@@ -275,17 +255,8 @@ func (d *Diag) SetRemoteADB(on bool) {
 	d.adb.OnCommand(on)
 }
 
-func (d *Diag) SetInsecureTLS(on bool) { d.tls.OnCommand(on) }
-
 // insecureTLS applies to everything the device downloads: models, firmware and the audio Home
 // Assistant serves all go through the default transport.
-func insecureTLS(on bool) {
-	fetch.Verify(!on)
-	if on {
-		slog.Warn("certificates are not being checked")
-	}
-}
-
 // reachable opens or closes the adb port and moves the switch to match what the chain now says.
 func (d *Diag) reachable(on bool) error {
 	change, what := func() error { return firewall.Close(firewall.ADB) }, "closing"
@@ -542,10 +513,6 @@ func (d *Diag) Restore(c config.Config) {
 	if err := d.reachable(c.Diag.RemoteADB); err == nil {
 		slog.Info("restored", "what", d.adb.ObjectID, "using", c.Diag.RemoteADB)
 	}
-
-	insecureTLS(c.Diag.InsecureTLS)
-	d.tls.Set(c.Diag.InsecureTLS)
-	slog.Info("restored", "what", d.tls.ObjectID, "using", c.Diag.InsecureTLS)
 
 	if err := setup.MinCores(c.Diag.MinCores); err != nil {
 		slog.Error("holding cores online failed", "cores", c.Diag.MinCores, "err", err)

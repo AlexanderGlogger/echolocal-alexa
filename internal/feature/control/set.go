@@ -4,6 +4,7 @@ package control
 
 import (
 	"fmt"
+	"github.com/ygelfand/echolocal/internal/feature/network"
 	"slices"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 )
 
 type setting struct {
@@ -44,6 +46,7 @@ func screenSettings() []setting {
 	c, i, v := dashboard.Get(), idle.Get(), visuals.Get()
 
 	return []setting{
+		{"network.verify", func(c config.Config) string { return onOff(c.Network.Verify) }, toggle(network.Get().SetVerify)},
 		{
 			"clock.face",
 			func(c config.Config) string { return string(c.Clock.Face) },
@@ -142,11 +145,6 @@ func screenSettings() []setting {
 			toggle(privacy.Get().SetMarks),
 		},
 		{
-			"screen.logo",
-			func(c config.Config) string { return onOff(c.Screen.Logo) },
-			toggle(c.SetLogo),
-		},
-		{
 			"screen.visual",
 			func(c config.Config) string { return c.Visual.Kind },
 			choose(visual.Built(), v.SetKind),
@@ -222,7 +220,7 @@ func screenSettings() []setting {
 
 func setCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "set [name] [value...]",
+		Use:   "settings [name] [value...]",
 		Short: "List the screen's settings, read one, or change one",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			said, err := set(args)
@@ -237,27 +235,11 @@ func setCommand() *cobra.Command {
 
 func set(args []string) (string, error) {
 	all := settings()
-
-	if len(args) == 0 {
-		cfg := config.Get()
-		var out []string
-		for _, s := range all {
-			out = append(out, fmt.Sprintf("%-20s %s", s.name, s.says(cfg)))
-		}
-		return strings.Join(out, "\n"), nil
+	rows := make([]harness.Setting[config.Config], 0, len(all))
+	for _, s := range all {
+		rows = append(rows, harness.Setting[config.Config]{Name: s.name, Read: s.says, Write: s.use})
 	}
-
-	at := slices.IndexFunc(all, func(s setting) bool { return strings.EqualFold(s.name, args[0]) })
-	if at < 0 {
-		return "", fmt.Errorf("no such setting %q, try set with no arguments", args[0])
-	}
-	if len(args) == 1 {
-		return all[at].says(config.Get()), nil
-	}
-	if err := all[at].use(strings.Join(args[1:], " ")); err != nil {
-		return "", fmt.Errorf("%s: %w", all[at].name, err)
-	}
-	return all[at].says(config.Get()), nil
+	return harness.Settings(config.Get, rows, args)
 }
 
 func idleKind(slot int) func(string) error {

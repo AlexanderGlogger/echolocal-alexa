@@ -1,151 +1,53 @@
 package config
 
-// Clock is the face the panel shows when nothing else is on it.
-type Clock struct {
-	Face     Face     `json:"face"`
-	Date     bool     `json:"date"`
-	Position Position `json:"position"`
-	Size     Size     `json:"size"`
-	Ink      Ink      `json:"ink"`
-}
+import "github.com/ygelfand/libcountertop/pkg/settings/schema"
 
-func defaultClock() Clock {
-	return Clock{
-		Face:     DefaultFace,
-		Date:     true,
-		Position: DefaultPosition,
-		Size:     DefaultSize,
-		Ink:      DefaultInk,
-	}
-}
-
-type Position string
+type Clock = schema.Clock
+type Delay = schema.Delay
+type Position = schema.Position
+type Size = schema.Size
+type Face = schema.Face
 
 const (
-	PositionTop    Position = "top"
-	PositionCenter Position = "center"
-	PositionBottom Position = "bottom"
+	DelayNever        = schema.DelayNever
+	Delay30s          = schema.Delay30s
+	Delay1m           = schema.Delay1m
+	Delay2m           = schema.Delay2m
+	Delay3m           = schema.Delay3m
+	Delay5m           = schema.Delay5m
+	Delay10m          = schema.Delay10m
+	Delay15m          = schema.Delay15m
+	PositionTop       = schema.PositionTop
+	PositionCenter    = schema.PositionCenter
+	PositionBottom    = schema.PositionBottom
+	SizeNano          = schema.SizeNano
+	SizeMicro         = schema.SizeMicro
+	SizeMini          = schema.SizeMini
+	SizeSmall         = schema.SizeSmall
+	SizeMedium        = schema.SizeMedium
+	SizeLarge         = schema.SizeLarge
+	FaceNone          = schema.FaceNone
+	FacePlain         = schema.FacePlain
+	FaceStack         = schema.FaceStack
+	FaceCards         = schema.FaceCards
+	FaceAnalog        = schema.FaceAnalog
+	FaceAnalogSeconds = schema.FaceAnalogSeconds
+	FaceSegments      = schema.FaceSegments
+	FaceWords         = schema.FaceWords
+	FaceOverlap       = schema.FaceOverlap
+	DefaultDelay      = schema.DefaultDelay
+	DefaultPosition   = schema.DefaultPosition
+	DefaultSize       = schema.DefaultSize
+	DefaultFace       = schema.DefaultFace
+	DefaultDate       = schema.DefaultDate
 )
 
-const DefaultPosition = PositionCenter
-
-func (p Position) Label() string {
-	switch p {
-	case PositionTop:
-		return say.T("position.top")
-	case PositionCenter:
-		return say.T("position.center")
-	case PositionBottom:
-		return say.T("position.bottom")
-	}
-	return string(p)
-}
-
-func Positions() []Position { return []Position{PositionTop, PositionCenter, PositionBottom} }
-
-type Size string
-
-const (
-	SizeNano   Size = "nano"
-	SizeMicro  Size = "micro"
-	SizeMini   Size = "mini"
-	SizeSmall  Size = "small"
-	SizeMedium Size = "medium"
-	SizeLarge  Size = "large"
-)
-
-const DefaultSize = SizeLarge
-
-func (s Size) Label() string {
-	switch s {
-	case SizeNano:
-		return say.T("size.nano")
-	case SizeMicro:
-		return say.T("size.micro")
-	case SizeMini:
-		return say.T("size.mini")
-	case SizeSmall:
-		return say.T("size.small")
-	case SizeMedium:
-		return say.T("size.medium")
-	case SizeLarge:
-		return say.T("size.large")
-	}
-	return string(s)
-}
-
-// Share is how much of the panel each way the face takes.
-func (s Size) Share() float64 {
-	switch s {
-	case SizeNano:
-		return 0.16
-	case SizeMicro:
-		return 0.26
-	case SizeMini:
-		return 0.40
-	case SizeSmall:
-		return 0.58
-	case SizeMedium:
-		return 0.78
-	}
-	return 1
-}
-
-func Sizes() []Size {
-	return []Size{SizeNano, SizeMicro, SizeMini, SizeSmall, SizeMedium, SizeLarge}
-}
-
-type Face string
-
-const (
-	FacePlain         Face = "plain"
-	FaceStack         Face = "stack"
-	FaceCards         Face = "cards"
-	FaceAnalog        Face = "analog"
-	FaceAnalogSeconds Face = "analog-seconds"
-	FaceSegments      Face = "segments"
-	FaceWords         Face = "words"
-	FaceOverlap       Face = "overlap"
-)
-
-const DefaultFace = FacePlain
-
-func (f Face) Label() string {
-	switch f {
-	case FaceNone:
-		return say.T("face.none")
-	case FacePlain:
-		return say.T("face.plain")
-	case FaceStack:
-		return say.T("face.stack")
-	case FaceCards:
-		return say.T("face.cards")
-	case FaceAnalog:
-		return say.T("face.analog")
-	case FaceAnalogSeconds:
-		return say.T("face.analog-seconds")
-	case FaceSegments:
-		return say.T("face.segments")
-	case FaceWords:
-		return say.T("face.words")
-	case FaceOverlap:
-		return say.T("face.overlap")
-	}
-	return string(f)
-}
-
-func Faces() []Face {
-	return []Face{
-		FacePlain,
-		FaceStack,
-		FaceCards,
-		FaceAnalog,
-		FaceAnalogSeconds,
-		FaceSegments,
-		FaceWords,
-		FaceOverlap,
-	}
-}
+var Delays = schema.Delays
+var MediaDelays = schema.MediaDelays
+var Positions = schema.Positions
+var Sizes = schema.Sizes
+var Faces = schema.Faces
+var defaultClock = schema.DefaultClock
 
 type ClockWriter struct{ st *Store }
 

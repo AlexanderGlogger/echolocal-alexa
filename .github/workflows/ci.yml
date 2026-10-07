@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+env:
+  GOWORK: "off"
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -30,8 +33,22 @@ jobs:
 
       # Most of this code only ever runs on the device, and a build tagged or arch-gated wrongly
       # passes on the host while failing there.
-      - name: cross-compile for the device
-        run: make build-echod
+      - name: cross-compile biscuit without native tools
+        run: |
+          make build-echod DOT_ARCH=arm NDK=/nonexistent
+          make build-echod DOT_ARCH=arm64 NDK=/nonexistent
+
+      - name: ensure biscuit excludes display dependencies
+        env:
+          GOOS: linux
+          GOARCH: arm
+          CGO_ENABLED: 0
+        run: |
+          go list -deps ./cmd/echod > "$RUNNER_TEMP/biscuit-deps"
+          if grep -Eq 'libcountertop/pkg/display/|echolocal/internal/(feature/(gui|livecam)|hardware/display)$' "$RUNNER_TEMP/biscuit-deps"; then
+            cat "$RUNNER_TEMP/biscuit-deps"
+            exit 1
+          fi
 
       - name: build without the assembly
         run: make build-echod TAGS=noasm
@@ -43,3 +60,23 @@ jobs:
             echo "$unformatted"
             exit 1
           fi
+
+  show:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board: [checkers, cronos]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: install Android NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;30.0.16248370"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
+      - name: build Show with its native payload
+        run: make build-echod BOARD=${{ matrix.board }}
+      - name: native wire checks
+        run: make test-surface

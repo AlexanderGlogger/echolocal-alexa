@@ -13,9 +13,9 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/weather"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 type weatherView func(w *gogui.Window, size float32, r weather.Reading, ink theme.Theme) gogui.View

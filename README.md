@@ -66,6 +66,15 @@ It then turns up in Home Assistant on its own, and the key `echoctl` printed is 
 
 ## Building it yourself
 
+Shared Go packages and native helper sources come from the `libcountertop` version selected by
+`go.mod`. CI and release builds need no sibling checkout. Native targets compile those sources
+with the Android NDK and stage the resulting helpers into this project's embedded payload.
+For local changes across repositories, use an untracked `go.work` containing this directory and
+`../libcountertop`; both Go compilation and native source resolution then use that checkout.
+Until the initial `v0.1.0` is published, include a version-specific workspace replacement:
+`replace github.com/ygelfand/libcountertop v0.1.0 => ../libcountertop`.
+
+
 ```sh
 make build-echod     # cross-compile the daemon for the Dot
 make install-echod   # build, install, and restart it on a connected device
@@ -78,3 +87,18 @@ make install-echod   # build, install, and restart it on a connected device
 - **echoctl** is the host CLI: installing, re-installing, provisioning, and offline tools for debugging the device.
 - **[go-esphome-device](https://github.com/ygelfand/go-esphome-device)** implements the device half of
   the ESPHome protocol, including the voice satellite and Bluetooth proxy.
+
+## Local control harness
+
+The shared `libcountertop` harness acts on the running daemon:
+
+```sh
+adb shell echod ctl device version
+adb shell echod ctl device state
+adb shell echod ctl input button mute
+adb shell echod ctl audio record echo 5 /data/local/tmp/echo.wav
+```
+
+Display boards also expose `input tap`, `display shot`, `display open`, `settings`, and supported
+camera/call/Bluetooth commands. Bare `ctl` prints the available groups; commands accept `--help`.
+The local socket accepts root and adb shell. Use the grouped command paths shown in help.

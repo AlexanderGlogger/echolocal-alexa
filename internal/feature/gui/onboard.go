@@ -8,9 +8,9 @@ import (
 	"rsc.io/qr"
 
 	"github.com/ygelfand/echolocal/internal/feature/web"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const (

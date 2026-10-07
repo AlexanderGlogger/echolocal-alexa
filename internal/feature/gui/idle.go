@@ -60,10 +60,7 @@ func (a *App) idle(w *gogui.Window, v *idle.View) gogui.View {
 			)
 		}
 	}
-	if cfg.Screen.Logo {
-		layers = append(layers, logo(vw, vh, pal))
-	}
-	if build, ok := faces[cfg.Idle.Face]; ok {
+	if build, ok := clockView(cfg.Idle.Face); ok {
 		r := idle.Reading(cfg, time.Now())
 		tones := make([]visual.Traits, len(slots))
 		for n, slot := range slots {

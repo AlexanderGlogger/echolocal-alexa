@@ -39,7 +39,13 @@ func main() {
 	flag.Var(&perBoard, "board", "a build for one board only, as codename:arch:path; repeatable")
 	flag.Parse()
 
-	if err := run(m, *from, map[string]string{"arm64": *arm64, "arm": *arm}, perBoard, *out); err != nil {
+	if err := run(
+		m,
+		*from,
+		map[string]string{"arm64": *arm64, "arm": *arm},
+		perBoard,
+		*out,
+	); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -64,7 +70,13 @@ type boardBuild struct {
 	Board, Arch, Path string
 }
 
-func run(m update.Manifest, from string, builds map[string]string, perBoard []boardBuild, out string) error {
+func run(
+	m update.Manifest,
+	from string,
+	builds map[string]string,
+	perBoard []boardBuild,
+	out string,
+) error {
 	if m.Version == "" || from == "" || builds["arm64"] == "" {
 		return fmt.Errorf("mkmanifest: -version, -from and -arm64 are all required")
 	}
@@ -95,7 +107,10 @@ func run(m update.Manifest, from string, builds map[string]string, perBoard []bo
 	// wrong binary rather than none.
 	for _, pb := range perBoard {
 		if _, ok := m.Boards[pb.Board]; !ok {
-			return fmt.Errorf("mkmanifest: -board names %q, which is not a board this build installs onto", pb.Board)
+			return fmt.Errorf(
+				"mkmanifest: -board names %q, which is not a board this build installs onto",
+				pb.Board,
+			)
 		}
 		b, err := measure(pb.Path)
 		if err != nil {
@@ -115,7 +130,10 @@ func run(m update.Manifest, from string, builds map[string]string, perBoard []bo
 
 	// Devices in the field read these and nothing else.
 	if m.URL == "" || len(m.Binaries) == 0 {
-		return fmt.Errorf("mkmanifest: %s carries no shared binaries, which no device already in the field could install", m.Version)
+		return fmt.Errorf(
+			"mkmanifest: %s carries no shared binaries, which no device already in the field could install",
+			m.Version,
+		)
 	}
 
 	// The same rules the device applies, so a release cannot publish a manifest every device will reject.

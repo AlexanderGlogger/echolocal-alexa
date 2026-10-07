@@ -3,7 +3,7 @@
 package settings
 
 import (
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/ui/widget"

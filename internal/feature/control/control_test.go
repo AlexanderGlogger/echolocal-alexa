@@ -75,7 +75,7 @@ func TestACommandIsAnsweredAndTerminated(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
-	out, ok := say(t, conn, in, "version")
+	out, ok := say(t, conn, in, "device version")
 	if !ok {
 		t.Fatalf("version failed: %s", out)
 	}
@@ -116,7 +116,7 @@ func TestOneConnectionTakesSeveralCommands(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)
 
-	for _, cmd := range []string{"version", "state", "version"} {
+	for _, cmd := range []string{"device version", "device state", "device version"} {
 		if out, ok := say(t, conn, in, cmd); !ok {
 			t.Fatalf("%s failed: %s", cmd, out)
 		}

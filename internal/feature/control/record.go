@@ -1,19 +1,13 @@
 package control
 
 import (
-	"encoding/binary"
 	"fmt"
-	"math"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
+	capture "github.com/ygelfand/libcountertop/pkg/audio/capture"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
-	"github.com/ygelfand/echolocal/internal/lib/audio"
 )
 
 const (
@@ -32,22 +26,16 @@ func hearing() []*cobra.Command {
 				return err
 			}
 
-			frames, stop := mic.Get().Listen("ctl record")
+			frames, stop := mic.Get().Listen("ctl audio record")
 			defer stop()
 
 			var got []int16
-			over := time.After(d)
-		loop:
-			for {
-				select {
-				case <-over:
-					break loop
-				case f, ok := <-frames:
-					if !ok {
-						break loop
-					}
-					got = append(got, f...)
-				}
+			err = capture.Listen(cmd.Context(), d, frames, func(f []int16) { got = append(got, f...) })
+			if err != nil {
+				return err
+			}
+			if len(got) == 0 {
+				return fmt.Errorf("record: nothing captured")
 			}
 
 			say := fmt.Sprintf("seconds %.2f %s", float64(len(got))/mic.Rate, levels(got))
@@ -77,22 +65,18 @@ func hearing() []*cobra.Command {
 
 			var m, r, o []int16
 			var sounding int
-			over := time.After(d)
-		loop:
-			for {
-				select {
-				case <-over:
-					break loop
-				case e, ok := <-frames:
-					if !ok {
-						break loop
-					}
-					n := min(len(e.Mic), len(e.Ref), len(e.Out))
-					m, r, o = append(m, e.Mic[:n]...), append(r, e.Ref[:n]...), append(o, e.Out[:n]...)
-					if e.Sounding {
-						sounding += n
-					}
+			err = capture.Listen(cmd.Context(), d, frames, func(e mic.Echo) {
+				n := min(len(e.Mic), len(e.Ref), len(e.Out))
+				m, r, o = append(m, e.Mic[:n]...), append(r, e.Ref[:n]...), append(o, e.Out[:n]...)
+				if e.Sounding {
+					sounding += n
 				}
+			})
+			if err != nil {
+				return err
+			}
+			if len(m) == 0 {
+				return fmt.Errorf("record echo: nothing captured")
 			}
 
 			wav := make([]int16, 0, 3*len(m))
@@ -121,46 +105,11 @@ func hearing() []*cobra.Command {
 	return []*cobra.Command{record}
 }
 
-func seconds(arg string) (time.Duration, error) {
-	secs, err := strconv.ParseFloat(arg, 64)
-	if err != nil {
-		return 0, fmt.Errorf("%s is not a number of seconds", arg)
-	}
-	d := time.Duration(secs * float64(time.Second))
-	if d < shortest || d > longest {
-		return 0, fmt.Errorf("%v is outside %v to %v", d, shortest, longest)
-	}
-	return d, nil
-}
+func seconds(arg string) (time.Duration, error) { return capture.Duration(arg, shortest, longest) }
+func levels(samples []int16) string             { return capture.Measure(samples).String() }
 
-func levels(s []int16) string {
-	var peak int
-	var energy float64
-	for _, v := range s {
-		peak = max(peak, int(v), -int(v))
-		energy += float64(v) * float64(v)
-	}
-	var rms float64
-	if len(s) > 0 {
-		rms = math.Sqrt(energy / float64(len(s)))
-	}
-	return fmt.Sprintf("peakdbfs %.1f rmsdbfs %.1f", dbfs(float64(peak)), dbfs(rms))
-}
-
-func dbfs(v float64) float64 {
-	return math.Round(20*math.Log10(max(v, 1)/32768)*10) / 10
-}
+var dbfs = capture.DBFS
 
 func write(path string, channels int, samples []int16) error {
-	if !strings.HasPrefix(path, "/") {
-		return fmt.Errorf("%s: the path has to be absolute", path)
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	pcm := make([]byte, 2*len(samples))
-	for i, v := range samples {
-		binary.LittleEndian.PutUint16(pcm[2*i:], uint16(v))
-	}
-	return audio.WriteWAV(path, pcm, mic.Rate, channels)
+	return capture.Write(path, samples, mic.Rate, channels)
 }

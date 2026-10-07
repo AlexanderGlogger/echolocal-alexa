@@ -4,6 +4,7 @@ package settings
 
 import (
 	"fmt"
+	"github.com/ygelfand/echolocal/internal/feature/network"
 	"log/slog"
 	"slices"
 	"strings"
@@ -11,7 +12,7 @@ import (
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 
-	"github.com/ygelfand/echolocal/internal/lib/say"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -270,7 +271,6 @@ func displayPage() *shell.Page {
 						Kind:  widget.Chevron,
 						Value: cfg.Screen.Volume.Label(),
 					},
-					{Label: say.T("controls.logo"), Kind: widget.Toggle, On: cfg.Screen.Logo},
 					{
 						Glyph: gogui.IconEye,
 						Label: say.T("display.marks"),
@@ -288,7 +288,6 @@ func displayPage() *shell.Page {
 					open(posterPage()),
 					open(edgePage()),
 					open(volumeEdgePage()),
-					func(int) { dashboard.Get().SetLogo(!cfg.Screen.Logo) },
 					func(int) { privacy.Get().SetMarks(!cfg.Screen.Marks) },
 				}
 		},
@@ -793,7 +792,7 @@ func networkPage() *shell.Page {
 	return &shell.Page{
 		Title: say.T("network.title"),
 		Build: func() ([]widget.Row, []func(int)) {
-			verify := !config.Get().Diag.InsecureTLS
+			verify := config.Get().Network.Verify
 			rows := []widget.Row{
 				{Label: say.T("network.ssid"), Kind: widget.Plain, Value: wifi.Get().Network()},
 				{Label: say.T("network.address"), Kind: widget.Plain, Value: address()},
@@ -821,7 +820,7 @@ func networkPage() *shell.Page {
 				widget.Row{Glyph: gogui.IconLock, Label: say.T("system.certificates"),
 					Hint: say.T("system.certificates.hint"), Kind: widget.Toggle, On: verify},
 			)
-			acts = append(acts, func(int) { diag.Get().SetInsecureTLS(verify) })
+			acts = append(acts, func(int) { network.Get().SetVerify(!verify) })
 			return rows, acts
 		},
 	}

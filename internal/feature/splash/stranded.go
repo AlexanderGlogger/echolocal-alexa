@@ -4,8 +4,8 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const (

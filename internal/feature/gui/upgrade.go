@@ -9,9 +9,9 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const (

@@ -8,24 +8,14 @@ import (
 	"image/color"
 	"image/png"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/hardware/touch"
 )
 
 // showing is what the panel can be asked.
 func showing() []*cobra.Command {
-	panel := &cobra.Command{
-		Use:   "screen",
-		Short: "The panel",
-		Args:  cobra.NoArgs,
-		RunE:  func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
-	}
-
 	shot := &cobra.Command{
 		Use:   "shot <path>",
 		Short: "Write what the panel is showing to a PNG",
@@ -39,59 +29,8 @@ func showing() []*cobra.Command {
 		},
 	}
 
-	tap := &cobra.Command{
-		Use:   "tap <x> <y>",
-		Short: "Touch the panel where a finger would",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			at, err := places(args)
-			if err != nil {
-				return err
-			}
-
-			touch.Get().Feed(touch.Contact{X: at[0], Y: at[1], Phase: touch.Down, At: time.Now()})
-			time.Sleep(tapHeld)
-			touch.Get().Feed(touch.Contact{X: at[0], Y: at[1], Phase: touch.Up, At: time.Now()})
-			return nil
-		},
-	}
-
-	swipe := &cobra.Command{
-		Use:   "swipe <x> <y> <x> <y>",
-		Short: "Drag a finger across the panel",
-		Args:  cobra.ExactArgs(4),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			at, err := places(args)
-			if err != nil {
-				return err
-			}
-
-			touch.Get().Feed(touch.Contact{X: at[0], Y: at[1], Phase: touch.Down, At: time.Now()})
-			for i := 1; i <= swipeSteps; i++ {
-				time.Sleep(swipeStep)
-				touch.Get().Feed(touch.Contact{
-					X:     at[0] + (at[2]-at[0])*i/swipeSteps,
-					Y:     at[1] + (at[3]-at[1])*i/swipeSteps,
-					Phase: touch.Move, At: time.Now(),
-				})
-			}
-			touch.Get().Feed(touch.Contact{X: at[2], Y: at[3], Phase: touch.Up, At: time.Now()})
-			return nil
-		},
-	}
-
-	panel.AddCommand(shot, tap, swipe, thumbsCommand())
-	panel.AddCommand(panelCommands()...)
-	return []*cobra.Command{panel, setCommand()}
+	return append([]*cobra.Command{shot, thumbsCommand(), setCommand()}, panelCommands()...)
 }
-
-const (
-	// tapHeld is how long an injected touch stays down.
-	tapHeld = 60 * time.Millisecond
-
-	swipeSteps = 8
-	swipeStep  = 16 * time.Millisecond
-)
 
 func save(path string) error {
 	img, err := composed()
@@ -140,16 +79,4 @@ func drawn() (image.Image, error) {
 		img.Set(i%w, i/w, color.RGBA{R: pixels[i*3], G: pixels[i*3+1], B: pixels[i*3+2], A: 0xff})
 	}
 	return img, nil
-}
-
-func places(args []string) ([]int, error) {
-	out := make([]int, 0, len(args))
-	for _, a := range args {
-		v, err := strconv.Atoi(a)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, v)
-	}
-	return out, nil
 }

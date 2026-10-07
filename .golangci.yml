@@ -2,8 +2,10 @@ version: "2"
 
 run:
   timeout: 5m
-  go: '1.26'
-
+  go: "1.26"
+formatters:
+  enable:
+    - golines
 linters:
   enable:
     - errcheck

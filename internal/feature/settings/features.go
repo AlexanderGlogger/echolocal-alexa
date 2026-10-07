@@ -7,8 +7,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/bluetooth"
 	"github.com/ygelfand/echolocal/internal/feature/sendspin"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/lib/say"
 	"github.com/ygelfand/echolocal/internal/ui/widget"
+	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 type feature struct {
