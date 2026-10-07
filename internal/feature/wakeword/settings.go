@@ -6,6 +6,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 )
 
 // What a slot is set to is read from the config, never back out of the entity. The entities are a
@@ -17,7 +18,7 @@ func saved(slot int) config.WakeWord { return config.Get().Wake.Slot(slot) }
 func Threshold(slot int) float64 { return saved(slot).Threshold }
 
 // Chime sounds a detection in whatever the slot is set to.
-func Chime(slot int) { speaker.Sound().Chime(speaker.WakeTone(saved(slot).Tone)) }
+func Chime(slot int) { speaker.Sound().Chime(sharedtone.Wake(saved(slot).Tone)) }
 
 // ThinkingEffect and ReplyingEffect are what those phases show, empty to leave them to Effect.
 func ThinkingEffect(slot int) string { return saved(slot).ThinkingEffect }
@@ -28,7 +29,7 @@ func Tones(slot int) bool { return saved(slot).Tone != config.ToneNone }
 
 // ChimeLength is how long that sound lasts.
 func ChimeLength(slot int) time.Duration {
-	return speaker.Length(speaker.WakeTone(saved(slot).Tone))
+	return sharedtone.Length(sharedtone.Wake(saved(slot).Tone))
 }
 
 // Delivery is how a slot's reply should reach the device.

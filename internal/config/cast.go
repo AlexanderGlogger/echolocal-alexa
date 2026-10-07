@@ -1,38 +1,15 @@
 package config
 
-// Cast is the Chromecast receiver and what it plays.
-type Cast struct {
-	Receiver bool    `json:"receiver"`
-	Oracle   string  `json:"oracle,omitempty"`
-	YouTube  YouTube `json:"youtube,omitzero"`
-	Prime    Prime   `json:"prime,omitzero"`
-}
+import "github.com/ygelfand/libcountertop/pkg/settings/schema"
 
-type Prime struct {
-	Persist   bool `json:"persist,omitempty"`
-	SkipIntro bool `json:"skipIntro,omitempty"`
-}
+type Cast = schema.Cast
+type YouTube = schema.YouTube
+type Prime = schema.Prime
 
-type YouTube struct {
-	Device string `json:"device,omitempty"`
-	Music  string `json:"music,omitempty"`
-	Video  string `json:"video,omitempty"`
+const LiveDelayLeast = schema.LiveDelayLeast
+const LiveDelayMost = schema.LiveDelayMost
 
-	Skip []string `json:"skip"`
-
-	OnDemand bool `json:"onDemand,omitempty"`
-
-	LiveDelay int `json:"liveDelay"`
-}
-
-const (
-	LiveDelayLeast = 4
-	LiveDelayMost  = 60
-)
-
-func defaultCast() Cast {
-	return Cast{Receiver: false, YouTube: YouTube{Skip: []string{"sponsor"}, LiveDelay: 10}}
-}
+var defaultCast = schema.DefaultCast
 
 type CastWriter struct{ st *Store }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
 	core "github.com/ygelfand/libcountertop/pkg/audio/sendspin"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
 )
 
@@ -16,20 +17,16 @@ type outputSink struct{ p *speaker.Player }
 func (s outputSink) Attach(r core.Renderer) { s.p.Attach(r) }
 func (s outputSink) Written() uint64        { return s.p.Written() }
 
-type arbitration struct{ a *speaker.Arbiter }
-
-func (a arbitration) Took(p core.Producer) { a.a.Took(p) }
-func (a arbitration) Gave(p core.Producer) { a.a.Gave(p) }
 func newOutput() *core.Output {
 	return core.NewOutput(outputSink{speaker.Get()}, core.Controls{
-		Volume:       func() int { return config.Get().Speaker.Volume * 100 / speaker.VolumeSteps },
-		SetVolume:    func(level int) { media.Get().Set(level * speaker.VolumeSteps / 100) },
-		SetMuted:     func(on bool) { media.Get().Mute(on) },
-		DuckDB:       func() float64 { return float64(config.Get().Media.DuckDB) },
-		HardwareTail: speaker.HardwareTail,
+		Volume: sharedvolume.Steps(media.Get(), speaker.VolumeSteps), Media: media.Get(), Settings: config.MediaSection, HardwareTail: speaker.HardwareTail,
 	})
 }
-func identity() core.Identity {
+
+type identity struct{}
+
+func (identity) Name() string { return config.Get().Device.Name }
+func (identity) Identity() core.Identity {
 	mac, _ := layout.FactoryMAC()
 	model := config.Get().Device.Board.Model
 	return core.Identity{

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
@@ -29,7 +28,7 @@ func (a *App) idleScreen(v *idle.View) *Screen {
 func (a *App) idle(w *gogui.Window, v *idle.View) gogui.View {
 	vw, vh := w.WindowSize()
 	cfg := config.Get()
-	pal := palette()
+	pal := presentation.Palette()
 	slots := v.Keep(vw, vh)
 	areas := idle.Areas(vw, vh, len(slots))
 	box := dashboard.Place(cfg.Idle.Position, cfg.Idle.Align, cfg.Idle.Size, vw, vh)

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
@@ -56,7 +55,7 @@ func (a *App) root(w *gogui.Window) gogui.View {
 			layers = append(layers, floating(o.Priority+1, v))
 		}
 	}
-	if typing(w) {
+	if presentation.Editor.Typing(w) {
 		if v := a.keyboard(w); v != nil {
 			layers = append(
 				layers,
@@ -82,7 +81,7 @@ var floating = widgets.Floating
 func (a *App) dashboard(w *gogui.Window) gogui.View {
 	vw, vh := w.WindowSize()
 	cfg := config.Get()
-	pal := palette()
+	pal := presentation.Palette()
 	ink := cfg.Clock.Ink.Over(pal)
 	r := face.Read(time.Now(), cfg.Screen.Hours == config.TwentyFourHour)
 	if !cfg.Clock.Date {
@@ -156,17 +155,17 @@ func (a *App) dashboard(w *gogui.Window) gogui.View {
 var placed = widgets.Placed
 
 func (a *App) page(w *gogui.Window, p *Screen) gogui.View {
-	return toolkit.PageFrame(
+	return presentation.Toolkit.PageFrame(
 		w,
 		widgets.FrameOptions{
 			Title:   p.Title,
 			Fixed:   p.Fixed,
 			Build:   p.Build,
 			Back:    func() { shell.Get().Pop() },
-			Gesture: holdStill,
-			Room:    editor.Room(w),
+			Gesture: presentation.HoldStill,
+			Room:    presentation.Editor.Room(w),
 		},
 	)
 }
 
-func room(w *gogui.Window) []gogui.View { return editor.Room(w) }
+func room(w *gogui.Window) []gogui.View { return presentation.Editor.Room(w) }

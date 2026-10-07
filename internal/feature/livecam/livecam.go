@@ -3,6 +3,9 @@ package livecam
 
 import (
 	"errors"
+	"log/slog"
+	"time"
+
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -10,8 +13,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/privacy"
 	"github.com/ygelfand/echolocal/internal/layout"
 	camerasession "github.com/ygelfand/libcountertop/pkg/camera/session"
-	"log/slog"
-	"time"
 )
 
 const FPS = 30
@@ -27,10 +28,7 @@ type Session = camerasession.Session
 type Size = camerasession.Size
 
 // Sizes is each stream as it is encoded.
-func Sizes() []Size {
-	mw, mh := parseSize(Saved().MainSize)
-	return []Size{{mw, mh}}
-}
+func Sizes() []Size { return hub.Sizes() }
 
 const noTurn = -1
 

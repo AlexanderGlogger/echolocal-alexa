@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
@@ -79,7 +78,7 @@ func thumbs(dir string) (int, error) {
 }
 
 func renderThumb(k visual.Kind, w, h int) (*image.RGBA, error) {
-	l, err := gpu.OpenOffscreen(w, h)
+	l, err := gpu.Get().OpenOffscreen(w, h)
 	if err != nil {
 		return nil, err
 	}

@@ -14,14 +14,14 @@ import (
 	"sync"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/indicate"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	esphome "github.com/ygelfand/go-esphome-device"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 )
 
 func init() {
@@ -85,7 +85,7 @@ func (f *Feedback) Restore(c config.Config) {
 // take the indication away with it. Which animation is the user's choice, and None is one of the
 // answers: some rooms would rather the ring stayed out of it.
 func Failure() {
-	speaker.Sound().Chime(speaker.ToneTrouble)
+	speaker.Sound().Chime(sharedtone.ToneTrouble)
 
 	name := config.Get().Ring.Trouble
 	if name == "" {
@@ -96,4 +96,4 @@ func Failure() {
 
 // Cancelled is a request dropped on purpose, which is neither a failure nor an answer. It only
 // sounds: the ring is already showing the turn ending.
-func Cancelled() { speaker.Sound().Chime(speaker.ToneCancel) }
+func Cancelled() { speaker.Sound().Chime(sharedtone.ToneCancel) }

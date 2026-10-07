@@ -5,15 +5,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ygelfand/go-esphome-device/mdns"
-
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
+	"github.com/ygelfand/go-esphome-device/mdns"
+	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
 )
 
 // mdnsRetry is how long to wait between attempts. There is no attempt limit: wifi can come back long
-// after boot, and an advert that never reappears is a device that has to be found by address.
+// after boot, and an advert that never reappears is a device that has to be found by netaddress.
 const mdnsRetry = 3 * time.Second
 
 // advertise publishes the addresses the device actually has, and republishes them when they change.
@@ -24,7 +23,7 @@ const mdnsRetry = 3 * time.Second
 // convenience and a device reachable by address works without it, so this only logs.
 func (a *API) advertise(ctx context.Context, port int) {
 	for attempt := 1; ; attempt++ {
-		ips := metrics.Addresses()
+		ips := netaddress.Addresses()
 		if len(ips) == 0 {
 			if attempt == 1 {
 				slog.Info("waiting for an address before advertising over mdns")
@@ -70,19 +69,19 @@ func (a *API) advertise(ctx context.Context, port int) {
 			"port",
 			port,
 			"addrs",
-			metrics.AddressKey(ips),
+			netaddress.AddressKey(ips),
 		)
 
 		// The registration stands until the addresses it was made with are no longer the ones the
 		// device has: a lease that changed, or a network that arrived late.
-		for metrics.AddressKey(metrics.Addresses()) == metrics.AddressKey(ips) {
+		for netaddress.AddressKey(netaddress.Addresses()) == netaddress.AddressKey(ips) {
 			if !pause(ctx, mdnsRetry) {
 				adv.Close()
 				return
 			}
 		}
 		adv.Close()
-		slog.Info("addresses changed, re-advertising over mdns", "was", metrics.AddressKey(ips))
+		slog.Info("addresses changed, re-advertising over mdns", "was", netaddress.AddressKey(ips))
 	}
 }
 

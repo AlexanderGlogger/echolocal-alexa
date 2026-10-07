@@ -21,7 +21,7 @@ func volumeCard(w *gogui.Window) gogui.View {
 			widgets.VolumeChoice{Key: string(s), Label: s.Label(), Level: vol.Level(s)},
 		)
 	}
-	return toolkit.VolumeCard(w, widgets.VolumeOptions{
+	return presentation.Toolkit.VolumeCard(w, widgets.VolumeOptions{
 		Current: widgets.VolumeChoice{
 			Key:   string(stream),
 			Label: stream.Label(),
@@ -35,6 +35,6 @@ func volumeCard(w *gogui.Window) gogui.View {
 		Linger:  vol.Linger,
 		Expand:  vol.Expand,
 		Dismiss: vol.Dismiss,
-		Grip:    grip,
+		Grip:    presentation.Grip,
 	})
 }

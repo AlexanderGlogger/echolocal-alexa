@@ -3,6 +3,8 @@
 package call
 
 import (
+	"sync"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -16,11 +18,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	sharedcall "github.com/ygelfand/libcountertop/pkg/media/call"
-	"sync"
-	"time"
 )
 
-// component binds application configuration restoration to the shared controller.
+// componentCall binds application configuration restoration to the shared controller.
 type componentCall struct{ *sharedcall.Calls }
 
 func (c *componentCall) Restore(v config.Config) { c.Calls.Restore(v.Call) }
@@ -31,26 +31,28 @@ var shared *sharedcall.Calls
 func Get() *sharedcall.Calls {
 	once.Do(func() {
 		shared = sharedcall.New(sharedcall.Dependencies{
-			Settings: config.CallSettings{},
-			Identity: discovery.Self,
+			Settings: config.CallSection,
 			Peers:    discovery.Get(),
 			Port:     web.Port,
 			Shell:    shell.Get(),
 			Privacy:  privacy.Get(),
 			Media:    media.Get(),
 			Sound:    device{},
-			Camera:   sharedcall.NewCamera(livecam.Sessions(), livecam.Sizes),
+			Camera:   sharedcall.NewCamera(livecam.Sessions()),
 			Display:  display.Get(),
-			Message: func(title, body string, hold time.Duration) {
-				message.Get().Show(message.Message{Title: title, Body: body, Tone: message.ToneInfo}, hold)
-			},
+			Messages: message.Get(),
 		})
 	})
 	return shared
 }
 
 func init() {
-	component.Register(component.Network, func() *componentCall { return &componentCall{Get()} }, component.Order(62), component.Needs(board.Panel))
+	component.Register(
+		component.Network,
+		func() *componentCall { return &componentCall{Get()} },
+		component.Order(62),
+		component.Needs(board.Panel),
+	)
 	web.Handle("POST /call/offer", Get().OfferHandler())
 	web.Handle("POST /call/answer", Get().AnswerHandler())
 	web.Handle("POST /call/end", Get().EndHandler())

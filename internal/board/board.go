@@ -56,6 +56,9 @@ const (
 
 // Board is a model of device.
 type Board struct {
+	// NativeAPI is the Android ABI used by this board's helpers; zero means none.
+	NativeAPI int
+
 	// Device is ro.product.device, which is what the device calls itself and the only thing a
 	// lookup may match on. It is not always the codename: a biscuit that took the Fire OS 6 OTA
 	// reports biscuit_puffin.

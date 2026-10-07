@@ -1,12 +1,12 @@
 package config
 
+import "github.com/ygelfand/libcountertop/pkg/settings/schema"
+
 // Sendspin is the room's part of a synchronized stream. A server discovers it and dials in, so there
 // is no address to set.
-type Sendspin struct {
-	Enabled bool `json:"enabled"`
-}
+type Sendspin = schema.Sendspin
 
-func defaultSendspin() Sendspin { return Sendspin{Enabled: true} }
+var defaultSendspin = schema.DefaultSendspin
 
 type SendspinWriter struct{ st *Store }
 

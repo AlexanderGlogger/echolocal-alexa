@@ -158,3 +158,12 @@ func (t *Time) Valid() bool {
 	built, err := time.Parse(time.RFC3339, layout.BuildDate)
 	return err != nil || time.Now().After(built)
 }
+
+// WatchSteps follows changes to the system clock.
+func (c *Time) WatchSteps(changed func(time.Duration)) func() {
+	return c.Synced.Listen(func(s Sync) {
+		if s.Stepped() {
+			changed(s.After.Sub(s.Before))
+		}
+	})
+}

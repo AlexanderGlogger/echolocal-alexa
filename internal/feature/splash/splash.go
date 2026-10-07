@@ -67,7 +67,7 @@ func (s *Splash) Run(ctx context.Context) error {
 	palette := chosen()
 	w, h := viewed(ctx)
 	rv := reveal.New(palette)
-	layer, err := gpu.Open(w, h)
+	layer, err := gpu.Get().Open(w, h)
 	if err != nil {
 		slog.Error(
 			"the boot animation could not start",

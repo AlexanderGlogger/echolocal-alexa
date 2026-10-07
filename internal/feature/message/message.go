@@ -11,11 +11,10 @@ import (
 	"sync"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
+	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
@@ -135,6 +134,11 @@ func (m *Messages) Show(msg Message, hold time.Duration) {
 	m.mu.Unlock()
 	slog.Info("message", "title", msg.Title, "tone", msg.Tone, "for", hold)
 	m.Changed.Emit(true)
+}
+
+// Info presents an informational message for the given duration.
+func (m *Messages) Info(title, body string, hold time.Duration) {
+	m.Show(Message{Title: title, Body: body, Tone: ToneInfo}, hold)
 }
 
 func (m *Messages) Hide() {

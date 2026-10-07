@@ -5,14 +5,13 @@ import (
 	"log/slog"
 	"sync"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
@@ -185,4 +184,13 @@ func clamp(level int) int {
 		return 100
 	}
 	return level
+}
+
+// Watch follows one stream's level until the returned function is called.
+func (v *Volume) Watch(stream config.Stream, changed func(int)) func() {
+	return v.Changed.Listen(func(c Change) {
+		if c.Stream == stream {
+			changed(c.Level)
+		}
+	})
 }

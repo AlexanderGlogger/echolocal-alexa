@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -22,6 +20,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/privacy"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	esphome "github.com/ygelfand/go-esphome-device"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
@@ -216,7 +216,7 @@ func (m *Mute) pressed(e buttons.Event) {
 	case buttons.Tap:
 		m.Toggle()
 	case buttons.Hold:
-		speaker.Sound().Chime(speaker.ToneMuteHold)
+		speaker.Sound().Chime(sharedtone.ToneMuteHold)
 	}
 }
 

@@ -8,22 +8,22 @@ package media
 import (
 	"context"
 	"fmt"
-	"github.com/ygelfand/libcountertop/pkg/media/ownership"
 	"log/slog"
 	"math"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	esphome "github.com/ygelfand/go-esphome-device"
-
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
+	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/audio/noise"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	"github.com/ygelfand/libcountertop/pkg/media/ownership"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
@@ -221,6 +221,9 @@ func build() *Player {
 }
 
 func (p *Player) Name() string { return "media player" }
+
+// WatchVolume follows the saved hardware volume step until unsubscribed.
+func (p *Player) WatchVolume(changed func(int)) func() { return p.Volume.Listen(changed) }
 
 func (p *Player) Entities() []esphome.Entity {
 	out := []esphome.Entity{p.mp, p.jack, p.resampling, p.duck, p.asp}
@@ -504,7 +507,7 @@ func (p *Player) turn(delta int) {
 // up and down both do.
 func (p *Player) Adjust(delta int) {
 	p.Set(p.Step() + delta)
-	speaker.Sound().Chime(speaker.ToneVolume)
+	speaker.Sound().Chime(sharedtone.ToneVolume)
 }
 
 // show lights the level as a clockwise arc, the leading segment dimmed by the fraction of a segment

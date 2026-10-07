@@ -79,19 +79,19 @@ BOARD_SH = go run ./cmd/echoctl board --sh $(SERIAL)
 ECHOD_DIR := /system/app/echod
 STATE_DIR := /data/misc/echolocal
 
-# The SurfaceFlinger helper for boards with a screen. Fire OS 6 is API 25.
+# Native helper ABI comes from the selected board, never the application identity.
 NDK ?= $(firstword $(ANDROID_NDK_HOME) $(ANDROID_NDK_LATEST_HOME) $(wildcard /opt/homebrew/Caskroom/android-ndk/*/AndroidNDK*.app/Contents/NDK))
 NDK_HOST := $(if $(filter Darwin,$(shell uname -s)),darwin-x86_64,linux-x86_64)
-SURFACE_API ?= 25
-NDK_CC = $(NDK)/toolchains/llvm/prebuilt/$(NDK_HOST)/bin/armv7a-linux-androideabi$(SURFACE_API)-clang
+NATIVE_API = $(shell go run ./cmd/native-target $(BOARD))
+NDK_CC = $(NDK)/toolchains/llvm/prebuilt/$(NDK_HOST)/bin/armv7a-linux-androideabi$(NATIVE_API)-clang
 LIBCOUNTERTOP_MODULE := github.com/ygelfand/libcountertop
 # Lazy: biscuit builds never resolve native sources or need the NDK.
 LIBCOUNTERTOP_DIR = $(shell go list -m -f '{{.Dir}}' $(LIBCOUNTERTOP_MODULE))
 SURFACE_SRC = $(LIBCOUNTERTOP_DIR)/native/surface
-SURFACE_BIN := $(BUILD_DIR)/echolocal-surface-api$(SURFACE_API)
-CAMSHIM_BIN := $(BUILD_DIR)/libecholocal-camshim-api$(SURFACE_API).so
-CAMERA_BIN := $(BUILD_DIR)/echolocal-camera-api$(SURFACE_API)
-COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(SURFACE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
+SURFACE_BIN = $(BUILD_DIR)/echolocal-surface-api$(NATIVE_API)
+CAMSHIM_BIN = $(BUILD_DIR)/libecholocal-camshim-api$(NATIVE_API).so
+CAMERA_BIN = $(BUILD_DIR)/echolocal-camera-api$(NATIVE_API)
+COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(NATIVE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
 PARTS_DIR := internal/parts/payload
 PART_BOARDS := $(shell grep -h '^//go:build' internal/parts/*.go 2>/dev/null | \
 	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)
@@ -107,7 +107,7 @@ countertop-native-source:
 	@test -n "$(LIBCOUNTERTOP_DIR)" || go mod download $(LIBCOUNTERTOP_MODULE)
 
 .PHONY: build-surface
-build-surface: countertop-native-source ## Build the SurfaceFlinger helper with the NDK (SURFACE_API=25 for Fire OS 6)
+build-surface: countertop-native-source ## Build the SurfaceFlinger helper with the NDK
 	+$(COUNTERTOP_NATIVE) surface
 
 .PHONY: build-camshim

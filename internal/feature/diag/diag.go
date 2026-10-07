@@ -21,6 +21,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 	esphome "github.com/ygelfand/go-esphome-device"
+	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
 	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
 )
 
@@ -270,7 +271,7 @@ func (d *Diag) reachable(on bool) error {
 
 func (d *Diag) address() {
 	var ips []string
-	for _, ip := range metrics.Addresses() {
+	for _, ip := range netaddress.Addresses() {
 		ips = append(ips, ip.String())
 	}
 	d.ip.Set(strings.Join(ips, ", "))

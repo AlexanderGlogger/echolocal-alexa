@@ -18,6 +18,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 	"github.com/ygelfand/echolocal/internal/lib/asp"
 	"github.com/ygelfand/echolocal/internal/service"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
@@ -646,10 +647,7 @@ func (p *Player) Queued() int {
 }
 
 // Note is one tone in a chime. A zero frequency is a rest.
-type Note struct {
-	Freq float64
-	Ms   int
-}
+type Note = sharedtone.Note
 
 // Beep queues a tone.
 func (p *Player) Beep(freq float64, ms int, level float64) {

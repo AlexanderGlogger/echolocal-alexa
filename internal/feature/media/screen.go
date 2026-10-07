@@ -4,7 +4,6 @@ package media
 
 import (
 	"sync"
-	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
 	"github.com/ygelfand/echolocal/internal/board"
@@ -24,13 +23,7 @@ var theCard *sharedcard.Card
 func card() *sharedcard.Card {
 	cardOnce.Do(func() {
 		theCard = sharedcard.New(
-			sharedcard.Options{
-				Now:    func() Now { return Get().Now() },
-				Source: func() Source { return Get().source() },
-				Idle:   func() time.Duration { return config.Get().Idle.Media.After() },
-				Reset:  func() { Get().sourceOwner().ResetSession() },
-				Shell:  shell.Get(),
-			},
+			sharedcard.Dependencies{Player: Get(), Idle: config.IdleSection, Shell: shell.Get()},
 		)
 	})
 	return theCard
@@ -47,18 +40,7 @@ func onRail() {
 			shell.Get().Push(Page())
 		}})
 }
-func Heading(now Now) string {
-	if now.Title != "" {
-		return now.Title
-	}
-	if now.Paused {
-		return "Paused"
-	}
-	if now.Playing {
-		return "Playing"
-	}
-	return "Nothing playing"
-}
+
 func init() {
 	component.Register(
 		component.Device,

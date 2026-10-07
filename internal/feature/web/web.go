@@ -20,9 +20,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/api"
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
 )
 
 func init() {
@@ -183,7 +183,7 @@ func Pairing() string {
 // address would need bracketing there and is not something anyone copies off a panel by hand.
 // The lease this device runs on is v4, so holding out for one costs nothing.
 func address() string {
-	for _, ip := range metrics.Addresses() {
+	for _, ip := range netaddress.Addresses() {
 		if ip.To4() != nil {
 			return ip.String()
 		}

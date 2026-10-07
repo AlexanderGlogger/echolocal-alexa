@@ -7,18 +7,19 @@ import (
 	"math"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
-
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	sharedwidgets "github.com/ygelfand/libcountertop/pkg/display/widgets"
+	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
 	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 var lamp = gogui.RGBA(255, 196, 64, 255)
 
-func tileBoard(at ui.Rect, s homecontrol.Selection, pal theme.Theme) gogui.View {
-	areas, loading := homecontrol.Dash().Tiles(s)
+func tileBoard(at ui.Rect, s sharedhome.Selection, pal theme.Theme) gogui.View {
+	areas, loading := homecontrol.Get().Dash().Tiles(s)
 	gap := reach() * 0.25
 	cols := max(2, int(float32(at.W)/(reach()*6)))
 	side := cell(float32(at.W)-gap, gap, cols)
@@ -69,12 +70,12 @@ func tileBoard(at ui.Rect, s homecontrol.Selection, pal theme.Theme) gogui.View 
 		Padding:    gogui.NoPadding,
 		Spacing:    gogui.SpacingPx(gap),
 		Scrollable: true,
-		OnGesture:  holdStill,
+		OnGesture:  presentation.HoldStill,
 		Content:    views,
 	}))
 }
 
-func areaName(a homecontrol.AreaTiles) string {
+func areaName(a sharedhome.AreaTiles) string {
 	if a.ID == "" {
 		return say.T("home.noarea")
 	}
@@ -83,8 +84,8 @@ func areaName(a homecontrol.AreaTiles) string {
 
 func card(
 	id string,
-	s homecontrol.Selection,
-	a homecontrol.AreaTiles,
+	s sharedhome.Selection,
+	a sharedhome.AreaTiles,
 	side float32,
 	pal theme.Theme,
 ) gogui.View {
@@ -101,7 +102,7 @@ func card(
 			pal,
 			nil,
 			nil,
-			func(gogui.EventCtx) { homecontrol.Dash().ToggleEntity(t) },
+			func(gogui.EventCtx) { homecontrol.Get().Dash().ToggleEntity(t) },
 		)
 	}
 	var chips []gogui.View
@@ -117,17 +118,17 @@ func card(
 					t.On,
 					t.Available,
 					pal,
-					func(gogui.EventCtx) { homecontrol.Dash().ToggleEntity(t) },
+					func(gogui.EventCtx) { homecontrol.Get().Dash().ToggleEntity(t) },
 				),
 			)
 		}
 	}
 	return tile(id, side, glyphFor(s), areaName(a), areaStatus(a), a.On > 0, true, pal,
 		chevron(id, s, a, pal), chips,
-		func(gogui.EventCtx) { homecontrol.Dash().ToggleArea(a) })
+		func(gogui.EventCtx) { homecontrol.Get().Dash().ToggleArea(a) })
 }
 
-func areaStatus(a homecontrol.AreaTiles) string {
+func areaStatus(a sharedhome.AreaTiles) string {
 	switch a.On {
 	case 0:
 		return say.T("home.tile.all.off")
@@ -148,7 +149,7 @@ func tint(on bool, pal theme.Theme) (badgeFill, badgeInk, fill gogui.Color) {
 	return color(pal.Background).WithOpacity(0.4), color(pal.Text), color(pal.Surface)
 }
 
-func deviceStatus(t homecontrol.Tile) string {
+func deviceStatus(t sharedhome.Tile) string {
 	switch {
 	case !t.Available:
 		return say.T("home.tile.unavailable")
@@ -213,11 +214,11 @@ func chip(
 			),
 		},
 	}
-	controls().Tile(&cfg, chosen(on))
-	return pressable(gogui.Row, cfg, tap)
+	presentation.Kit().Tile(&cfg, sharedwidgets.Chosen(on))
+	return presentation.Presses.Pressable(gogui.Row, cfg, tap)
 }
 
-func glyphFor(s homecontrol.Selection) string {
+func glyphFor(s sharedhome.Selection) string {
 	if s.Key == "lights" {
 		return gogui.IconSunnyO
 	}
@@ -233,15 +234,15 @@ func domainGlyph(domain string) string {
 
 func chevron(
 	id string,
-	s homecontrol.Selection,
-	a homecontrol.AreaTiles,
+	s sharedhome.Selection,
+	a sharedhome.AreaTiles,
 	pal theme.Theme,
 ) gogui.View {
 	glyph := gogui.IconArrowDown
 	if a.Open {
 		glyph = gogui.IconArrowUp
 	}
-	return iconKey(gogui.ContainerCfg{
+	return presentation.Toolkit.IconKey(gogui.ContainerCfg{
 		ID:      id + "-chevron",
 		Width:   reach(),
 		Height:  reach(),
@@ -251,7 +252,7 @@ func chevron(
 		HAlign:  gogui.HAlignCenter,
 		VAlign:  gogui.VAlignMiddle,
 		Padding: gogui.NoPadding,
-	}, glyph, iconStyle(color(pal.Text)), style.Partial, func(gogui.EventCtx) { homecontrol.Dash().Expand(s, a.ID) })
+	}, glyph, iconStyle(color(pal.Text)), style.Partial, func(gogui.EventCtx) { homecontrol.Get().Dash().Expand(s, a.ID) })
 }
 
 func tile(
@@ -307,6 +308,6 @@ func tile(
 			gogui.Label(status, secondary()),
 		}, more...),
 	}
-	controls().Tile(&cfg, chosen(on))
-	return pressable(gogui.Column, cfg, tap)
+	presentation.Kit().Tile(&cfg, sharedwidgets.Chosen(on))
+	return presentation.Presses.Pressable(gogui.Column, cfg, tap)
 }

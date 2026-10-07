@@ -1,13 +1,14 @@
 package visuals
 
 import (
+	"sync"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/mute"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	sharedinput "github.com/ygelfand/libcountertop/pkg/display/visualinput"
-	"sync"
 )
 
 const LiftMax = sharedinput.LiftMax
@@ -34,7 +35,7 @@ func newVisuals(
 	tap func(speaker.Tap),
 ) *Visuals {
 	return &Visuals{sharedinput.New(sharedinput.Options{
-		Read:            func() config.Visual { return config.Get().Visual },
+		Settings:        config.VisualSection,
 		MicRate:         16000,
 		SpeakerRate:     speaker.Rate,
 		SpeakerChannels: speaker.Channels,
@@ -43,10 +44,6 @@ func newVisuals(
 		Listen:          listen,
 		Muted:           muted,
 		Tap:             func(t sharedinput.Tap) { tap(t) },
-		Kind:            func(v string) error { return config.Set().Visual().Kind(v) },
-		Label:           func(v string) error { return config.Set().Visual().Label(v) },
-		Seed:            func(v int) error { return config.Set().Visual().Seed(v) },
-		MaxFPS:          func(v int) error { return config.Set().Visual().MaxFPS(v) },
 	})}
 }
 func (v *Visuals) Restore(c config.Config) { v.Visuals.Restore(c.Visual) }

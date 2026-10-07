@@ -4,6 +4,7 @@ import "github.com/ygelfand/echolocal/internal/layout"
 
 // Checkers is the 1st-generation Echo Show 5.
 var Checkers = Board{
+	NativeAPI:     25,
 	Device:        "checkers",
 	Codename:      "checkers",
 	Model:         "Echo Show 5 1st gen (checkers)",

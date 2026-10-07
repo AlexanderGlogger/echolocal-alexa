@@ -4,6 +4,7 @@ import "github.com/ygelfand/echolocal/internal/layout"
 
 // Cronos is the 2nd-generation Echo Show 5.
 var Cronos = Board{
+	NativeAPI:     25,
 	Device:        "cronos",
 	Codename:      "cronos",
 	Model:         "Echo Show 5 2nd gen (cronos)",
