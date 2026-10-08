@@ -1,8 +1,9 @@
 package dashboard
 
 import (
-	"github.com/ygelfand/echolocal/internal/feature/shell"
 	sharedlib "github.com/ygelfand/libcountertop/pkg/display/dashboard"
+
+	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
 
 type Tab = sharedlib.Tab

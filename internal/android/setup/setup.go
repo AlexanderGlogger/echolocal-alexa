@@ -1,12 +1,3 @@
-// Package setup applies the device changes echod wants in place on every boot.
-//
-// Only idempotent, atomic actions belong here. Idempotent because this runs on every start,
-// including a restart, and must not care whether the last one got there first; atomic because a
-// step that failed half way through would leave the device in a state nothing else expects.
-//
-// A property write and a stop request both qualify: init either accepts the message or does not.
-// Anything that has to read state, edit a file, or take more than one step to be true does not
-// belong here — that is provisioning's job, where it can be checked and rolled back.
 package setup
 
 import (
@@ -22,18 +13,14 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// pinControl dumps and drives every pin on the SoC. It is how the vendor audio HAL reaches the
-// microphone mute line, which is the one thing here that must be nobody else's.
 const pinControl = "/sys/devices/soc/1000b000.pinctrl/mt_gpio"
 
-// Action is one change and why echod wants it.
 type Action struct {
 	Name   string
 	Reason string
 	Do     func() error
 }
 
-// stop asks init to stop a vendor service.
 func stop(service, reason string) Action {
 	return Action{
 		Name:   "stop " + service,
@@ -42,7 +29,6 @@ func stop(service, reason string) Action {
 	}
 }
 
-// Actions is applied in order. Nothing here is allowed to fail a boot.
 var Actions = []Action{
 	stop("meshmgrservice", "the other half of the BLE mesh stack"),
 	stop("whad_cc", "whole-home audio's control channel, left with nothing once whad is hidden"),
@@ -55,14 +41,7 @@ var Actions = []Action{
 		Name: "take the pin controller back from mediaserver",
 		Reason: "the vendor audio HAL clears the microphone mute line while it sets up an input path, " +
 			"which unmutes a device the user left muted",
-		// Amazon's csm_audio_init.sh grants it: "mediaserver service needs to access mt_gpio file in
-		// order to access mute LED on MUTE button ... chown root.media". Dropping the group write takes
-		// it back. echod drives the line through /sys/class/gpio, which is root's, so this costs us
-		// nothing and leaves mediaserver running — stopping it is not an option, because AudioService
-		// inside system_server then retries forever and says so every time.
-		//
-		// Every boot: sysfs modes are the kernel's defaults again after a restart, and the vendor
-		// script re-grants it.
+		// Amazon's csm_audio_init.sh chowns the mute LED gpio to root.media.
 		Do: func() error {
 			if component.Board().MuteDir != "" {
 				return nil
@@ -73,8 +52,7 @@ var Actions = []Action{
 	{
 		Name:   "silence AmazonUsageStatsService",
 		Reason: "logs the network state on a timer from inside system_server",
-		// The persist form of this property is 39 bytes, past what Android 5.1 accepts, so it
-		// cannot be set once at install and has to be set again on every boot.
+		// The persist form of this property is 39 bytes, past what Android 5.1 accepts.
 		Do: func() error { return prop.Set("log.tag.AmazonUsageStatsService", "S") },
 	},
 	{
@@ -90,9 +68,7 @@ var Actions = []Action{
 	{
 		Name:   "size the runtime to the cores that are present",
 		Reason: "the kernel hotplugs them, so Go sees however many were online when it started",
-		// GOMAXPROCS is read once at start-up. Pinning cores against the governor is the answer we
-		// rejected; counting them and telling the runtime is the one that works.
-		Do: procs,
+		Do:     procs,
 	},
 	{
 		Name:   "point the resolver at the nameservers the platform knows",
@@ -102,8 +78,7 @@ var Actions = []Action{
 	{
 		Name:   "point the verifier at the platform's root certificates",
 		Reason: "crypto/x509 reads the Android store only in a GOOS=android build, and this one is linux",
-		// SSL_CERT_DIR replaces the directories crypto/x509 scans, never the files it reads, so a device
-		// carrying /etc/ssl/certs/ca-certificates.crt keeps every root it already had.
+		// SSL_CERT_DIR replaces the directories crypto/x509 scans, never the files it reads.
 		Do: func() error { return os.Setenv("SSL_CERT_DIR", certDirs) },
 	},
 	{
@@ -123,12 +98,9 @@ func temp() error {
 	return os.Setenv("TMPDIR", layout.TempDir)
 }
 
-// certDirs are the directories a GOOS=android build would have scanned: the platform's roots, and any
-// the user added.
 const certDirs = "/system/etc/security/cacerts:/data/misc/keychain/certs-added"
 
-// Late is applied once Android reports the boot finished, for the services init starts from that
-// and no earlier. A stop sent before then is undone by the start that follows it.
+// A stop sent before the boot completes is undone by the start that follows it.
 var Late = []Action{
 	stop(
 		"shblemeshd",
@@ -142,21 +114,14 @@ var Late = []Action{
 	},
 }
 
-// How long ApplyLate waits for the boot to finish, and how often it looks. Nothing is waiting on
-// these stops, so the interval is loose.
 const (
 	bootProp = "sys.boot_completed"
 	bootWait = 3 * time.Minute
 	bootPoll = 5 * time.Second
 )
 
-// Apply runs every action, reporting what failed. A failure is logged and passed over: none of this
-// is worth refusing to start over.
 func Apply() { apply("boot setup", Actions) }
 
-// Setup is the platform prep as a component, so it takes its turn in the same ordered list as
-// everything else. First: what follows expects the resolver to work and the runtime to be the right
-// size, and the vendor services it stops are the ones that fight over the hardware.
 type Setup struct{}
 
 func init() {
@@ -170,18 +135,12 @@ func (Setup) Start(context.Context) error {
 	return nil
 }
 
-// Run finishes the job once Android says the boot completed, then returns. The stops that wait for
-// that are undone by the start that would otherwise follow them.
 func (Setup) Run(ctx context.Context) error {
 	ApplyLate(ctx)
 	return nil
 }
 
-// ApplyLate waits for the boot to finish and then applies Late. It is meant to be run in its own
-// goroutine, and returns without applying anything if the boot never completes.
 func ApplyLate(ctx context.Context) {
-	// Waiting is what keeps a stop from being undone by the start that follows it. A board that never
-	// signals a boot never fires those triggers either, so there is nothing to be ordered against.
 	if component.Board().SignalsBoot && !bootCompleted(ctx) {
 		return
 	}
@@ -199,7 +158,6 @@ func apply(what string, actions []Action) {
 	slog.Info(what+" applied", "actions", len(actions), "failed", failed)
 }
 
-// bootCompleted reports whether the boot finished before bootWait ran out.
 func bootCompleted(ctx context.Context) bool {
 	tick := time.NewTicker(bootPoll)
 	defer tick.Stop()

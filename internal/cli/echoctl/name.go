@@ -11,13 +11,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/installer"
 )
 
-// resolveName decides what Home Assistant will call the device.
-//
-// An explicit --name wins, because someone who typed it meant it — but renaming is not free: Home
-// Assistant keys the device on its name, so the old one becomes a stale device with all its entities,
-// and that is worth saying out loud rather than doing quietly. Failing that, a name already on the
-// device is kept, and only a device with neither is asked about. Off a terminal there is nobody to
-// ask, so the flag is required rather than guessing a name that is then permanent.
 func resolveName(
 	ctx context.Context,
 	out io.Writer,

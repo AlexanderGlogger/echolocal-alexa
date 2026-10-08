@@ -2,19 +2,11 @@ package subband
 
 import "github.com/ygelfand/libcountertop/pkg/audio/fft"
 
-// The bank is the standard polyphase pair. Analysis windows the last WindowLen samples with the
-// prototype, folds them onto FFTLen by summing every FFTLen apart, and transforms; synthesis
-// transforms back, spreads the result over WindowLen, windows it again and overlap-adds. Hop is half
-// the transform, so the folds that go in come back out as overlaps, and a band can be filtered
-// without its neighbours aliasing into it.
-
-// analysis turns one microphone's samples into subbands, Hop samples at a time.
 type analysis struct {
 	g      geometry
 	window []float32
 	fft    *fft.FFT
 
-	// hist is the last WindowLen samples, oldest first.
 	hist []float32
 	fold []complex64
 }
@@ -29,7 +21,6 @@ func newAnalysis(g geometry, window []float32, f *fft.FFT) *analysis {
 	}
 }
 
-// push takes Hop new samples and writes the frame's bands into out.
 func (a *analysis) push(samples []float32, out []complex64) {
 	copy(a.hist, a.hist[a.g.Hop:])
 	copy(a.hist[a.g.WindowLen-a.g.Hop:], samples)
@@ -45,15 +36,13 @@ func (a *analysis) push(samples []float32, out []complex64) {
 	copy(out, a.fold[:a.g.Bands])
 }
 
-// synthesis turns subbands back into samples, Hop at a time.
 type synthesis struct {
 	g      geometry
 	window []float32
 	fft    *fft.FFT
 
 	spread []complex64
-	// tail is what previous frames have already added to samples not yet returned.
-	tail []float32
+	tail   []float32
 }
 
 func newSynthesis(g geometry, window []float32, f *fft.FFT) *synthesis {
@@ -66,10 +55,8 @@ func newSynthesis(g geometry, window []float32, f *fft.FFT) *synthesis {
 	}
 }
 
-// pull takes one frame's bands and returns the next Hop samples.
 func (s *synthesis) pull(bands []complex64, out []float32) {
-	// The transform is of a real signal, so the upper half is the lower half mirrored and conjugated.
-	// Band 0 and the Nyquist band have no partner.
+	// A real signal's upper half is the lower half conjugate-mirrored; 0 and Nyquist are unpaired.
 	s.spread[0] = complex(real(bands[0]), 0)
 	for k := 1; k < s.g.Bands; k++ {
 		s.spread[k] = bands[k]
@@ -79,7 +66,6 @@ func (s *synthesis) pull(bands []complex64, out []float32) {
 
 	s.fft.Inverse(s.spread)
 
-	// Overlap-add the windowed period, then hand back the oldest Hop samples.
 	for n, h := range s.window {
 		s.tail[n] += h * real(s.spread[n%s.g.FFTLen])
 	}
@@ -90,14 +76,6 @@ func (s *synthesis) pull(bands []complex64, out []float32) {
 	}
 }
 
-// bankGain is what a steady signal comes back scaled by after analysis and synthesis with the same
-// prototype. Dividing it out leaves a mix comparable with the other mixers rather than one that
-// needs its own volume.
-//
-// A constant folds to the prototype's own fold, so the gain at each position in the window is that
-// fold weighted by the window again, summed over every position the frames land on. A prototype
-// designed for this reconstructs exactly, which means each position gives the same answer and the
-// average below is that answer.
 func bankGain(g geometry, window []float32) float32 {
 	folded := make([]float32, g.FFTLen)
 	for n, h := range window {

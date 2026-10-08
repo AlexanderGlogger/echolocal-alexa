@@ -3,11 +3,12 @@ package control
 import (
 	"time"
 
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
-	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 )
 
 func deviceInfo() harness.DeviceInfo {

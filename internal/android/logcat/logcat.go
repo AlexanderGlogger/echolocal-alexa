@@ -1,9 +1,3 @@
-// Package logcat reads what the rest of Android logged, which is the half of the story echod cannot
-// tell: the kernel, mediaserver taking the audio device away, the vendor's own tags.
-//
-// logd hands it over on /dev/socket/logdr, the same way logcat gets it. The socket is SOCK_SEQPACKET,
-// which net cannot dial, so it is opened directly. Each packet is one entry: a header whose size is
-// in the header, then priority, tag and message.
 package logcat
 
 import (
@@ -19,26 +13,20 @@ import (
 
 const socket = "/dev/socket/logdr"
 
-// The buffers worth having: main is where applications log and system is where the framework does.
-// The rest carry radio traffic and binary events, which read as noise here.
 const (
 	lidMain   = 0
 	lidSystem = 3
 )
 
-// hdrSize is where the payload starts in the oldest layout, and the shortest packet worth reading.
-// Every version since says its own header size, which is what keeps this working across them.
+// The oldest logger_entry layout has a 20-byte header; later ones carry hdr_size.
 const hdrSize = 20
 
-// Entry is one line Android logged.
 type Entry struct {
 	Level slog.Level
 	Tag   string
 	Text  string
 }
 
-// Recent returns the last of what logd is holding, oldest first. logd is asked to dump and hang up
-// rather than to follow, so this returns instead of waiting for more.
 func Recent(lines int) ([]Entry, error) {
 	fd, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_SEQPACKET, 0)
 	if err != nil {
@@ -70,8 +58,6 @@ func Recent(lines int) ([]Entry, error) {
 	}
 }
 
-// parse reads one packet. A short or malformed one is skipped rather than failing the dump: this is
-// somebody else's log, and we take what can be read of it.
 func parse(pkt []byte) (Entry, bool) {
 	if len(pkt) < hdrSize {
 		return Entry{}, false
@@ -87,7 +73,6 @@ func parse(pkt []byte) (Entry, bool) {
 		return Entry{}, false
 	}
 
-	// Priority, then the tag and the message, each ending at a zero byte.
 	parts := strings.SplitN(strings.TrimRight(string(body[1:]), "\x00"), "\x00", 2)
 	if len(parts) < 2 {
 		return Entry{}, false

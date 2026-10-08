@@ -7,15 +7,6 @@ import (
 	"testing"
 )
 
-// TestDecodeV2 reads the Fire OS 6 weights under the layout its own structure describes.
-//
-// Correlating the file against itself at every stride shows the sign alternating every 16 complex
-// values and decaying slowly out to 128 — a long smooth axis carrying the modulation a DFT filter
-// bank puts on adjacent bands. So bands step every 16, 16 is taps times microphones, and the 128
-// bands of a beam occupy 2048 of the 16384 complex values. Adjacent values are uncorrelated where
-// Fire OS 5's are not, which is real and imaginary interleaved rather than split.
-//
-//	ECHOLOCAL_FBF=... ECHOLOCAL_WINDOW=... go test ./internal/lib/subband/ -run DecodeV2 -v
 func TestDecodeV2(t *testing.T) {
 	weights, window := os.Getenv("ECHOLOCAL_FBF"), os.Getenv("ECHOLOCAL_WINDOW")
 	if weights == "" || window == "" {
@@ -84,8 +75,6 @@ func TestDecodeV2(t *testing.T) {
 	}
 }
 
-// micOrders is what to try for the microphone axis: the map AFE.cfg names first, then every ordered
-// choice of four when ECHOLOCAL_ALLMICS is set.
 func micOrders(t *testing.T) [][]int {
 	if os.Getenv("ECHOLOCAL_ALLMICS") != "" {
 		return orderedPicks(arrayMics, 4)
@@ -93,8 +82,6 @@ func micOrders(t *testing.T) [][]int {
 	return [][]int{{1, 2, 4, 5}, {0, 1, 3, 4}, {0, 1, 2, 3}}
 }
 
-// fill4 lays the file out with all four axes free and one complex value per element, real and
-// imaginary interleaved. order names the axes outer to inner: a band, e beam, t tap, m microphone.
 func fill4(w *Weights, values []float32, order string, down, flip bool) bool {
 	g := w.g
 	size := map[byte]int{'a': g.Bands, 'e': g.Beams, 't': g.Taps, 'm': g.Inputs()}
@@ -115,8 +102,6 @@ func fill4(w *Weights, values []float32, order string, down, flip bool) bool {
 					}
 					re, im := values[at], values[at+1]
 					at += 2
-					// Their bank may carry a half-band modulation ours does not, which shows as the
-					// sign alternating from one band to the next.
 					if flip && pos['a']%2 == 1 {
 						re, im = -re, -im
 					}
@@ -128,9 +113,6 @@ func fill4(w *Weights, values []float32, order string, down, flip bool) bool {
 	return at == len(values)
 }
 
-// TestBeamEnergiesPairUp asks whether eight beams over four microphones are four patterns and their
-// negations. If they are, a beam and its opposite have identical energy, at most four directions can
-// ever win, and scoring a layout by how many of the eight win is measuring the wrong thing.
 func TestBeamEnergiesPairUp(t *testing.T) {
 	weights, window := os.Getenv("ECHOLOCAL_FBF"), os.Getenv("ECHOLOCAL_WINDOW")
 	if weights == "" || window == "" {

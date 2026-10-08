@@ -4,12 +4,13 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/feature/wakeword"
-	"github.com/ygelfand/echolocal/internal/lib/wake"
 	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/assistant/turn"
 	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
+
+	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/wakeword"
+	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
 func TestSecondaryPhraseUsesItsSlotRatherThanTheCompactAdvertisement(t *testing.T) {

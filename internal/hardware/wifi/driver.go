@@ -1,5 +1,3 @@
-// Package wifi owns the radio without any of Android's networking: the interface, and the
-// supplicant that associates. Addresses belong to the dhcp feature.
 package wifi
 
 import (
@@ -11,20 +9,16 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// Interface is the station the supplicant runs on.
 const Interface = layout.WifiIface
 
-// Loaded reports whether the interface exists.
 func Loaded() bool {
 	_, err := os.Stat("/sys/class/net/" + Interface)
 	return err == nil
 }
 
-// appear is how long the interface is waited for. init insmods the driver from our boot image, so
-// echod may start first.
+// init insmods the driver from the boot image, possibly after echod starts.
 const appear = 15 * time.Second
 
-// Load waits for the driver init loaded to register the interface.
 func Load() error {
 	deadline := time.Now().Add(appear)
 	for {
@@ -38,7 +32,6 @@ func Load() error {
 	}
 }
 
-// MAC is the interface's address, which is the device's identity to Home Assistant.
 func MAC() (string, error) {
 	b, err := os.ReadFile("/sys/class/net/" + Interface + "/address")
 	if err != nil {

@@ -1,7 +1,10 @@
 package sendspin
 
 import (
+	"log/slog"
 	"sync"
+
+	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -9,7 +12,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/timesync"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
 )
 
 type componentPlayer struct{ *sharedplayer.Player }
@@ -25,7 +27,11 @@ var get = sync.OnceValue(func() *sharedplayer.Player {
 		DeviceID:    component.DevicePlayback,
 		Clock:       timesync.Get(),
 		Media:       media.Get(),
-		OpenPort:    func() { firewall.Open(firewall.Sendspin, Port) },
+		OpenPort: func() {
+			if err := firewall.Open(firewall.Sendspin, Port); err != nil {
+				slog.Error("opening the sendspin port failed", "port", Port, "err", err)
+			}
+		},
 	})
 })
 

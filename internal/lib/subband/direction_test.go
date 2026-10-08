@@ -6,9 +6,7 @@ import (
 	"testing"
 )
 
-// The array the weights were generated for, as measured with directional taps: a 36 mm ring of six
-// microphones 60 degrees apart with the first at 108 degrees, and a seventh in the middle. Only the
-// synthetic source below needs it — where a beam ends up pointing is not asserted.
+// A 36 mm ring of six microphones 60 degrees apart from 108 degrees, and a seventh in the middle.
 const (
 	ringRadius   = 0.036
 	firstMic     = 108 * math.Pi / 180
@@ -16,15 +14,9 @@ const (
 	speedOfSound = 343.0
 	centerMic    = 6
 
-	// The array has seven microphones whatever a firmware chooses to beamform over.
 	arrayMics = 7
 )
 
-// planeWave is what the array hears from a source far enough away that the wavefront is flat: the
-// same signal at each microphone, arriving at a time that depends on where the microphone sits.
-//
-// The signal is a sum of tones so the delays can be exact. Interpolating a delay would soften the
-// top of the band, which is the part that carries the direction.
 func planeWave(bearing float64, samples int) [][]int16 {
 	const tones = 24
 
@@ -39,7 +31,6 @@ func planeWave(bearing float64, samples int) [][]int16 {
 	for m := range out {
 		out[m] = make([]int16, samples)
 
-		// Seconds of arrival, offset so none is negative. A microphone facing the source hears first.
 		delay := ringRadius / speedOfSound
 		if m != centerMic {
 			delay *= 1 - math.Cos(bearing-(firstMic+float64(m)*micSpacing))
@@ -57,10 +48,6 @@ func planeWave(bearing float64, samples int) [][]int16 {
 	return out
 }
 
-// Whether the weights are being read correctly comes down to one question: does a source in front of
-// a beam come out of that beam louder than out of the others? If the taps or the conjugation are
-// wrong the weights still sum to something, but nothing points anywhere and every beam answers the
-// same to every direction.
 func TestVendorBeamsPointSomewhere(t *testing.T) {
 	w := vendorWeights(t)
 

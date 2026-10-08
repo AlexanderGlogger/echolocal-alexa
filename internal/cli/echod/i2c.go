@@ -113,9 +113,7 @@ func newI2CCmd() *cobra.Command {
 				return err
 			}
 
-			// Some of these chips answer writes and refuse reads — the LED driver at 0x3f is one, and
-			// NAKs every read with ENXIO. So the write is the result, and reading it back is a bonus:
-			// failing here would report a write that landed as an error.
+			// The LED driver at 0x3f answers writes and NAKs every read with ENXIO.
 			out := cmd.OutOrStdout()
 			after, err := b.ReadReg(uint8(reg))
 			switch {

@@ -8,9 +8,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 )
+
+var says = harness.Says
 
 func init() {
 	boardCommands = append(boardCommands, func() *cobra.Command {

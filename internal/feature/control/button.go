@@ -1,8 +1,9 @@
 package control
 
 import (
-	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
+	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 )
 
 func (c *Control) inputEngine() *harness.Input {

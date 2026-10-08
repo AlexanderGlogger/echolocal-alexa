@@ -178,7 +178,6 @@ func newDirectionCmd() *cobra.Command {
 				fmt.Fprintln(w, "-> strong in-plane fit")
 			}
 
-			// Level should peak toward the same bearing, independently of timing.
 			loudest := 0
 			for i := range levels {
 				if levels[i] > levels[loudest] {

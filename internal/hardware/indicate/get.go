@@ -10,8 +10,6 @@ var (
 	registered []func() Surface
 )
 
-// Register adds a surface, in preference order. make returns nil where the board lacks it. It exists
-// so this package does not import the hardware it stands in front of.
 func Register(make func() Surface) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -23,8 +21,6 @@ var (
 	found Surface
 )
 
-// Get is what this board shows things on, and a surface that shows nothing where it has none. It
-// always answers, so a feature says what happened without asking whether anyone can see it.
 func Get() Surface {
 	once.Do(func() {
 		mu.Lock()

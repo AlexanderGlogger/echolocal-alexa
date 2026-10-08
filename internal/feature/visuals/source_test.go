@@ -3,9 +3,10 @@ package visuals
 import (
 	"testing"
 
+	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
-	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 )
 
 func heard() visual.Input {

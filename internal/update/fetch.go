@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-// At reads a manifest from a URL or a local file, for an install pointed at a build that has not
-// been published.
 func At(ctx context.Context, src string) (Manifest, error) {
 	var m Manifest
 
@@ -52,7 +50,6 @@ func At(ctx context.Context, src string) (Manifest, error) {
 	return m, m.Valid()
 }
 
-// local is the path a source names, and false where it names a URL.
 func local(src string) (string, bool) {
 	if path, ok := strings.CutPrefix(src, "file://"); ok {
 		return path, true
@@ -63,13 +60,8 @@ func local(src string) (string, bool) {
 	return src, true
 }
 
-// binaryTimeout bounds a download. Twenty megabytes should not take this long on any connection
-// worth installing over.
 const binaryTimeout = 5 * time.Minute
 
-// Resolve is the binary's bytes, checked against the size and hash the manifest gave for it.
-//
-// progress is called with a fraction as the download runs, and may be nil.
 func (b Binary) Resolve(ctx context.Context, progress func(float64)) ([]byte, string, error) {
 	if path, ok := local(b.URL); ok {
 		data, err := os.ReadFile(path)
@@ -102,8 +94,6 @@ func (b Binary) Resolve(ctx context.Context, progress func(float64)) ([]byte, st
 		return nil, "", fmt.Errorf("update: fetching %s: %s", b.URL, resp.Status)
 	}
 
-	// Sized and capped from what the manifest says it is, so a response claiming to be far larger is
-	// refused before it is held.
 	buf := make([]byte, 0, b.Size)
 	body := io.LimitReader(resp.Body, b.Size+1)
 

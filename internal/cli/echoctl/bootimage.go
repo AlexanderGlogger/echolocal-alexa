@@ -13,7 +13,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/profile"
 )
 
-// profileFor is the install this device needs, or why there is not one.
 func profileFor(d *device.Device) (profile.Profile, error) {
 	name, err := d.Getprop("ro.product.device")
 	if err != nil {
@@ -22,11 +21,6 @@ func profileFor(d *device.Device) (profile.Profile, error) {
 	return profile.For(name)
 }
 
-// resolveBootImage is the image to write: the one named on the command line, or the one published
-// for this board.
-//
-// The fetch is the only part of an install that needs the network. Nothing is kept afterwards, so it
-// runs once per install rather than once per machine.
 func resolveBootImage(
 	ctx context.Context,
 	out io.Writer,
@@ -51,8 +45,6 @@ func resolveBootImage(
 	return data, from, nil
 }
 
-// fetchImage runs a resolve behind a progress bar, or plain lines where there is no terminal to draw
-// one on.
 func fetchImage(ctx context.Context, out io.Writer, title string,
 	resolve func(context.Context, func(float64)) ([]byte, string, error),
 ) ([]byte, string, error) {
@@ -95,7 +87,6 @@ type (
 	}
 )
 
-// barWidth is the bar in cells, narrowed to fit a terminal that cannot hold it.
 const barWidth = 40
 
 type fetchModel struct {

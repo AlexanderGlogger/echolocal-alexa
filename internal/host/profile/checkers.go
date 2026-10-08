@@ -35,7 +35,6 @@ var checkers = Profile{
 		"audioserver",
 	}, services.Disabled...),
 
-	// The helper decodes video and audio and reaches the camera through these.
 	Enable: append([]string{
 		"media",
 		"mediacodec",

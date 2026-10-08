@@ -1,12 +1,3 @@
-// Package wakeword is the wake word slots: how sensitive each one is, what it does when it fires, and
-// how the reply that follows should arrive.
-//
-// Home Assistant pairs each of its wake word slots with its own pipeline, so everything here is per
-// slot: two wake words can mean two different assistants, and they should not look or sound the same.
-//
-// Detection itself is not here — it runs against the microphones and calls in when it fires. There is
-// no switch for it either: a slot with no wake word is off, and every slot off is detection off, which
-// is what Home Assistant's own wake word selects already say. A second control could only disagree.
 package wakeword
 
 import (
@@ -16,24 +7,22 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	"github.com/ygelfand/libcountertop/pkg/hook"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
 	component.Register(component.Device, Get, component.Order(20))
 }
 
-// Slots is how many wake words Home Assistant offers at once, and so how many assistants there are to
-// configure. Its own UI stops at two.
+// Home Assistant's UI offers two wake word slots.
 const Slots = 2
 
-// Requested is a slot woken by hand rather than by hearing anything. What that means is the
-// conversation's to decide, so this only says which slot.
 var Requested hook.Hook[int]
 
 type WakeWord struct {
@@ -70,16 +59,11 @@ func Get() *WakeWord {
 	return shared
 }
 
-// newSlot builds one slot's entities. The name leads with the assistant so that everything belonging
-// to one of them reads together, beside Home Assistant's own Assistant and Wake word selects for the
-// same slot.
 func newSlot(n int) slot {
-	// Names carry no assistant number: these sit on the assistant's own sub-device, and Home Assistant
-	// puts its name in front of every one of them.
+	// Home Assistant prefixes each entity name with its sub-device's name.
 	on := component.AssistantDevice(n)
 
 	s := slot{
-		// Not diagnostic: waking the device by hand is something to do, not something to inspect.
 		wake: &esphome.Button{
 			Base: esphome.Base{
 				ObjectID: fmt.Sprintf("wake_assistant_%d", n+1),
@@ -183,7 +167,6 @@ func newSlot(n int) slot {
 		},
 	}
 
-	// All eleven on a page of their own.
 	for _, b := range []*esphome.Base{
 		&s.wake.Base, &s.threshold.Base, &s.tone.Base, &s.effect.Base,
 		&s.thinking.Base, &s.replying.Base, &s.delivery.Base,
@@ -255,16 +238,12 @@ func newSlot(n int) slot {
 	return s
 }
 
-// deliveries is how a reply can arrive, in the order it is offered.
 func deliveries() []config.Delivery {
 	return []config.Delivery{config.DeliveryWhole, config.DeliveryStream}
 }
 
 func (w *WakeWord) Name() string { return "wake word settings" }
 
-// Three of a slot's settings say what the ring does at each point in a turn, and are offered only on
-// a board that has one. Everything else about a wake word — what it listens for, how surely, what it
-// sounds like, how long it waits — is the same wherever it runs.
 func (w *WakeWord) Entities() []esphome.Entity {
 	ring := component.Board().Has(board.Ring)
 

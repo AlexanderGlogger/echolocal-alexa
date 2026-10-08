@@ -6,7 +6,6 @@ import (
 	"math"
 )
 
-// Channels splits an interleaved S24_3LE buffer into per-channel float slices.
 func Channels(raw []byte, chans int) [][]float64 {
 	frameBytes := chans * 3
 	frames := len(raw) / frameBytes
@@ -24,7 +23,6 @@ func Channels(raw []byte, chans int) [][]float64 {
 	return out
 }
 
-// Correlation is the Pearson coefficient between two channels at zero lag.
 func Correlation(a, b []float64) float64 {
 	n := len(a)
 	if len(b) < n {
@@ -55,14 +53,6 @@ func Correlation(a, b []float64) float64 {
 	return num / math.Sqrt(da*db)
 }
 
-// CorrelationMatrix reports pairwise correlation between all channels.
-//
-// Interpreting a silent-room capture:
-//
-//   - independent microphones correlate near zero, because each preamp's noise is its own
-//   - a channel that is a hardware sum of others correlates strongly with all of them
-//   - a true center mic correlates about equally with every perimeter mic, while a
-//     perimeter mic correlates most with its immediate neighbours
 func CorrelationMatrix(w io.Writer, ch [][]float64) {
 	n := len(ch)
 
@@ -81,8 +71,6 @@ func CorrelationMatrix(w io.Writer, ch [][]float64) {
 	}
 }
 
-// MeanAbsCorrelation is a channel's average |correlation| with all others. A hardware mix
-// stands out as an outlier here.
 func MeanAbsCorrelation(ch [][]float64, i int) float64 {
 	if len(ch) < 2 {
 		return 0
@@ -97,16 +85,6 @@ func MeanAbsCorrelation(ch [][]float64, i int) float64 {
 	return sum / float64(len(ch)-1)
 }
 
-// Topology summarises array structure from a correlation matrix, without assuming geometry.
-//
-// CenterSpread is the max-min range of a channel's correlations to the other perimeter
-// mics. A center mic is equidistant from all of them, so its spread is small; a perimeter
-// mic favours neighbours and so spreads wider.
-//
-// ByDistance is mean correlation grouped by separation around the ring: 1 = adjacent,
-// 2 = two apart, 3 = opposite. For a ring of 6 at radius r the physical separations are
-// r, r*sqrt(3) and 2r, so correlation must fall monotonically as distance grows for any
-// direction of arrival. If it does not, the assumed ring order is wrong.
 type Topology struct {
 	Center       int
 	CenterSpread float64
@@ -114,8 +92,6 @@ type Topology struct {
 	ByDistance   [4]float64
 }
 
-// AnalyzeTopology treats perimeter as the assumed ring order and center as the candidate
-// center channel, and reports how well the data supports that arrangement.
 func AnalyzeTopology(ch [][]float64, perimeter []int, center int) Topology {
 	t := Topology{Center: center}
 
@@ -157,8 +133,6 @@ func AnalyzeTopology(ch [][]float64, perimeter []int, center int) Topology {
 	return t
 }
 
-// Monotonic reports whether correlation falls as ring distance grows, which is what
-// physical separation requires.
 func (t Topology) Monotonic() bool {
 	return t.ByDistance[1] > t.ByDistance[2] && t.ByDistance[2] > t.ByDistance[3]
 }
@@ -166,11 +140,6 @@ func (t Topology) Monotonic() bool {
 // SpeedOfSound in air, m/s, near room temperature.
 const SpeedOfSound = 343.0
 
-// LoudestWindow returns the start index of the highest-energy window of n samples in ref.
-//
-// Transient sources such as taps leave most of a recording as silence, which dilutes a
-// whole-signal correlation until the noise floor dominates the result. Restricting the
-// analysis to the transient keeps the direction estimate meaningful.
 func LoudestWindow(ref []float64, n int) int {
 	if n <= 0 || n >= len(ref) {
 		return 0
@@ -189,7 +158,6 @@ func LoudestWindow(ref []float64, n int) int {
 	return best
 }
 
-// SliceAll takes the same window from every channel, preserving alignment between them.
 func SliceAll(ch [][]float64, start, n int) [][]float64 {
 	out := make([][]float64, len(ch))
 	for i, c := range ch {
@@ -206,15 +174,7 @@ func SliceAll(ch [][]float64, start, n int) [][]float64 {
 	return out
 }
 
-// SubSampleLag finds the cross-correlation peak between a and b to sub-sample precision by
-// fitting a parabola through the peak and its neighbours.
-//
-// Sign convention: the returned lag is the raw correlation offset. If a is a delayed copy
-// of b the peak lands at a *negative* offset, so a more negative value means a arrived
-// LATER. Use ArrivalOffset for a value that reads as an arrival time.
-//
-// This matters on this array: 36 mm of separation is ~105 us, only 1.7 samples at 16 kHz,
-// so integer lag quantises the entire useful range into three or four values.
+// 36 mm of separation is about 105 us, 1.7 samples at 16 kHz.
 func SubSampleLag(a, b []float64, maxLag int) (float64, float64) {
 	corr := make([]float64, 2*maxLag+1)
 	for i := range corr {
@@ -239,7 +199,6 @@ func SubSampleLag(a, b []float64, maxLag int) (float64, float64) {
 	}
 	lag := float64(peak - maxLag)
 
-	// Parabolic interpolation needs a neighbour on each side.
 	if peak > 0 && peak < len(corr)-1 {
 		l, c, r := corr[peak-1], corr[peak], corr[peak+1]
 		if d := l - 2*c + r; d != 0 {
@@ -249,27 +208,11 @@ func SubSampleLag(a, b []float64, maxLag int) (float64, float64) {
 	return lag, corr[peak]
 }
 
-// ArrivalOffset returns when a heard the source relative to b, in samples. Negative means a
-// heard it first. This is the negation of the raw correlation lag, and is the form to use
-// for direction finding.
 func ArrivalOffset(a, b []float64, maxLag int) (float64, float64) {
 	lag, corr := SubSampleLag(a, b, maxLag)
 	return -lag, corr
 }
 
-// FitBearing estimates the source direction from all perimeter arrival offsets at once,
-// rather than trusting whichever single mic happens to read loudest.
-//
-// For a distant source at bearing t, a mic at ring angle p hears it at offset
-// -A*cos(t - p), where A is the ring radius expressed in samples. Projecting the offsets
-// onto sin and cos of the mic angles recovers t and A by least squares.
-//
-// The returned bearing is relative to mic 0, in degrees, increasing in the same direction
-// as mic index. Absolute orientation needs a source at a known physical bearing.
-//
-// Amplitude is a quality signal: for a source in the plane of the ring it should approach
-// r/c in samples (about 1.68 at 16 kHz with r=36 mm). A materially smaller value means the
-// source was elevated, since only the in-plane component produces inter-mic delay.
 func FitBearing(offsets []float64) (bearingDeg, amplitude float64) {
 	n := len(offsets)
 	if n == 0 {
@@ -291,22 +234,14 @@ func FitBearing(offsets []float64) (bearingDeg, amplitude float64) {
 	return deg, math.Hypot(cx, cy)
 }
 
-// InPlaneLag is the expected arrival offset in samples between the ring edge and its center
-// for a source in the plane of the array.
 func InPlaneLag(radiusMM float64, rate int) float64 {
 	return radiusMM / 1000 / SpeedOfSound * float64(rate)
 }
 
-// LagToDistance converts a lag in samples to a path-length difference in millimetres.
 func LagToDistance(lagSamples float64, rate int) float64 {
 	return lagSamples / float64(rate) * SpeedOfSound * 1000
 }
 
-// BestLag cross-correlates a against b over +/-maxLag samples and returns the lag with the
-// highest correlation, plus that correlation. Positive means a lags b.
-//
-// The array is small: 36 mm spacing is ~210 us, only 3.4 samples at 16 kHz, so integer lag
-// alone is coarse and this is a starting point rather than a geometry solution.
 func BestLag(a, b []float64, maxLag int) (int, float64) {
 	best, bestVal := 0, math.Inf(-1)
 	for lag := -maxLag; lag <= maxLag; lag++ {

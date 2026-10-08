@@ -6,8 +6,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 )
 
-// The values moved here out of config were all measured on a biscuit, and moving them must not have
-// changed any of them: a device that has never been configured has to come up the way it did before.
 func TestBiscuitIsWhatItAlwaysWas(t *testing.T) {
 	got := For(board.Biscuit)
 
@@ -39,8 +37,6 @@ func TestAnUnmeasuredBoardBorrowsBiscuits(t *testing.T) {
 	}
 }
 
-// Nobody has to call Use for the values to be sane, because plenty of things that read a setting are
-// not the agent: the offline tools, and every test in the tree.
 func TestCurrentIsBiscuitUntilToldOtherwise(t *testing.T) {
 	if got := Current(); got != For(board.Biscuit) {
 		t.Errorf("Current() = %+v before Use, want biscuit's %+v", got, For(board.Biscuit))

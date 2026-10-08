@@ -6,13 +6,13 @@ import (
 	"sync"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
 	"github.com/ygelfand/echolocal/internal/feature/rtspd"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/setting"
-	"github.com/ygelfand/echolocal/internal/ui/widget"
-	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
 )
 
 var cameraOnce sync.Once
@@ -40,12 +40,7 @@ func cameraPages() *sharedsettings.CameraPages[livecam.Knobs] {
 func cameraPage() *shell.Page                 { return cameraPages().Page() }
 func sectionPage(g setting.Group) *shell.Page { return cameraPages().Section(g) }
 func choicePage(s livecam.Knob) *shell.Page   { return cameraPages().Choice(s) }
-func cameraRow(s livecam.Knob, k *livecam.Knobs) (widget.Row, func(int)) {
-	return cameraPages().Row(s, k)
-}
-func shown() []setting.Group { return cameraPages().Shown() }
-
-var dimmed = sharedsettings.Dimmed
+func shown() []setting.Group                  { return cameraPages().Shown() }
 
 func init() {
 	sections = append(

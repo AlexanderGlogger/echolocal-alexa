@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-// made builds an image with the same shape as a real one — magic, a cmdline at the header offset,
-// padded to size — so Verify can be exercised without the 7 MB file.
 func made(size int64, cmdline string) ([]byte, Image) {
 	data := make([]byte, size)
 	copy(data, magic)
@@ -34,8 +32,6 @@ func TestVerifyAcceptsWhatItDescribes(t *testing.T) {
 	}
 }
 
-// Each property is checked separately so a failure says which one, rather than reporting every wrong
-// file as a hash mismatch.
 func TestVerifyRefusesEachWay(t *testing.T) {
 	data, img := made(4096, "bootopt=64S3 androidboot.selinux=permissive")
 
@@ -68,8 +64,6 @@ func TestVerifyRefusesEachWay(t *testing.T) {
 	}
 }
 
-// An image whose cmdline lacks permissive is the dangerous case: it is a valid boot image that boots
-// enforcing, so echod comes up unable to listen and nothing about it looks wrong.
 func TestVerifyRefusesAnEnforcingCmdline(t *testing.T) {
 	data, img := made(4096, "bootopt=64S3,32N2,64N2")
 
@@ -82,8 +76,6 @@ func TestVerifyRefusesAnEnforcingCmdline(t *testing.T) {
 	}
 }
 
-// The device is the half that refuses. A build this image was never tested on is installable, since
-// Amazon ships new ones and waiting for a release here would leave them uninstallable.
 func TestSupportsRefusesTheDeviceAndOnlyRemarksOnTheBuild(t *testing.T) {
 	_, img := made(4096, "androidboot.selinux=permissive")
 
@@ -115,7 +107,6 @@ func TestSupportsRefusesTheDeviceAndOnlyRemarksOnTheBuild(t *testing.T) {
 	}
 }
 
-// A device that names no slot has no partition to write, and "boot" on its own is not one here.
 func TestPartitionIsTheSlot(t *testing.T) {
 	if got := Partition("_b"); got != "boot_b" {
 		t.Errorf("Partition(_b) = %q", got)
@@ -135,8 +126,6 @@ func TestCmdline(t *testing.T) {
 	}
 }
 
-// The partition is written with dd in fixed blocks, and the count comes from the image size, so a size
-// that is not a whole number of blocks would read back short and fail a write that was fine.
 func TestEveryImageFitsHowItIsWritten(t *testing.T) {
 	for _, img := range Images {
 		if img.Size%512 != 0 {
@@ -150,10 +139,6 @@ func TestEveryImageFitsHowItIsWritten(t *testing.T) {
 	}
 }
 
-// The file in the tree is what gets uploaded, so an image that is not there is a board that cannot be
-// published — and a compiled-in URL that serves nothing, which is an install that fails at the fetch.
-//
-// Verifying rather than only checking it exists is what keeps the table and the file together.
 func TestEveryImageIsInTheTreeAndIsWhatWeSayItIs(t *testing.T) {
 	for _, img := range Images {
 		if img.File == "" {
@@ -171,8 +156,6 @@ func TestEveryImageIsInTheTreeAndIsWhatWeSayItIs(t *testing.T) {
 			t.Error(err)
 		}
 
-		// The upload sends the directory as it stands, so a file whose name differs from the last
-		// segment of its URL is a URL that serves nothing.
 		if base := filepath.Base(img.File); base != img.Asset() {
 			t.Errorf("%s is committed as %q and published at %q", img.Device, base, img.Asset())
 		}

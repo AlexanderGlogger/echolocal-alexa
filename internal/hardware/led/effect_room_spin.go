@@ -2,10 +2,6 @@ package led
 
 import "time"
 
-// roomSpin turns the palette round the ring at a speed the room sets: still and dark in silence,
-// turning as fast as the room is loud. The phase is carried between frames rather than worked out from
-// elapsed, because a speed that changes has to be integrated — there is no closed form for "however
-// fast the room happened to be".
 func roomSpin(p Palette, r Room) Frame {
 	const revolution = 1400 * time.Millisecond
 

@@ -1,5 +1,3 @@
-// Package diag is what the device says about itself: its temperature, its cores, its disk, its link,
-// and where on the network it is. Nothing here changes what it does.
 package diag
 
 import (
@@ -8,6 +6,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	esphome "github.com/ygelfand/go-esphome-device"
+	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
+	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/android/setup"
@@ -20,23 +22,18 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
-	esphome "github.com/ygelfand/go-esphome-device"
-	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
-	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
 )
 
 func init() {
 	component.Register(component.Network, Get, component.Order(90))
 }
 
-// The thermal zones worth showing, by the name the kernel gives them. The rest are board sensors that
-// answer no question anybody asks.
 const (
 	cpuZone   = "mtktscpu"
 	radioZone = "mtktswmt"
 )
 
-// adbPort is where adbd listens: the boot image sets service.adb.tcp.port, and this is that port.
+// The boot image sets service.adb.tcp.port to this.
 const adbPort = 5555
 
 type Diag struct {
@@ -62,7 +59,6 @@ type Diag struct {
 	ip    *esphome.TextSensor
 	color *esphome.TextSensor
 
-	// boardName reports the codename, not to be confused with board(), which samples the sensors on it.
 	boardName *esphome.TextSensor
 
 	signal *esphome.Sensor
@@ -73,9 +69,6 @@ type Diag struct {
 	interval *esphome.Number
 	minCores *esphome.Number
 
-	// wake restarts the collector's wait when the interval changes, so a shorter one takes effect now
-	// rather than after the wait already running. Buffered: a change while nothing is waiting is not
-	// worth blocking on.
 	wake chan struct{}
 
 	last struct {
@@ -119,7 +112,6 @@ func (d *Diag) Entities() []esphome.Entity {
 	}
 }
 
-// collector builds the one setting these readings have: how often to take them.
 func (d *Diag) collector() {
 	d.interval = &esphome.Number{
 		Base: esphome.Base{
@@ -139,7 +131,6 @@ func (d *Diag) collector() {
 
 		d.interval.Set(float32(config.Get().Diag.Interval))
 
-		// The wait already running was measured against the old interval.
 		d.soon()
 	}
 
@@ -167,7 +158,6 @@ func (d *Diag) collector() {
 	}
 }
 
-// soon asks the collector to sample without waiting out the rest of its interval.
 func (d *Diag) soon() {
 	select {
 	case d.wake <- struct{}{}:
@@ -175,11 +165,6 @@ func (d *Diag) soon() {
 	}
 }
 
-// Run collects the readings that drift, once at the start and then on the interval.
-//
-// Immediately, not after the first wait: the readings go into entities that hold their last value
-// until Home Assistant asks, so a device that waited would report nothing at all until then — and a
-// restart is exactly when somebody is looking.
 func (d *Diag) Run(ctx context.Context) error {
 	return collector.Run(
 		ctx,
@@ -189,9 +174,6 @@ func (d *Diag) Run(ctx context.Context) error {
 	)
 }
 
-// playback is a known signal through the reply path with nothing in front of it. A reply is 16 kHz
-// audio fetched over HTTP and stretched here, so judging a resampling by ear against a reply
-// confounds the filter with the network and with whatever the pipeline said.
 func (d *Diag) playback() {
 	spk := speaker.Get()
 
@@ -209,7 +191,6 @@ func (d *Diag) playback() {
 	}
 }
 
-// remote opens the port adbd listens on, for getting at a device that is not on a cable.
 func (d *Diag) remote() {
 	d.adb = &esphome.Switch{
 		Base: esphome.Base{
@@ -230,8 +211,7 @@ func (d *Diag) remote() {
 		}
 	}
 
-	// The protocol's device info carries the mac and no address, so this is the only place Home
-	// Assistant can learn where the device actually is.
+	// The protocol's device info carries the MAC and no address.
 	d.ip = &esphome.TextSensor{
 		Base: esphome.Base{
 			ObjectID: "ip_address",
@@ -250,9 +230,6 @@ func (d *Diag) SetADB(on bool) {
 	d.adb.OnCommand(on)
 }
 
-// insecureTLS applies to everything the device downloads: models, firmware and the audio Home
-// Assistant serves all go through the default transport.
-// reachable opens or closes the adb port and moves the switch to match what the chain now says.
 func (d *Diag) reachable(on bool) error {
 	change, what := func() error { return firewall.Close(firewall.ADB) }, "closing"
 	if on {
@@ -277,12 +254,7 @@ func (d *Diag) address() {
 	d.ip.Set(strings.Join(ips, ", "))
 }
 
-// identity is what the device is rather than what it is doing. Neither of these changes within a
-// boot — the board is decided at start-up and the shell colour comes off the factory idme partition
-// — so both are read once here rather than sampled.
-//
-// The board is worth publishing because nothing else in the entity list says which model this is,
-// and what a device looks like is not something a dashboard can work out from its entities.
+// The shell colour comes from the factory idme partition.
 func (d *Diag) identity() {
 	b := config.Get().Device.Board
 
@@ -307,13 +279,7 @@ func (d *Diag) identity() {
 	d.boardName.Set(b.Codename)
 }
 
-// storage builds what the device says about its own disk. Cached is what could be deleted without
-// losing anything: wake word models no slot is listening for, which Home Assistant still offers and
-// will serve again on the next selection. Nothing else is cache yet.
-//
-// Reported in kilobytes because the protocol carries a state as a float32, which counts bytes exactly
-// only to sixteen megabytes. Home Assistant converts for display, so a size class in kB can still be
-// read in MB.
+// The protocol carries a state as a float32, exact in bytes only to 16 MB.
 func (d *Diag) storage() {
 	d.cached = &esphome.Sensor{
 		Base: esphome.Base{
@@ -353,8 +319,6 @@ func (d *Diag) storage() {
 	}
 }
 
-// radio builds what the wireless side reports: the link, what it carries, and what the Bluetooth
-// proxy hears. They share one antenna, so these belong together — scanning is paid for in throughput.
 func (d *Diag) radio() {
 	d.signal = &esphome.Sensor{
 		Base: esphome.Base{
@@ -390,13 +354,7 @@ func (d *Diag) radio() {
 	}
 }
 
-// hardware builds what the board says about itself. Two temperatures rather than four: the CPU answers
-// "is it working hard" and the combo chip answers "is it the radio", and the board sensors answer
-// nothing anybody asks.
-//
-// Cores are reported twice on purpose. This kernel hotplugs them, so a device with four can be running
-// two, and echod's share of a CPU means something different depending on which number you hold it
-// against.
+// This kernel hotplugs cores.
 func (d *Diag) hardware() {
 	temp := func(id, name, icon string) *esphome.Sensor {
 		return &esphome.Sensor{
@@ -426,9 +384,6 @@ func (d *Diag) hardware() {
 	d.cores = count("cpu_cores", "CPU cores")
 	d.coresOnline = count("cpu_cores_online", "CPU cores online")
 
-	// Sampled with everything else, so at the default interval this shows the room's resting level rather
-	// than tracking speech. That is the number worth having: the sensitivity is set as a distance above
-	// the floor, and both sides of it are here.
 	room := func(id, name, icon string) *esphome.Sensor {
 		return &esphome.Sensor{
 			Base: esphome.Base{
@@ -481,8 +436,6 @@ func (d *Diag) hardware() {
 	}
 }
 
-// Measure republishes what the disk holds. Called at start-up and after anything that adds to the cache
-// or takes from it, so the number is right the moment a purge finishes rather than a minute later.
 func (d *Diag) Measure() {
 	_, cached := wake.Cached(wake.Lib().Dir(), inUse())
 	d.cached.Set(float32(cached / 1024))
@@ -495,16 +448,13 @@ func (d *Diag) Measure() {
 	d.free.Set(float32(free / 1024))
 }
 
-// Restore is the disk as it stands at start-up, which the slots decide: a model no slot wants is
-// cache. It runs with the rest so the numbers are there before Home Assistant asks.
 func (d *Diag) Restore(c config.Config) {
 	d.Measure()
 
 	d.interval.Set(float32(c.Diag.Interval))
 	slog.Info("restored", "what", d.interval.ObjectID, "using", c.Diag.Interval)
 
-	// The chain is empty after a reboot but not after an echod restart, so the rule is put back or
-	// taken away rather than either being assumed.
+	// The firewall chain is empty after a reboot but not after an echod restart.
 	if err := d.reachable(c.Diag.ADB); err == nil {
 		slog.Info("restored", "what", d.adb.ObjectID, "using", c.Diag.ADB)
 	}
@@ -517,8 +467,6 @@ func (d *Diag) Restore(c config.Config) {
 	}
 }
 
-// Sample takes every reading at once, so they come from the same moment and line up when something
-// is wrong.
 func (d *Diag) Sample() {
 	d.Measure()
 	d.board()
@@ -527,15 +475,12 @@ func (d *Diag) Sample() {
 	d.room()
 }
 
-// room is what the level the ring can react to is reading, and the floor it is measured against.
 func (d *Diag) room() {
 	source := mic.Get()
 	d.roomLevel.Set(float32(source.Peak()))
 	d.roomFloor.Set(float32(source.Floor()))
 }
 
-// wireless publishes the link and the two things competing for it. Rates come from what changed since
-// the last beat, so the first one after a start reports nothing rather than counting from boot.
 func (d *Diag) wireless() {
 	signal, rx, tx := metrics.Reader{}.Wifi()
 	set(d.signal, signal)
@@ -563,8 +508,6 @@ func (d *Diag) wireless() {
 	d.ads.Set(float32(float64(reports-was.reports) / secs))
 }
 
-// board reads the hardware and publishes what it reported. A sensor with no reading is left alone
-// rather than set to zero: a board without that sensor should show unknown, not a plausible lie.
 func (d *Diag) board() {
 	r := metrics.Reader{}
 
@@ -585,7 +528,6 @@ func (d *Diag) board() {
 	set(d.lux, r.Lux(d.luxPath))
 }
 
-// reading picks one thermal zone out of what was found.
 func reading(temps map[string]float64, zone string) metrics.Reading {
 	v, ok := temps[zone]
 	return metrics.Reading{Value: v, Known: ok}
@@ -597,7 +539,6 @@ func set(s *esphome.Sensor, r metrics.Reading) {
 	}
 }
 
-// inUse is what the slots are set to, which is what a purge has to leave alone.
 func inUse() []string {
 	saved := config.Get().Wake
 

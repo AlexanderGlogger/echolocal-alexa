@@ -14,7 +14,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 )
 
-// part is a component with nothing but an opinion about coming up.
 type part struct {
 	name string
 	p    component.Progress
@@ -27,7 +26,6 @@ func registered(f part) func() component.Component {
 	return func() component.Component { return f }
 }
 
-// The root is the status page, and since the onboarding page went it is the only page there is.
 func TestTheRootIsTheStatusPage(t *testing.T) {
 	rec := httptest.NewRecorder()
 	Get().status(rec, httptest.NewRequest(http.MethodGet, "http://10.0.0.5/", nil))
@@ -49,9 +47,6 @@ func TestStatusRefusesAnythingElse(t *testing.T) {
 	}
 }
 
-// The registry is walked in the order the device starts things, and each component's own answer
-// is what the row says. A component that failed is not the same as one still waiting: the device
-// carries on without the first and is held up by the second.
 func TestComponentsReportWhatTheySayTheyAre(t *testing.T) {
 	reg := component.New()
 	reg.Add(component.Hardware, registered(part{"panel", component.Progress{Done: true}}))
@@ -78,8 +73,6 @@ func TestComponentsReportWhatTheySayTheyAre(t *testing.T) {
 	}
 }
 
-// A component with nothing to say about coming up is not on the list, rather than on it as a row
-// that never resolves.
 func TestAComponentWithNoProgressIsNotListed(t *testing.T) {
 	reg := component.New()
 	reg.Add(component.Device, func() component.Component { return quiet{} })
@@ -93,8 +86,6 @@ type quiet struct{}
 
 func (quiet) Name() string { return "quiet" }
 
-// Nothing on this page is a secret. It is served unauthenticated to anyone who can reach port 80,
-// and the process it is rendered from holds the encryption key and the network's passphrase.
 func TestTheStatusPageCarriesNoSecrets(t *testing.T) {
 	for _, field := range reflect.VisibleFields(reflect.TypeFor[Status]()) {
 		switch strings.ToLower(field.Name) {
@@ -103,7 +94,6 @@ func TestTheStatusPageCarriesNoSecrets(t *testing.T) {
 		}
 	}
 
-	// And the template asks for nothing the struct does not have to offer.
 	for _, banned := range []string{".Key", ".Secret", ".Password", ".Token", ".PSK"} {
 		if strings.Contains(statusHTML, banned) {
 			t.Errorf("the template renders %s", banned)
@@ -134,8 +124,6 @@ func TestTheZoneSaysWhereItCameFrom(t *testing.T) {
 	}
 }
 
-// Two of the forty nine zones the kernel exposes, named for what they are. The rest are per-core
-// throttling steps and would bury the page.
 func TestOnlyTheTwoTemperaturesWorthShowing(t *testing.T) {
 	root := t.TempDir()
 	zone(t, root, 0, "apc0-cpu0-usr", "33400")
@@ -155,8 +143,7 @@ func TestOnlyTheTwoTemperaturesWorthShowing(t *testing.T) {
 	}
 }
 
-// meminfo counts kilobytes. Read as bytes it turned a 1.9 GiB board into a 1.9 MiB one, which is
-// the sort of figure somebody acts on.
+// meminfo counts kilobytes.
 func TestMemoryIsReportedFromKilobytes(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "proc"), 0o755); err != nil {
@@ -171,7 +158,6 @@ func TestMemoryIsReportedFromKilobytes(t *testing.T) {
 	}
 }
 
-// A board with no thermal zones is a board with no temperature rows, not rows reading zero.
 func TestNoThermalZonesMeansNoRows(t *testing.T) {
 	if got := hottest(metrics.Reader{Root: t.TempDir()}); got != nil {
 		t.Errorf("got %+v, want nothing", got)
@@ -252,7 +238,6 @@ func TestOffsetsReadAsUTC(t *testing.T) {
 	}
 }
 
-// A reading the board did not give says so, rather than leaving a gap that reads as a value.
 func TestAMissingReadingSaysSo(t *testing.T) {
 	if got := or("   "); got != unknown {
 		t.Errorf("or(blank) = %q, want %q", got, unknown)
@@ -262,7 +247,6 @@ func TestAMissingReadingSaysSo(t *testing.T) {
 	}
 }
 
-// rowsOf is a group as a map, for a test that cares about one row and not where it sits.
 func rowsOf(g Group) map[string]string {
 	out := map[string]string{}
 	for _, r := range g.Rows {

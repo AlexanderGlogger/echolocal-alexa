@@ -1,14 +1,14 @@
-// Package control binds the shared local harness to device commands.
 package control
 
 import (
 	"context"
-	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/service"
-	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
-	"net"
 	"sync"
 	"time"
+
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
+	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/service"
 )
 
 const Socket = "@echod"
@@ -46,7 +46,6 @@ func (c *Control) Run(ctx context.Context) error {
 	return nil
 }
 
-// server is created lazily so host tests can choose their own address.
 func (c *Control) server() *harness.Server {
 	c.gate.Lock()
 	defer c.gate.Unlock()
@@ -66,17 +65,4 @@ func (c *Control) down() {
 	if server != nil {
 		server.Close()
 	}
-}
-func (c *Control) serve(conn net.Conn) {
-	harness.Serve(
-		context.Background(),
-		conn,
-		func(ctx context.Context, args []string) (string, error) { return harness.Execute(ctx, c.tree, args) },
-	)
-}
-func (c *Control) run(args []string) (string, error) {
-	if len(args) == 0 {
-		return "", nil
-	}
-	return harness.Execute(context.Background(), c.tree, args)
 }

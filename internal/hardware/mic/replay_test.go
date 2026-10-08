@@ -6,13 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/audio"
 	"github.com/ygelfand/libcountertop/pkg/audio/aec"
+
+	"github.com/ygelfand/echolocal/internal/lib/audio"
 )
 
-// ECHO_REPLAY is a capture from `echod ctl audio record echo`. Each variant runs the pipeline over its
-// microphone and loopback twice, the first time to train the canceller, and writes the second to
-// ECHO_REPLAY_OUT as one WAV per variant.
+// ECHO_REPLAY is a capture from `echod ctl audio record echo`; WAVs go to ECHO_REPLAY_OUT.
 func TestReplayPipeline(t *testing.T) {
 	path, dir := os.Getenv("ECHO_REPLAY"), os.Getenv("ECHO_REPLAY_OUT")
 	if path == "" || dir == "" {

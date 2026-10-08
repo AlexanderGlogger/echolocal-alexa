@@ -13,9 +13,6 @@ import (
 	"testing"
 )
 
-// release stands in for a published build: a manifest describing one binary per architecture, and the
-// binaries themselves. Each architecture is served its own bytes, so a test can tell which one was
-// fetched from what arrived.
 func release(t *testing.T, bodies map[string][]byte) Manifest {
 	t.Helper()
 
@@ -42,12 +39,8 @@ func release(t *testing.T, bodies map[string][]byte) Manifest {
 	return m
 }
 
-// testBoard is what these tests say they are running on. Which board it is does not matter; that
-// there is one does, since a build is only ever offered to a named board.
 const testBoard = "biscuit"
 
-// one is the single build of a release that carries nothing else, for the tests about fetching rather
-// than about choosing.
 func one(t *testing.T, body []byte) Binary {
 	t.Helper()
 
@@ -89,7 +82,6 @@ func TestDownloadChecksWhatArrived(t *testing.T) {
 	}
 }
 
-// A download that was refused must not be left behind looking like a binary somebody could run.
 func TestInstallRefusesAManifestItCannotUse(t *testing.T) {
 	somewhere(t)
 
@@ -108,8 +100,6 @@ func TestInstallRefusesAManifestItCannotUse(t *testing.T) {
 	}
 }
 
-// Progress is what somebody watches instead of wondering whether it has stalled, so it has to reach 1
-// and never run past it.
 func TestProgressReachesTheEnd(t *testing.T) {
 	dir := t.TempDir()
 	b := one(t, []byte(strings.Repeat("x", 64<<10)))
@@ -137,7 +127,6 @@ func TestProgressReachesTheEnd(t *testing.T) {
 	}
 }
 
-// The staged file is what gets copied into /system, so it has to be exactly what was offered.
 func TestDownloadWritesWhatItVerified(t *testing.T) {
 	dir := t.TempDir()
 	want := []byte("a new echod")

@@ -11,7 +11,7 @@ func (d *Driver) Backgrounds() *Arbiter {
 
 	if d.arb == nil {
 		d.arb = &Arbiter{}
-		d.bg = d.arb // set here rather than through Yields, which wants the same lock
+		d.bg = d.arb
 	}
 	return d.arb
 }

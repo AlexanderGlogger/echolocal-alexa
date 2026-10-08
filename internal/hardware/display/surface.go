@@ -22,7 +22,6 @@ const (
 
 const helperWait = 60 * time.Second
 
-// open is the helper's layer on a board that carries the helper, and the framebuffer on one that does not.
 func (d *Driver) open(ctx context.Context) (*Panel, error) {
 	if _, err := os.Stat(layout.Surface); err != nil {
 		p, err := Open(d.path)
@@ -64,7 +63,6 @@ func (d *Driver) open(ctx context.Context) (*Panel, error) {
 	return p, nil
 }
 
-// Stranded is what to show while the helper is gone.
 func (d *Driver) Stranded(draw func(*Panel) error) {
 	d.mu.Lock()
 	d.stranded = draw
@@ -115,7 +113,7 @@ func (d *Driver) strand() (stop func()) {
 	return func() {
 		cancel()
 		wg.Wait()
-		p.Close()
+		_ = p.Close()
 	}
 }
 
@@ -126,7 +124,7 @@ func OpenSurface(sock string, wait time.Duration) (*Panel, error) {
 	}
 	p := &Panel{surf: c, sock: sock}
 	if err := p.attach(c); err != nil {
-		c.Close()
+		_ = c.Close()
 		return nil, err
 	}
 	p.rot = Mounted()
@@ -134,7 +132,6 @@ func OpenSurface(sock string, wait time.Duration) (*Panel, error) {
 	return p, nil
 }
 
-// Helper is the connection to the SurfaceFlinger helper, or nil on the framebuffer.
 func (d *Driver) Helper() *surface.Client {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -176,7 +173,7 @@ func (p *Panel) flipSurface() error {
 
 func (p *Panel) redial(cause error) error {
 	kept := append([]byte(nil), p.mem...)
-	p.surf.Close()
+	_ = p.surf.Close()
 	p.mem, p.layer = nil, nil
 
 	c, err := surface.DialWait(p.sock, reconnect)
@@ -184,7 +181,7 @@ func (p *Panel) redial(cause error) error {
 		return fmt.Errorf("display: lost the helper (%v) and could not get it back: %w", cause, err)
 	}
 	if err := p.attach(c); err != nil {
-		c.Close()
+		_ = c.Close()
 		return err
 	}
 	copy(p.mem, kept)

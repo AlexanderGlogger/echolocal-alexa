@@ -9,14 +9,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// ErrNoName means neither the device nor the caller supplied a name.
 var ErrNoName = errors.New("no device name")
 
-// installName records the name Home Assistant sees.
-//
-// A name asked for is written even over one already there, because the caller resolved it deliberately
-// and refusing quietly is worse than renaming. Home Assistant keys the device on it, so the old name
-// stays behind as a device with its own entities — which the caller warns about.
 func installName(r *run) (string, bool, error) {
 	existing, err := ReadName(r.d)
 	if err != nil {
@@ -44,7 +38,6 @@ func installName(r *run) (string, bool, error) {
 	return r.cfg.Name, false, nil
 }
 
-// ReadName returns the device's configured name, or empty when it has none.
 func ReadName(d *device.Device) (string, error) {
 	have, err := d.Exists(layout.NamePath)
 	if err != nil || !have {
@@ -57,7 +50,6 @@ func ReadName(d *device.Device) (string, error) {
 	return strings.TrimSpace(string(b)), nil
 }
 
-// SuggestName derives a unique default from the device's address.
 func SuggestName(d *device.Device) string {
 	on := BoardOf(d)
 
@@ -68,9 +60,6 @@ func SuggestName(d *device.Device) string {
 	return on.NameFromMAC(out)
 }
 
-// validName checks the display name can produce a usable node name. The name is stored as typed
-// and shown in Home Assistant; the node name it slugifies to becomes the mDNS hostname and the
-// entity id prefix.
 func validName(name string) error {
 	slug := layout.Slug(name)
 	if slug == "" {

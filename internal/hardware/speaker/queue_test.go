@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-// Ducking must not be heard as a gap. Rescaling the queue by emptying it and putting it back leaves it
-// empty in between, and a period that lands in that window is written out as silence.
 func TestRescalingWhatIsQueuedNeverPlaysSilence(t *testing.T) {
 	const periods = 200
 

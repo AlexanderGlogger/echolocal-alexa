@@ -2,9 +2,7 @@ package update
 
 import "testing"
 
-// The two firmwares put the same binary on different filesystems, and both are in the field: Fire OS 5
-// mounts the system partition at /system, Fire OS 6 runs it as the root filesystem. Remounting the
-// wrong one fails, and the device is then stuck on whatever build it is running.
+// Fire OS 5 mounts the system partition at /system; Fire OS 6 runs it as the root filesystem.
 func TestMountHoldingTheBinary(t *testing.T) {
 	const fireOS5 = `rootfs / rootfs ro,seclabel 0 0
 tmpfs /dev tmpfs rw,seclabel,nosuid 0 0
@@ -31,7 +29,7 @@ sysfs /sys sysfs rw,seclabel,relatime 0 0
 	}
 }
 
-// /sys is a prefix of /system as a string but not as a path, and picking it would remount sysfs.
+// /sys is a prefix of /system as a string but not as a path.
 func TestMountIgnoresAPrefixThatIsNotAPathPrefix(t *testing.T) {
 	const mounts = `sysfs /sys sysfs rw 0 0
 /dev/root / ext4 ro 0 0

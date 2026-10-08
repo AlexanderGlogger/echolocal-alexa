@@ -10,15 +10,12 @@ import (
 )
 
 const (
-	// Service is the vendor's supplicant, which ships disabled: the framework is what started it.
 	Service = "wpa_supplicant"
 
-	// config is the least a supplicant needs. update_config is what lets a join persist.
+	// update_config=1 lets a join persist.
 	config = "ctrl_interface=" + layout.WifiSockets + "\nupdate_config=1\n"
 )
 
-// Up leaves the supplicant answering: a configuration in place and the service running. Each part is
-// skipped where it is already true.
 func Up(d *device.Device) (string, error) {
 	var did []string
 
@@ -44,8 +41,6 @@ func Up(d *device.Device) (string, error) {
 	return strings.Join(did, ", "), nil
 }
 
-// writeConfig gives the supplicant something to read. A wiped /data has none, and nothing on the
-// device creates one.
 func writeConfig(d *device.Device) (bool, error) {
 	has, err := d.Exists(layout.WifiConf)
 	if err != nil || has {
@@ -69,9 +64,6 @@ func writeConfig(d *device.Device) (bool, error) {
 	return true, nil
 }
 
-// startSupplicant asks init for the service and waits for it to answer, which is a different thing
-// from init reporting it running: it is oneshot, so one that exited for want of a configuration
-// leaves the property behind.
 func startSupplicant(d *device.Device) (bool, error) {
 	if answering(d) {
 		return false, nil

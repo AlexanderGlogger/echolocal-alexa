@@ -1,15 +1,15 @@
-// Package poster registers the shared photo backdrop with the device's physical sensors.
 package poster
 
 import (
 	"sync"
+
+	sharedposter "github.com/ygelfand/libcountertop/pkg/display/poster"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	sharedposter "github.com/ygelfand/libcountertop/pkg/display/poster"
 )
 
 type componentPoster struct{ *sharedposter.Poster }

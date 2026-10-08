@@ -13,7 +13,6 @@ func abs(code uint16, v int32) input.Event {
 
 var syn = input.Event{Type: input.EvSyn, Code: synReport}
 
-// feed runs a batch and returns what the closing SYN_REPORT produced.
 func feed(d *decoder, events ...input.Event) []Contact {
 	var out []Contact
 	now := time.Now()
@@ -36,7 +35,6 @@ func TestAFingerDownMovesAndLifts(t *testing.T) {
 		t.Errorf("Down at (%d,%d) id=%d, want (100,200) id=7", got[0].X, got[0].Y, got[0].ID)
 	}
 
-	// Only X changed; the kernel says nothing about Y and the finger keeps the position it had.
 	got = feed(&d, abs(absMTPositionX, 140), syn)
 	if len(got) != 1 || got[0].Phase != Move {
 		t.Fatalf("second report %+v, want one Move", got)
@@ -54,7 +52,6 @@ func TestAFingerDownMovesAndLifts(t *testing.T) {
 	}
 }
 
-// A report with nothing changed says nothing, or every SYN would look like a finger moving.
 func TestAnIdleReportSaysNothing(t *testing.T) {
 	var d decoder
 
@@ -64,8 +61,6 @@ func TestAnIdleReportSaysNothing(t *testing.T) {
 	}
 }
 
-// A slot released without ever having been reported down must not produce an Up, or a caller sees
-// a finger lift that never landed.
 func TestALiftWithoutADownIsSilent(t *testing.T) {
 	var d decoder
 
@@ -111,7 +106,6 @@ func TestTwoFingersAreTrackedApart(t *testing.T) {
 	}
 }
 
-// One finger lifting must not disturb the other, which is what the slot bookkeeping is for.
 func TestOneFingerLiftingLeavesTheOther(t *testing.T) {
 	var d decoder
 
@@ -131,7 +125,6 @@ func TestOneFingerLiftingLeavesTheOther(t *testing.T) {
 	}
 }
 
-// Positions arrive in the panel's own coordinates and are reported in the ones drawing uses.
 func TestContactsArePlacedInViewedCoordinates(t *testing.T) {
 	d := decoder{place: func(x, y int) (int, int) { return y, x }}
 

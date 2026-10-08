@@ -11,21 +11,12 @@ import (
 	"github.com/ygelfand/echolocal/internal/android/logd"
 )
 
-// waitForReader is how often to look for a client having subscribed. Nothing is lost while waiting,
-// so checking often buys nothing.
 const waitForReader = time.Second
 
-// pipeLogs sends the device's log to whoever subscribed, which is how it reaches Home Assistant's own
-// log. How much arrives is Home Assistant's to decide: it asks for a level.
-//
-// The lines come by channel because sending them is a socket write, on whatever goroutine logged.
 func (a *API) pipeLogs(ctx context.Context) {
 	lines := logd.Lines()
 
 	for {
-		// Until something is listening there is nowhere to put a line, so they are left in the buffer
-		// rather than drained into nothing. What waits there is the most recent of them, which is how
-		// Home Assistant gets the log from before it connected — including the boot.
 		if !a.srv.LogsSubscribed() {
 			select {
 			case <-ctx.Done():

@@ -1,10 +1,3 @@
-// Package dns teaches Go's resolver where this device keeps its nameservers.
-//
-// Android has no /etc/resolv.conf: bionic reads the nameservers from system properties, and echod is
-// built without cgo so it gets Go's own resolver, which only knows about the file. Every lookup
-// therefore goes to [::1]:53 and is refused. Nothing noticed for a long time because Home Assistant is
-// reached by address and the wake word models come from Home Assistant — the first name anything had to
-// resolve was a release manifest.
 package dns
 
 import (
@@ -19,36 +12,23 @@ import (
 	"github.com/ygelfand/echolocal/internal/android/prop"
 )
 
-// dhcpcd's hook sets the dhcp ones from the lease. Promoting them to net.dns is the framework's job,
-// and there is no framework here.
+// dhcpcd's hook sets dhcp.wlan0.dns* from the lease; no framework promotes them to net.dns*.
 var props = []string{
 	"net.dns1", "net.dns2", "net.dns3", "net.dns4",
 	"dhcp.wlan0.dns1", "dhcp.wlan0.dns2", "dhcp.wlan0.dns3", "dhcp.wlan0.dns4",
 }
 
 const (
-	// timeout bounds one lookup, short enough that a nameserver which is not answering falls through to
-	// the next rather than holding up whatever asked.
 	timeout = 5 * time.Second
 
-	// fresh is how long the nameservers are trusted before being read again. They come from DHCP and
-	// change when the device joins another network, so reading them once would leave a moved device
-	// resolving against a nameserver that is no longer there. Reading them every lookup is worse: each
-	// one is a getprop, and whatever starts resolving in a loop later would be spawning processes to do
-	// it. A minute is short against how often a device changes network and long against anything that
-	// resolves in earnest.
 	fresh = time.Minute
 )
 
-// Use makes every lookup in this process go to the nameservers the platform reports, by replacing the
-// resolver the standard library shares. Nothing else has to be told: http.DefaultClient included.
 func Use() {
 	net.DefaultResolver = &net.Resolver{PreferGo: true, Dial: dial}
 	slog.Info("resolver configured", "nameservers", nameservers())
 }
 
-// dial ignores the address Go derived from the resolv.conf it could not find and uses what the platform
-// says, trying each in turn.
 func dial(ctx context.Context, network, _ string) (net.Conn, error) {
 	servers := nameservers()
 	if len(servers) == 0 {

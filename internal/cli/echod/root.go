@@ -1,4 +1,3 @@
-// Package echod is the command tree for the on-device agent.
 package echod
 
 import (
@@ -27,8 +26,7 @@ func newRoot() *cobra.Command {
 }
 
 func Execute() {
-	// init starts echod from a service definition that passes no arguments, so a bare
-	// invocation has to mean "be the agent" rather than print usage and exit.
+	// init starts echod with no arguments.
 	if len(os.Args) == 1 {
 		os.Args = append(os.Args, "run")
 	}

@@ -1,10 +1,12 @@
 package dhcp
 
 import (
-	"github.com/insomniacslk/dhcp/dhcpv4"
-	"github.com/ygelfand/echolocal/internal/config"
-	shared "github.com/ygelfand/libcountertop/pkg/network/dhcp"
 	"net"
+
+	"github.com/insomniacslk/dhcp/dhcpv4"
+	shared "github.com/ygelfand/libcountertop/pkg/network/dhcp"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 func previous() net.IP                     { return shared.Previous(config.Get().Network.Address) }

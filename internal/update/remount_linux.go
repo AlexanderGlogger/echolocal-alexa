@@ -12,8 +12,6 @@ import (
 
 const blkroset = 0x125d
 
-// room refuses an install that would not fit. Both copies exist at once, and filling /system is a
-// worse outcome than not updating.
 func room(need int64) error {
 	var fs syscall.Statfs_t
 	if err := syscall.Statfs(mount, &fs); err != nil {
@@ -41,13 +39,7 @@ func remount(rw bool) error {
 	return syscall.Mount("", mount, "", flags, "")
 }
 
-// allowWrites clears the block device's read-only flag, which the kernel checks before any ro->rw
-// remount and answers with EACCES. Some devices carry it on /system; `mount` clears it and a bare
-// mount(2) does not. It does not survive a reboot.
-//
-// Where the kernel mounted the root filesystem itself it names the source /dev/root, for which there
-// is no node to open. Nothing can be cleared through a name like that, and nothing needs to be: the
-// remount is what matters and it is tried either way.
+// A ro->rw remount of a read-only block device gets EACCES; mount(8) clears the flag, mount(2) not.
 func allowWrites() error {
 	dev, err := backing(mount)
 	if err != nil {

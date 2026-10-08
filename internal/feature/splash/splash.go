@@ -1,5 +1,3 @@
-// Package splash is what the panel shows while the device is coming up: the mark, then what it is
-// still waiting for.
 package splash
 
 import (
@@ -10,6 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	bootview "github.com/ygelfand/libcountertop/pkg/display/boot"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -19,14 +21,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/reveal"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	bootview "github.com/ygelfand/libcountertop/pkg/display/boot"
-	"github.com/ygelfand/libcountertop/pkg/display/style"
-	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
 )
 
 func init() {
-	// First of the hardware, for the same reason the ring is: it is the only thing the device can
-	// say before anything else works.
 	component.Register(component.Hardware, Get, component.Order(5), component.Needs(board.Panel))
 }
 
@@ -48,7 +45,6 @@ func Get() *Splash { once.Do(func() { shared = &Splash{} }); return shared }
 
 func (s *Splash) Name() string { return "splash" }
 
-// Start takes the panel before anything else has run, clear so the reveal underneath shows through.
 func (s *Splash) Start(context.Context) error {
 	s.finished.Store(false)
 	s.hold = display.Get().Claim(display.PriorityBoot)
@@ -61,8 +57,6 @@ func (s *Splash) Start(context.Context) error {
 	return nil
 }
 
-// Run plays the reveal, then what the device is still waiting for, and finishes once everything
-// is up.
 func (s *Splash) Run(ctx context.Context) error {
 	if s.hold == nil {
 		<-ctx.Done()
@@ -135,10 +129,10 @@ func (s *Splash) Run(ctx context.Context) error {
 				fresh,
 				w,
 				h,
-				reveal.Moment{At: m.At, Trace: m.Trace, Header: m.Header, Ready: m.Ready},
+				reveal.Moment(m),
 			); err != nil {
 				slog.Error("the boot animation stopped", "err", err)
-				layer.Close()
+				_ = layer.Close()
 				layer = nil
 				return false
 			}
@@ -188,9 +182,6 @@ func chosen() theme.Theme {
 	}
 	return t
 }
-
-// summary is what the screen currently says, for deciding whether to draw it again.
-func summary(progress []component.Progress) string { return startup.Summary(progress) }
 
 func wait(ctx context.Context, d time.Duration) bool {
 	t := time.NewTimer(d)

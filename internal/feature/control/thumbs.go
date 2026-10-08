@@ -13,12 +13,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
-	"github.com/ygelfand/libcountertop/pkg/audio/analysis"
 )
 
 const (

@@ -6,16 +6,10 @@ import (
 	"time"
 )
 
-// attack is how fast a band's gain comes down onto a signal that is too loud. The file gives releases
-// only, so this one is ours: fast enough to catch a transient within a cycle of its own band, slow
-// enough not to modulate the bass it is riding on.
 const attack = 2 * time.Millisecond
 
-// floorDB is the level below which a band counts as silent and its gain is left where it is. Tracking
-// an envelope to negative infinity only costs precision.
 const floorDB = -120
 
-// mbclState is the four-band compressor and limiter, plus the limiter across the sum of them.
 type mbclState struct {
 	split *crossover
 	bands []*bandState
@@ -23,9 +17,6 @@ type mbclState struct {
 	work  [][]float32
 }
 
-// bandState is one band's compressor followed by its limiter, the comp_ and lim_ settings the file
-// gives each band, in series. The compressor's gain is carried in dB, so smoothing moves it at a rate
-// that does not depend on how far down it already is.
 type bandState struct {
 	compThreshDB  float64
 	compRatio     float64
@@ -39,23 +30,14 @@ type bandState struct {
 	lim *limiter
 }
 
-// lookahead is how far ahead the limiter sees a peak coming, which is how long it has to bring the
-// gain down before one arrives, and the delay it costs the playback path.
 const lookahead = 2 * time.Millisecond
 
-// limiter holds a ceiling by looking ahead: the signal is delayed, the gain each sample will need is
-// worked out as it arrives, and the gain follows the lowest of those still to come. That gives it the
-// lookahead to arrive smoothly, and a gain that moves smoothly is a gain that stays inaudible.
 type limiter struct {
 	ceiling float64
 	gain    float64
 	attack  float64
 	relCo   float64
 
-	// delay holds the samples not yet let out, and want the gain each of them will need. front is the
-	// oldest of both. low holds the indices of want still in the running for the lowest, rising, so its
-	// head is the lowest of everything still to come; it is a ring of its own to keep this allocation
-	// free at 48 kHz.
 	delay []float32
 	want  []float64
 	front int
@@ -64,7 +46,6 @@ type limiter struct {
 	tail  int
 }
 
-// pushLow drops everything that can no longer be the lowest and adds i, keeping low rising.
 func (l *limiter) pushLow(i int, want float64) {
 	for l.head != l.tail {
 		back := (l.tail - 1 + len(l.low)) % len(l.low)
@@ -106,8 +87,6 @@ func newMBCL(m mbcl, rate int) (*mbclState, error) {
 	return s, nil
 }
 
-// newLimiter sizes the lookahead and the attack together: the gain has exactly the lookahead to reach
-// what a peak asks for, so it covers almost all of that distance in that many samples.
 func newLimiter(threshDB float64, rel time.Duration, rate int) *limiter {
 	n := max(int(lookahead.Seconds()*float64(rate)), 1)
 	return &limiter{
@@ -121,7 +100,6 @@ func newLimiter(threshDB float64, rel time.Duration, rate int) *limiter {
 	}
 }
 
-// smoothing is the per-sample coefficient of a one-pole that covers most of its distance in d.
 func smoothing(d time.Duration, rate int) float64 {
 	if d <= 0 {
 		return 1
@@ -129,7 +107,6 @@ func smoothing(d time.Duration, rate int) float64 {
 	return 1 - math.Exp(-1/(d.Seconds()*float64(rate)))
 }
 
-// millis reads one of the file's times, which are all in milliseconds.
 func millis(v float64) time.Duration { return time.Duration(v * float64(time.Millisecond)) }
 
 func (s *mbclState) reset() {
@@ -147,7 +124,6 @@ func (l *limiter) reset() {
 	clear(l.want)
 }
 
-// process splits the block into bands, rides each one's gain, and sums them back under a limiter.
 func (s *mbclState) process(x []float32) {
 	if len(s.work) != len(s.bands) || len(s.work[0]) != len(x) {
 		s.work = make([][]float32, len(s.bands))
@@ -171,7 +147,6 @@ func (s *mbclState) process(x []float32) {
 	s.full.process(x)
 }
 
-// process compresses one band and then holds it under its own ceiling.
 func (b *bandState) process(x []float32) {
 	for i, v := range x {
 		level := b.track(float64(v))
@@ -188,7 +163,6 @@ func (b *bandState) process(x []float32) {
 	b.lim.process(x)
 }
 
-// track follows the band's peak, falling at the release rate, and reports it in dB.
 func (b *bandState) track(v float64) float64 {
 	a := math.Abs(v)
 	if a > b.env {
@@ -227,14 +201,11 @@ func (l *limiter) process(x []float32) {
 			l.gain += (target - l.gain) * l.relCo
 		}
 
-		// The gain arrives ahead of the peak, so this only has to catch what rounding leaves.
 		v := float64(out) * l.gain
 		x[i] = float32(math.Max(-l.ceiling, math.Min(l.ceiling, v)))
 	}
 }
 
-// approach moves a gain toward what was asked, quickly when that is further down and at the release
-// rate when it is back up.
 func approach(have, want, attack, release float64) float64 {
 	co := release
 	if want < have {

@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-// record builds one datagram the way the daemon sends it: a header of hdr bytes, then the priority,
-// the tag and the message, each NUL-terminated.
 func record(hdr int, prio byte, tag, msg string) []byte {
 	payload := []byte{prio}
 	payload = append(payload, tag...)
@@ -21,8 +19,7 @@ func record(hdr int, prio byte, tag, msg string) []byte {
 	return append(b, payload...)
 }
 
-// The two images echod runs on lay the header out differently, which is why hdr_size is read rather
-// than assumed: Fire OS 5 sends 24 bytes, Fire OS 6 sends 28.
+// Fire OS 5 sends a 24-byte header, Fire OS 6 sends 28.
 func TestEntryReadsBothHeaderSizes(t *testing.T) {
 	for _, hdr := range []int{24, 28} {
 		l, tag, ok := entry(record(hdr, 6, "echolocal", "playback path up"))
@@ -41,7 +38,6 @@ func TestEntryReadsBothHeaderSizes(t *testing.T) {
 	}
 }
 
-// A record with no hdr_size is the oldest layout, where those bytes are padding.
 func TestEntryFallsBackToTheSharedPrefix(t *testing.T) {
 	b := record(entryPrefix, 4, "echolocal", "hello")
 	binary.LittleEndian.PutUint16(b[2:4], 0)
@@ -66,7 +62,6 @@ func TestEntryRejectsShortAndBrokenRecords(t *testing.T) {
 	}
 }
 
-// The trailing newline the daemon carries is not part of the line.
 func TestEntryTrimsTheTrailingNewline(t *testing.T) {
 	l, _, ok := entry(record(24, 4, "echolocal", "ServiceCall error -65536\n"))
 	if !ok {

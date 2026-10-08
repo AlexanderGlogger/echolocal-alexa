@@ -50,7 +50,6 @@ func newVoiceCmd() *cobra.Command {
 			defer stop()
 			go func() { _ = p.Run(ctx) }()
 
-			// Let the mixer sequence and the amplifier settle, the same wait a reply gets.
 			time.Sleep(1500 * time.Millisecond)
 
 			switch {
@@ -68,7 +67,6 @@ func newVoiceCmd() *cobra.Command {
 			for p.Queued() > 0 {
 				time.Sleep(50 * time.Millisecond)
 			}
-			// The tail is still in the hardware buffer.
 			time.Sleep(300 * time.Millisecond)
 
 			fmt.Fprintf(
@@ -85,7 +83,6 @@ func newVoiceCmd() *cobra.Command {
 	return c
 }
 
-// readWAVFile reads a 16-bit PCM WAV, walking the chunk list rather than assuming a fixed header.
 func readWAVFile(path string) (pcm []int16, rate, channels int, err error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {

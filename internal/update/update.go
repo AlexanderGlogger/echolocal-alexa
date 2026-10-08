@@ -1,10 +1,3 @@
-// Package update owns replacing echod with a newer echod, and getting back to a working one when
-// that goes wrong.
-//
-// The shape of it is that nothing trusts a new binary until it has run for a while. An update leaves
-// the one it replaced beside it as echod.prev, and only a process that has been alive long enough to
-// be believed deletes it. So echod.prev existing means an update is still on trial, and that single
-// fact drives everything here and the boot hook that backs it up.
 package update
 
 import (
@@ -16,8 +9,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// Paths and properties are variables rather than constants so a test can point them somewhere it is
-// allowed to write.
 var (
 	prev = layout.PrevBinary
 	old  = layout.OldBinary
@@ -29,17 +20,12 @@ var (
 
 	mount = mountHolding(layout.Binary)
 
-	// writable is the remount, kept as a variable so a test can run everything around it somewhere it
-	// is already allowed to write.
 	writable = remount
 )
 
-// Writable makes the filesystem holding echod writable, or read-only again.
 func Writable(rw bool) error { return writable(rw) }
 
-// mountHolding is what has to be made writable to replace a binary at this path. Which filesystem
-// that is depends on the firmware: Fire OS 5 mounts the system partition at /system, Fire OS 6 runs
-// it as the root filesystem, and devices in the field are on both.
+// Fire OS 5 mounts the system partition at /system; Fire OS 6 runs it as the root filesystem.
 func mountHolding(path string) string {
 	mounts, err := os.ReadFile("/proc/mounts")
 	if err != nil {
@@ -48,7 +34,6 @@ func mountHolding(path string) string {
 	return mountIn(string(mounts), path)
 }
 
-// mountIn is the longest mountpoint in /proc/mounts that contains path.
 func mountIn(mounts, path string) string {
 	at := "/"
 	for line := range strings.SplitSeq(mounts, "\n") {
@@ -57,7 +42,7 @@ func mountIn(mounts, path string) string {
 			continue
 		}
 
-		// A prefix only counts when it ends at a separator, or /sys would claim /system/app.
+		// /sys is a string prefix of /system/app.
 		point := fields[1]
 		if point == path || strings.HasPrefix(path, strings.TrimSuffix(point, "/")+"/") {
 			if len(point) > len(at) {
@@ -68,14 +53,9 @@ func mountIn(mounts, path string) string {
 	return at
 }
 
-// wanted carries a request to restart into whatever is supervising the process, which is the only
-// thing that can unwind the hardware cleanly. Buffered and dropped when full: two requests are one
-// restart.
 var wanted = make(chan string, 1)
 
-// Restart asks for the process to be replaced by a new one of itself. It does not exit: the caller has
-// no idea what state the speaker or the ring are in, and finishing with the amplifier still driven is
-// what makes the device pop.
+// Exiting with the amplifier still driven makes the speaker pop.
 func Restart(why string) {
 	select {
 	case wanted <- why:
@@ -83,15 +63,11 @@ func Restart(why string) {
 	}
 }
 
-// Wanted is how the supervisor hears about it.
 func Wanted() <-chan string { return wanted }
 
-// Remount makes the system partition writable, or puts it back. Nothing on the device can express the
-// second from a shell — the kernel names the root filesystem's source /dev/root and there is no such
-// node — and `adb remount` only does the first, so an installer needs this to undo itself.
+// The kernel names the root source /dev/root, with no node, and adb remount only goes read-write.
 func Remount(rw bool) error { return writable(rw) }
 
-// OnTrial reports whether an update is waiting to be believed.
 func OnTrial() bool { return exists(prev) || exists(systemPrev) }
 
 func exists(path string) bool {
@@ -99,17 +75,6 @@ func exists(path string) bool {
 	return err == nil
 }
 
-// Start is the first thing echod does about an update it may have installed, and it either carries on
-// or reboots.
-//
-// A trial is opened by the process that installed the update; if this process finds one already open,
-// the last one took the binary and died without committing, and trying again would join init's restart
-// loop forever. Rebooting hands the decision to the boot hook, which is outside the binary and can put
-// the old one back.
-//
-// It reports whether echod is on trial, so a caller can say so and commit later, and whether a reboot
-// has been asked for — in which case there is no point taking the hardware, and the caller should get
-// out of the way of it.
 func Start() (onTrial, rebooting bool) {
 	if !OnTrial() {
 		return false, false
@@ -134,11 +99,6 @@ func Start() (onTrial, rebooting bool) {
 	return true, false
 }
 
-// Commit keeps an update: the binary it replaced becomes one generation back rather than the thing a
-// boot would restore. Called once echod has been running long enough to be worth believing, which is
-// the only evidence available — there is nothing else to ask.
-//
-// Doing nothing is the normal case, since most starts have no update behind them.
 func Commit() {
 	if !OnTrial() {
 		return
@@ -165,7 +125,6 @@ func keep() error {
 	return onSystem(func() error { return os.Remove(systemPrev) })
 }
 
-// tidy clears /system of everything but the binary.
 func tidy() {
 	var stale []string
 	for _, p := range []string{systemOld, aside} {
@@ -202,8 +161,6 @@ func onSystem(do func() error) error {
 	return err
 }
 
-// RolledBack is what the boot hook left behind if it had to put the previous binary back, and clearing
-// it is this process saying it has been noticed. Empty means the last boot was ordinary.
 func RolledBack() string {
 	was, err := prop.Get(layout.RolledBackProp)
 	if err != nil || was == "" {
@@ -217,17 +174,12 @@ func RolledBack() string {
 	return was
 }
 
-// reboot asks init for a clean reboot, which unwinds the services it started rather than dropping
-// the device where it stands. A variable so a test can see the ask.
 var reboot = func() {
 	if err := prop.Set("sys.powerctl", "reboot"); err != nil {
 		slog.Error("asking init to reboot failed", "err", err)
 	}
 }
 
-// Reboot asks init for a clean reboot. Unlike Restart, which replaces this process with a new one of
-// itself, the whole device comes back: init unwinds the services it started, then starts them again,
-// so echod returns on its own.
 func Reboot(why string) {
 	slog.Info("rebooting", "why", why)
 	reboot()

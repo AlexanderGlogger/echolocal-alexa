@@ -27,12 +27,11 @@ func newRunCmd() *cobra.Command {
 			defer h.Close()
 			slog.SetDefault(slog.New(h))
 
-			// init discards our stderr, so a panic would otherwise vanish and look like a silent
-			// restart. Log it, then let it kill the process as it would have.
+			// init discards stderr.
 			defer func() {
 				if r := recover(); r != nil {
 					slog.Error("panic", "panic", r, "stack", string(debug.Stack()))
-					h.Close()
+					_ = h.Close()
 					panic(r)
 				}
 			}()

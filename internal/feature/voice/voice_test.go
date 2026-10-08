@@ -1,15 +1,14 @@
 package voice
 
 import (
-	"github.com/ygelfand/echolocal/internal/config"
 	"testing"
+
+	"github.com/ygelfand/echolocal/internal/config"
 
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
-// What a device advertises as active when nothing has been chosen decides whether a fresh install can
-// be spoken to at all, and it must not come down to which model sorts first.
 func TestWakeWordsPreselectsTheDefault(t *testing.T) {
 	config.Use(t.TempDir() + "/state.json")
 	for name, tc := range map[string]struct {

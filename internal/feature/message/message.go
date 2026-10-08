@@ -3,10 +3,11 @@ package message
 import (
 	"sync"
 
+	shared "github.com/ygelfand/libcountertop/pkg/display/message"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	shared "github.com/ygelfand/libcountertop/pkg/display/message"
 )
 
 var get = sync.OnceValue(func() *shared.Messages {

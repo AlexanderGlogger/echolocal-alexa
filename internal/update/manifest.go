@@ -11,27 +11,15 @@ import (
 	"time"
 )
 
-// Manifest is what a release says about itself, and the only thing a device reads to decide there is
-// something newer. It is written by the release build and served beside the binaries it describes.
-//
-// The device does not compare versions: Home Assistant does that, with a parser that forces the update
-// card permanently on for anything it cannot rank. So Version has to stay something AwesomeVersion can
-// read — dotted numerals, optionally a prerelease, and any build detail after an underscore, which is
-// where Home Assistant truncates before comparing.
+// Home Assistant ranks Version with AwesomeVersion; an unrankable one pins the update card on.
 type Manifest struct {
-	// Version is what a device reports as available, and what Home Assistant ranks against what it is
-	// running.
 	Version string `json:"version"`
 
-	// The arm64 build and the builds by architecture. Nothing here reads them; they are how devices
-	// already in the field resolve, so every release fills them.
 	URL      string            `json:"url"`
 	SHA256   string            `json:"sha256"`
 	Size     int64             `json:"size"`
 	Binaries map[string]Binary `json:"binaries"`
 
-	// Boards is keyed by codename then architecture. Every supported board is listed, naming the
-	// shared file unless it has a build of its own.
 	Boards map[string]map[string]Binary `json:"boards,omitempty"`
 
 	Title      string `json:"title,omitempty"`
@@ -39,9 +27,6 @@ type Manifest struct {
 	ReleaseURL string `json:"release_url,omitempty"`
 }
 
-// Binary is one build of a release. SHA256 and Size are both checked before anything is written: a
-// length that matches proves nothing, and neither proves the file came from us, which is what signing
-// is for.
 type Binary struct {
 	URL    string `json:"url"`
 	SHA256 string `json:"sha256"`
@@ -50,27 +35,17 @@ type Binary struct {
 
 const flatArch = "arm64"
 
-// What this device resolves a build by. Variables so a test can stand somewhere other than the
-// machine it runs on.
 var (
 	arch     = runtime.GOARCH
 	codename string
 )
 
-// Use says which board this device is. Called once at start-up.
 func Use(board string) { codename = board }
 
-// manifestTimeout bounds the fetch. Home Assistant asks for this on connect and after every selection
-// change, so it has to fail quickly rather than hold up a configuration reply.
 const manifestTimeout = 10 * time.Second
 
-// maxManifest is a sanity bound on the response. A manifest is a few hundred bytes; anything else is a
-// captive portal or a mistake.
 const maxManifest = 64 << 10
 
-// Fetch reads the channel's manifest and checks that it describes something installable. A manifest
-// that arrives without a version or without somewhere to fetch a binary from is a broken release, and
-// saying so here is better than failing half way through an install.
 func Fetch(ctx context.Context, c Channel) (Manifest, error) {
 	var m Manifest
 
@@ -103,8 +78,6 @@ func (m Manifest) flat() Binary {
 	return Binary{URL: m.URL, SHA256: m.SHA256, Size: m.Size}
 }
 
-// Valid reports whether the manifest describes something installable, which is checked both where one
-// is written and where one is read. It does not ask whether this device is served — For does that.
 func (m Manifest) Valid() error {
 	if m.Version == "" {
 		return errors.New("update: the manifest names no version")
@@ -145,9 +118,6 @@ func (b Binary) valid(version, arch string) error {
 	return nil
 }
 
-// For is the build this board and architecture may install. It does not fall back to the shared
-// fields: those are for devices that cannot read Boards, and taking one here could install a binary
-// built for another board.
 func (m Manifest) For(board, arch string) (Binary, error) {
 	if b, ok := m.Boards[board][arch]; ok {
 		return b, nil

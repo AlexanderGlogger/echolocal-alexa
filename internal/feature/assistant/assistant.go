@@ -3,12 +3,13 @@ package assistant
 import (
 	"sync"
 
+	sharedscreen "github.com/ygelfand/libcountertop/pkg/display/assistant"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	sharedscreen "github.com/ygelfand/libcountertop/pkg/display/assistant"
 )
 
 func init() {

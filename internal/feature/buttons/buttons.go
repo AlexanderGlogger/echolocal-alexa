@@ -1,7 +1,3 @@
-// Package buttons is the four buttons as Home Assistant sees them.
-//
-// The device acts on a press itself; these are so an automation can act on one as well, including
-// the buttons the device does nothing with.
 package buttons
 
 import (
@@ -18,14 +14,11 @@ func init() {
 	component.Register(component.Device, Get)
 }
 
-// Event types, as Home Assistant sees them. Repeats are not reported: a volume ramp would fill the
-// logbook with dozens of entries for one press.
 const (
 	Press = "press"
 	Hold  = "hold"
 )
 
-// order is the buttons as Home Assistant lists them, since a map has none.
 var order = []buttons.Name{buttons.Action, buttons.Mute, buttons.VolumeDown, buttons.VolumeUp}
 
 type Events struct {
@@ -37,7 +30,6 @@ var (
 	shared *Events
 )
 
-// Get is the button entities, listening to the hardware from the moment it is built.
 func Get() *Events {
 	once.Do(func() {
 		shared = &Events{events: map[buttons.Name]*esphome.Event{}}
@@ -65,8 +57,6 @@ func (e *Events) Entities() []esphome.Entity {
 	return out
 }
 
-// report tells Home Assistant, and logs. Both happen for every button whether the device does
-// anything with it or not.
 func (e *Events) report(ev buttons.Event) {
 	if ev.Kind == buttons.Repeat {
 		return

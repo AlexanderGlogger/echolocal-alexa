@@ -10,10 +10,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/installer"
 )
 
-// approveFlash asks before the progress display starts, since that owns the terminal.
-//
-// The answer is typed out rather than a keypress: this is the one thing echoctl does that cannot be
-// undone from here.
 func approveFlash(
 	ctx context.Context,
 	out io.Writer,

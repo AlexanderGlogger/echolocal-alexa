@@ -1,11 +1,12 @@
-// Package component binds the shared registry to product configuration and board selection.
 package component
 
 import (
+	"sync"
+
+	sharedlib "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/config"
-	sharedlib "github.com/ygelfand/libcountertop/pkg/runtime/component"
-	"sync"
 )
 
 type Option = sharedlib.Option

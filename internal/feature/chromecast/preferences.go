@@ -1,8 +1,9 @@
 package chromecast
 
 import (
-	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/libcountertop/pkg/media/cast/preferences"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 func init() {

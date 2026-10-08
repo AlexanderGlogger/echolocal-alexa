@@ -3,10 +3,11 @@ package homeassistant
 import (
 	"sync"
 
+	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
 )
 
 var get = sync.OnceValue(func() *sharedha.Controller {

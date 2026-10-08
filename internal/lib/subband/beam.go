@@ -6,7 +6,6 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
-// Beamformer is one stream through the vendor's bank and weights. It is not safe for concurrent use.
 type Beamformer struct {
 	w     *Weights
 	g     geometry
@@ -15,14 +14,12 @@ type Beamformer struct {
 	an  []*analysis
 	syn *synthesis
 
-	// bands is the last Taps frames of every microphone, newest at at, indexed by frame below.
 	bands []complex64
 	at    int
 
 	beam   []complex64
 	energy []float32
 
-	// which beam is being listened to, which one is winning, and for how long.
 	using, winning, held int
 
 	carry [][]float32
@@ -30,7 +27,6 @@ type Beamformer struct {
 	out   []int16
 }
 
-// New builds a stream that uses these coefficients.
 func (w *Weights) New() *Beamformer {
 	g := w.g
 	f := fft.New(g.FFTLen)
@@ -53,8 +49,6 @@ func (w *Weights) New() *Beamformer {
 	return b
 }
 
-// frameBands is one microphone's bands from one of the Taps frames held, and tapBands every
-// microphone's, laid out mic-major so the filter-and-sum walks it in order.
 func (b *Beamformer) frameBands(tap, mic int) []complex64 {
 	at := (tap*b.g.Inputs() + mic) * b.g.Bands
 	return b.bands[at : at+b.g.Bands]
@@ -65,12 +59,7 @@ func (b *Beamformer) tapBands(tap int) []complex64 {
 	return b.bands[tap*n : (tap+1)*n]
 }
 
-// Mix combines the array through the beam that currently sounds most like the talker. Whole frames
-// of Hop samples are what the bank works in, so a call returns what those frames produced and holds
-// anything left over for the next one.
-//
-// The weights are generated for a selection of the array rather than all of it, so what arrives is
-// indexed through that selection: on Fire OS 6 four of the seven microphones reach the beamformer.
+// On Fire OS 6 four of the seven microphones reach the beamformer.
 func (b *Beamformer) Mix(mics [][]int16) []int16 {
 	if len(mics) < b.g.Channels() {
 		return nil
@@ -97,7 +86,6 @@ func (b *Beamformer) Mix(mics [][]int16) []int16 {
 	return b.out
 }
 
-// frame filters and sums one frame into every beam, picks one, and turns it back into samples.
 func (b *Beamformer) frame() {
 	g := b.g
 	first, last := g.firstSpeechBand(), g.lastSpeechBand()
@@ -134,7 +122,6 @@ func (b *Beamformer) frame() {
 	b.at = (b.at + 1) % g.Taps
 }
 
-// steer switches beams once one has held the lead long enough.
 func (b *Beamformer) steer() {
 	loudest := 0
 	for j := 1; j < b.g.Beams; j++ {
@@ -156,9 +143,7 @@ func (b *Beamformer) steer() {
 	}
 }
 
-// Beam is which one is being listened to. The vendor's configuration gives the count and that each
-// beam's nulls are two indices away, so they are evenly spaced in order, but not which direction beam
-// 0 faces.
+// The vendor configuration does not say which direction beam 0 faces.
 func (b *Beamformer) Beam() int { return b.using }
 
 func clamp(v float32) int16 {

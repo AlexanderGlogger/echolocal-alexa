@@ -48,8 +48,6 @@ func newWifiCmd() *cobra.Command {
 	return c
 }
 
-// ensureWifi verifies the connection and configures one when there is none. Both the wifi command and
-// the end of an install come through here, so a device gets the same treatment either way.
 func ensureWifi(
 	ctx context.Context,
 	out io.Writer,
@@ -59,8 +57,6 @@ func ensureWifi(
 ) error {
 	given := ssid != ""
 
-	// What the device is now decides what to offer. One already on a network is left alone unless the
-	// flags say otherwise.
 	if ssid == "" && !wps {
 		done, err := check(ctx, out, d)
 		if err != nil || done {
@@ -94,7 +90,6 @@ func ensureWifi(
 
 		fmt.Fprintf(out, "%s %v\n", styleFail.Render("✗"), err)
 
-		// One that associated is kept: the passphrase was right and what failed came after it.
 		if ssid != "" && !state.Associated() {
 			if err := wifi.Remove(d, ssid); err != nil {
 				return err
@@ -106,8 +101,6 @@ func ensureWifi(
 			return err
 		}
 
-		// A name that came from a flag is kept: it may be a hidden network, which a scan cannot offer,
-		// so asking again would only fail the same way. One that was picked from a scan is asked again.
 		if !given {
 			ssid, password = "", ""
 		}
@@ -115,7 +108,6 @@ func ensureWifi(
 	}
 }
 
-// askNetwork scans, has one picked, and asks for a passphrase unless the network is open.
 func askNetwork(ctx context.Context, out io.Writer, d *device.Device) (string, string, error) {
 	fmt.Fprintf(out, "%s\n", styleDetail.Render("Scanning…"))
 
@@ -139,8 +131,6 @@ func askNetwork(ctx context.Context, out io.Writer, d *device.Device) (string, s
 		return "", "", err
 	}
 
-	// The zero Network is the "other" row: a hidden access point is never in a scan, so its name has to
-	// be typed, and its security is whatever the passphrase implies.
 	if chosen.SSID == "" {
 		name, err := line(ctx, out, "Network name", "", false)
 		if err != nil {
@@ -165,8 +155,6 @@ func askNetwork(ctx context.Context, out io.Writer, d *device.Device) (string, s
 	return chosen.SSID, password, err
 }
 
-// check reports what the device already has, and whether that is the end of it: connected means
-// nothing to do, while a network configured but not up is worth asking about rather than replacing.
 func check(ctx context.Context, out io.Writer, d *device.Device) (bool, error) {
 	state, err := wifi.Status(d)
 	if err != nil {
@@ -193,8 +181,6 @@ func check(ctx context.Context, out io.Writer, d *device.Device) (bool, error) {
 	return !again, err
 }
 
-// attempt waits out one try at joining ssid and being given an address. An empty ssid is a WPS join,
-// where the network was never named and any is what success looks like.
 func attempt(ctx context.Context, d *device.Device, ssid string) (wifi.State, error) {
 	ctx, cancel := context.WithTimeout(ctx, joinTimeout)
 	defer cancel()

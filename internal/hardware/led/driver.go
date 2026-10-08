@@ -13,8 +13,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/service"
 )
 
-// The ring's priorities are indicate's: the ring is one surface among those a board might have, and
-// a feature claims at a priority without knowing which it got.
 type Priority = indicate.Priority
 
 const (
@@ -30,23 +28,15 @@ const (
 	PriorityBoot    = indicate.PriorityBoot
 )
 
-// Content is what a claim wants shown. An empty Content shows nothing, which is how a claim can
-// exist before it has anything to say.
 type Content struct {
-	// Frame is a still image, used when Effect is empty.
 	Frame []Color
 
-	// Effect is a named animation, and Base the color it works from.
 	Effect  string
 	Base    Color
 	Reverse bool
 
-	// Room is what an effect that reacts to the room reads. Whoever claims the ring for one supplies it,
-	// because the driver has no business knowing where the microphones are.
 	Room Room
 
-	// Animate replaces both, for something with a timeline of its own such as the boot animation. It
-	// runs until the context is cancelled.
 	Animate func(ctx context.Context, r *Ring) error
 }
 
@@ -54,33 +44,24 @@ func (c Content) empty() bool {
 	return c.Animate == nil && c.Effect == "" && len(c.Frame) == 0
 }
 
-// Driver owns the ring. One goroutine writes to the hardware; everything else takes a Claim and says
-// what it wants, which removes the question of who painted last.
 type Driver struct {
 	ring *Ring
 
-	// busy is the shared indication that the device is working on something, so that anything holding
-	// the driver can say so without taking a claim of its own and competing with the others.
 	busy *Busy
 
 	mu     sync.Mutex
 	claims []*Claim
 	seq    uint64
 
-	// hold is what to leave the ring showing once the driver stops, dark unless something says
-	// otherwise. The hardware keeps the last frame with nothing driving it.
+	// The hardware keeps the last frame with nothing driving it.
 	hold Color
 
-	// changed wakes the render loop. Buffered, so a change that lands between choosing what to
-	// render and starting to watch for changes is not lost.
 	changed chan struct{}
 }
 
 func NewDriver(r *Ring) *Driver {
 	d := &Driver{ring: r, changed: make(chan struct{}, 1)}
 
-	// Built here rather than on first use: a claim with nothing to show costs nothing, and this way
-	// there is one of them without anybody having to arrange it.
 	d.busy = &Busy{claim: d.Claim(PriorityBusy)}
 	return d
 }
@@ -91,19 +72,11 @@ var (
 )
 
 func init() {
-	// First of the hardware: the boot animation is the only thing the device can say before anything
-	// else works.
 	component.Register(component.Hardware, Get, component.Order(5),
 		component.Needs(board.Ring),
 		component.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
-// Get is the ring. There is one, and everything that wants to show something takes a claim on it
-// rather than owning it.
-//
-// It answers on a board with no ring too, with a driver nobody renders: the component is not
-// registered there, so the loop never runs, and the dozen things that show something during a turn
-// go on taking claims without having to ask first. Claims cost nothing and nothing reads them.
 func Get() *Driver {
 	once.Do(func() {
 		if !component.Board().Has(board.Ring) {
@@ -115,11 +88,7 @@ func Get() *Driver {
 	return shared
 }
 
-// Start takes the ring off the kernel driver, which otherwise animates it and repaints over
-// everything written to it.
-//
-// led_current is an attenuation index, not a level: 0 is full current and 3 a quarter, which is
-// where the driver leaves it at probe. It does not survive a reboot.
+// led_current is an attenuation index: 0 is full current, 3 a quarter and the probe default.
 func (d *Driver) Start(context.Context) error {
 	d.ring.Forget()
 
@@ -132,18 +101,12 @@ func (d *Driver) Start(context.Context) error {
 	return nil
 }
 
-// HoldOnStop is what the ring should be left showing once the driver stops, for a process that is
-// coming back: the hardware holds a still frame with nothing driving it, so the device can say why it
-// is not answering rather than going dark. Dark is the default, and the right answer for a stop that
-// nothing follows.
 func (d *Driver) HoldOnStop(c Color) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.hold = c
 }
 
-// Close leaves the ring as it should be found. Nothing renders after this: the loop has stopped, so
-// this writes the hardware directly.
 func (d *Driver) Close() error {
 	d.mu.Lock()
 	hold := d.hold
@@ -152,22 +115,14 @@ func (d *Driver) Close() error {
 	return d.ring.SetSegments(Solid(hold))
 }
 
-// Busy is how anything says the device is working on something. Shared, so several things working at
-// once show as one indication rather than as claims taking turns.
 func (d *Driver) Busy() *Busy { return d.busy }
 
-// Present reports whether this board has a ring. Claims do not need to ask — they are accepted and
-// shown nothing — but something that would do work only to be discarded does.
 func (d *Driver) Present() bool { return d.ring.Present() }
 
-// Present is the same question asked of the claim, for a caller that holds one and not the driver.
 func (c *Claim) Present() bool { return c.d.Present() }
 
-// Name is what it is called when supervised.
 func (d *Driver) Name() string { return "ring" }
 
-// Claim asks for the ring at a priority. Nothing is shown until the claim is given content, and
-// whatever it shows lasts until it is released or something higher takes over.
 func (d *Driver) Claim(p Priority) *Claim {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -176,11 +131,9 @@ func (d *Driver) Claim(p Priority) *Claim {
 	c := &Claim{d: d, priority: p, seq: d.seq}
 	d.claims = append(d.claims, c)
 
-	// Nothing to show yet, so the loop does not need waking.
 	return c
 }
 
-// Run drives the ring until ctx is cancelled. Nothing reaches the hardware without going through it.
 func (d *Driver) Run(ctx context.Context) error {
 	for {
 		if ctx.Err() != nil {
@@ -190,15 +143,12 @@ func (d *Driver) Run(ctx context.Context) error {
 		top, rev := d.top()
 		d.render(ctx, top, rev)
 
-		// A timed claim that has run its course goes away, revealing what is under it.
 		if top != nil && top.done() {
 			top.Release()
 		}
 	}
 }
 
-// render shows one claim until something changes: a claim appears, is given different content,
-// expires, or is released.
 func (d *Driver) render(ctx context.Context, top *Claim, rev uint64) {
 	rctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -210,20 +160,9 @@ func (d *Driver) render(ctx context.Context, top *Claim, rev uint64) {
 		}
 	}
 
-	// under is read once and handed to the effect as a still frame, so a change to it has to restart the
-	// render or the ring goes on compositing a frame that is no longer there. Turning on one segment
-	// while something reacting to the room is on top is exactly that: the segment reaches the claim and
-	// is never looked at again.
 	under := d.composited(top)
 	underRev := under.revision()
 
-	// Watch for a change alongside the render, so a new claim interrupts an animation part way
-	// through rather than after it finishes.
-	//
-	// Only a change to what should be showing counts. A claim underneath being repainted — Home
-	// Assistant setting the light, the saved volume arriving — must not restart the animation on top
-	// of it, or the boot walk begins again every time anything else so much as reports its state. The
-	// exception is the claim being composited with, which is part of what is showing.
 	stop := make(chan struct{})
 	defer close(stop)
 	go func() {
@@ -262,7 +201,6 @@ func (d *Driver) show(ctx context.Context, c Content, under Frame) {
 		if err := c.Animate(ctx, d.ring); err != nil && ctx.Err() == nil {
 			slog.Error("ring animation failed", "err", err)
 		}
-		// An animation that finishes early holds what it left until something changes.
 		<-ctx.Done()
 
 	case c.Effect != "":
@@ -285,14 +223,10 @@ func (d *Driver) show(ctx context.Context, c Content, under Frame) {
 	}
 }
 
-// stack is every claim with something to show, in the order they would be shown: by priority, and among
-// equals the one taken most recently.
 func (d *Driver) stack() []*Claim {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	// Each claim's own lock guards its content, so it is taken here too. The order is always the
-	// driver's lock first and never the other way round.
 	live := make([]*Claim, 0, len(d.claims))
 	for _, c := range d.claims {
 		if c.live() {
@@ -309,8 +243,6 @@ func (d *Driver) stack() []*Claim {
 	return live
 }
 
-// top is what should be showing. The revision comes back with it so the caller can tell this claim
-// changing from something underneath changing.
 func (d *Driver) top() (*Claim, uint64) {
 	live := d.stack()
 	if len(live) == 0 {
@@ -323,15 +255,6 @@ func (d *Driver) top() (*Claim, uint64) {
 	return best, best.rev
 }
 
-// composited is the claim top draws over, or nil when top does not read what is under it.
-//
-// Only something reacting to the room does: a room effect is dark until something happens, so a dark
-// ring should mean nothing is happening rather than that the ring is claimed and being held empty.
-// Everything else that draws black draws it deliberately — heartbeat rests between its thumps, alert
-// between its pulses — and would strobe whatever is underneath if it fell through.
-//
-// Keyed on the claim having been given a room to read rather than on which effect it names, because that
-// is the question being asked: not what this animation is capable of, but what it is being used for.
 func (d *Driver) composited(top *Claim) *Claim {
 	if top == nil || top.get().Room.Level == nil {
 		return nil
@@ -344,7 +267,6 @@ func (d *Driver) composited(top *Claim) *Claim {
 	return live[1]
 }
 
-// beneath is what a claim would draw, for the one above it to show through wherever it draws nothing.
 func (d *Driver) beneath(c *Claim) Frame {
 	if c == nil {
 		return nil
@@ -353,7 +275,6 @@ func (d *Driver) beneath(c *Claim) Frame {
 	under := c.get()
 	switch {
 	case under.Animate != nil:
-		// It owns the hardware and runs to its own timeline, so it cannot be asked for one frame.
 		return nil
 
 	case under.Effect != "":
@@ -370,7 +291,6 @@ func (d *Driver) beneath(c *Claim) Frame {
 	return nil
 }
 
-// wake tells the render loop to reconsider.
 func (d *Driver) wake() {
 	select {
 	case d.changed <- struct{}{}:
@@ -390,8 +310,6 @@ func (d *Driver) drop(c *Claim) {
 	d.wake()
 }
 
-// Claim is one thing's hold on the ring. It is safe to use from any goroutine, and safe to keep
-// after releasing: everything on a released claim does nothing.
 type Claim struct {
 	d        *Driver
 	priority Priority
@@ -402,50 +320,35 @@ type Claim struct {
 	expires  time.Time
 	released bool
 
-	// rev counts content changes, so the driver can tell being woken about this claim from being
-	// woken about something else.
 	rev uint64
 }
 
-// Show puts something on the ring and leaves it there.
 func (c *Claim) Show(content Content) { c.set(content, time.Time{}) }
 
-// ShowFor plays a motion for a while, after which the claim releases itself and whatever is
-// underneath comes back.
 func (c *Claim) ShowFor(effect string, base Color, d time.Duration) {
 	c.ShowContentFor(Content{Effect: effect, Base: base}, d)
 }
 
-// ShowContentFor is ShowFor for something only the ring can show, such as a still frame.
 func (c *Claim) ShowContentFor(content Content, d time.Duration) {
 	c.set(content, time.Now().Add(d))
 }
 
-// Paint shows a still frame.
 func (c *Claim) Paint(frame []Color) { c.Show(Content{Frame: frame}) }
 
-// PaintFor shows a still frame briefly.
 func (c *Claim) PaintFor(frame []Color, d time.Duration) {
 	c.ShowContentFor(Content{Frame: frame}, d)
 }
 
-// Play runs a named effect.
 func (c *Claim) Play(effect string, base Color) { c.Show(Content{Effect: effect, Base: base}) }
 
-// React runs an effect that watches the room, and keeps running it: what it shows changes with the
-// room rather than with the claim, so nothing has to come back and set it again.
 func (c *Claim) React(effect string, base Color, room Room) {
 	c.Show(Content{Effect: effect, Base: base, Room: room})
 }
 
-// PlayReversed runs it the other way round the ring, which is how the device says it has stopped
-// listening and is waiting on an answer.
 func (c *Claim) PlayReversed(effect string, base Color) {
 	c.Show(Content{Effect: effect, Base: base, Reverse: true})
 }
 
-// Clear gives up the ring without releasing the claim, for a holder that is still around but has
-// nothing to say.
 func (c *Claim) Clear() { c.set(Content{}, time.Time{}) }
 
 func (c *Claim) set(content Content, expires time.Time) {
@@ -461,7 +364,6 @@ func (c *Claim) set(content Content, expires time.Time) {
 	c.d.wake()
 }
 
-// Release hands the ring back.
 func (c *Claim) Release() {
 	c.mu.Lock()
 	if c.released {
@@ -475,7 +377,6 @@ func (c *Claim) Release() {
 	c.d.drop(c)
 }
 
-// live reports whether the claim is still held and has something to show.
 func (c *Claim) live() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -488,8 +389,6 @@ func (c *Claim) get() Content {
 	return c.content
 }
 
-// revision counts how many times this claim has been given content, so a render compositing with it can
-// tell that what it snapshotted has moved on. Zero for no claim, which is a revision nothing reaches.
 func (c *Claim) revision() uint64 {
 	if c == nil {
 		return 0
@@ -505,16 +404,12 @@ func (c *Claim) deadline() (time.Time, bool) {
 	return c.expires, !c.expires.IsZero()
 }
 
-// done reports whether a timed claim has run out.
 func (c *Claim) done() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return !c.expires.IsZero() && !time.Now().Before(c.expires)
 }
 
-// surface is the ring as something a feature can claim without naming it. An adapter rather than
-// the driver itself, because Claim hands back the ring's own type — the one carrying the still
-// frames and animations a screen has no equivalent for.
 type surface struct{ d *Driver }
 
 var _ indicate.Surface = surface{}

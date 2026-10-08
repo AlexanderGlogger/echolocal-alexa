@@ -3,11 +3,12 @@
 package settings
 
 import (
+	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/bluetooth"
 	"github.com/ygelfand/echolocal/internal/feature/sendspin"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
 )
 
 type feature struct {
@@ -31,12 +32,6 @@ var features = []feature{
 	},
 }
 
-// featuresPage is what the device does at all, as opposed to how it looks or how loud it is.
-//
-// These are whole subsystems rather than settings on one: each opens a port, holds hardware, or
-// listens for something. They were switches in Home Assistant and nowhere else, which leaves a
-// device that has not been adopted, or whose Home Assistant is down, unable to be set up from its
-// own screen.
 func featuresPage() *shell.Page {
 	return sharedsettings.FeaturesPage(func() []sharedsettings.Feature {
 		c := config.Get()

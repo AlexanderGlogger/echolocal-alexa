@@ -27,7 +27,6 @@ func TestSplitKeepsShortLogsWhole(t *testing.T) {
 	}
 }
 
-// No page may outgrow what the transport carries, and no line may be cut in half to manage it.
 func TestSplitBoundsEachPageWithoutSplittingALine(t *testing.T) {
 	line := strings.Repeat("x", 1000)
 	lines := make([]string, 200)

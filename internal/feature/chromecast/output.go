@@ -3,14 +3,15 @@ package chromecast
 import (
 	"context"
 
+	"github.com/ygelfand/libcountertop/pkg/media/castoutput"
+	"github.com/ygelfand/libcountertop/pkg/media/pcm"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/videoplayer"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/hardware/video"
-	"github.com/ygelfand/libcountertop/pkg/media/castoutput"
-	"github.com/ygelfand/libcountertop/pkg/media/pcm"
 )
 
 const Queued = castoutput.Queued

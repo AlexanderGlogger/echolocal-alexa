@@ -1,8 +1,9 @@
 package display
 
 import (
-	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/libcountertop/pkg/display/geometry"
+
+	"github.com/ygelfand/echolocal/internal/component"
 )
 
 type Orientation = geometry.Orientation

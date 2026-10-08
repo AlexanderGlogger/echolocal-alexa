@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-// counted is a Background that keeps what it was last told, so the tests can check the driver left it
-// able to play rather than merely that it called something.
 type counted struct {
 	mu   sync.Mutex
 	down bool
@@ -20,8 +18,6 @@ func (b *counted) Stand(down bool) {
 	b.down = down
 }
 
-// held is whether the background is still standing down, which is the thing that matters: a
-// background left standing down never plays again, and nothing reports an error about it.
 func (b *counted) held() bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -40,9 +36,6 @@ func TestBackgroundPlaysAgainAfterOneSound(t *testing.T) {
 	}
 }
 
-// One claim displacing another is the ordinary case — a wake tone, then the reply that follows it —
-// and it used to leak a hold every time. Each claim suspended, only the last one to finish resumed,
-// and the background was left stood down for the life of the process with nothing logged.
 func TestBackgroundPlaysAgainAfterOneSoundDisplacesAnother(t *testing.T) {
 	d := driver()
 	bg := &counted{}
@@ -63,8 +56,6 @@ func TestBackgroundPlaysAgainAfterOneSoundDisplacesAnother(t *testing.T) {
 	}
 }
 
-// Silencing clears the current claim itself, so the claim's own release finds nothing to release and
-// the background has to be let go here instead.
 func TestBackgroundPlaysAgainAfterSilence(t *testing.T) {
 	d := driver()
 	bg := &counted{}
@@ -75,7 +66,6 @@ func TestBackgroundPlaysAgainAfterSilence(t *testing.T) {
 		return nil
 	})
 
-	// Let the errand reach its wait before taking the speaker away.
 	time.Sleep(50 * time.Millisecond)
 	d.Silence()
 	waitFor(t, c)
@@ -85,7 +75,6 @@ func TestBackgroundPlaysAgainAfterSilence(t *testing.T) {
 	}
 }
 
-// A run of sounds must not accumulate anything, however many of them there were.
 func TestBackgroundSurvivesAStreamOfSounds(t *testing.T) {
 	d := driver()
 	bg := &counted{}

@@ -11,8 +11,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
-// The three the reference satellite ships. A device with none of them cannot offer a wake word until
-// Home Assistant hosts one, which is the state this exists to avoid.
 var want = []string{"hey_jarvis", "hey_mycroft", "okay_nabu"}
 
 func TestModelsAreTheOnesWeMeanToShip(t *testing.T) {
@@ -35,8 +33,6 @@ func TestModelsAreTheOnesWeMeanToShip(t *testing.T) {
 	}
 }
 
-// Every manifest has to name its model file and its phrase: the phrase is what Home Assistant shows,
-// and a manifest naming a file that is not beside it loads nothing.
 func TestManifestsNameTheirModelAndPhrase(t *testing.T) {
 	models, err := assets.Models()
 	if err != nil {
@@ -65,8 +61,6 @@ func TestManifestsNameTheirModelAndPhrase(t *testing.T) {
 	}
 }
 
-// What the installer writes has to be what the engine then reads: same directory, same names, and
-// recognised as microWakeWord from the model itself rather than from the manifest.
 func TestWhatIsShippedIsWhatTheEngineLoads(t *testing.T) {
 	models, err := assets.Models()
 	if err != nil {

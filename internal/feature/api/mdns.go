@@ -5,22 +5,16 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/go-esphome-device/mdns"
 	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
+
+	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// mdnsRetry is how long to wait between attempts. There is no attempt limit: wifi can come back long
-// after boot, and an advert that never reappears is a device that has to be found by netaddress.
 const mdnsRetry = 3 * time.Second
 
-// advertise publishes the addresses the device actually has, and republishes them when they change.
-//
-// echod starts from init, well before wifi has associated. The addresses are passed rather than left
-// to the library, which falls back to loopback when nothing routable exists — a record Home Assistant
-// discovers and then cannot connect to, which is worse than no record at all. Discovery is a
-// convenience and a device reachable by address works without it, so this only logs.
+// The mdns library falls back to loopback when nothing routable exists.
 func (a *API) advertise(ctx context.Context, port int) {
 	for attempt := 1; ; attempt++ {
 		ips := netaddress.Addresses()
@@ -35,22 +29,18 @@ func (a *API) advertise(ctx context.Context, port int) {
 		}
 
 		adv, err := mdns.Advertise(mdns.Config{
-			Name:         a.name,
-			FriendlyName: a.srv.Info.FriendlyName,
-			Port:         port,
-			MACAddress:   a.srv.Info.MACAddress,
-			Version:      a.srv.Info.Version,
-			Platform:     layout.Platform,
-			Board:        config.Get().Device.Board.Codename,
-			// A zero key is not encryption to advertise: it says the device is waiting to be given
-			// one, which is what stops Home Assistant asking for a key nobody has.
+			Name:          a.name,
+			FriendlyName:  a.srv.Info.FriendlyName,
+			Port:          port,
+			MACAddress:    a.srv.Info.MACAddress,
+			Version:       a.srv.Info.Version,
+			Platform:      layout.Platform,
+			Board:         config.Get().Device.Board.Codename,
 			Encrypted:     a.srv.PSK != nil && !a.srv.PSK.IsZero(),
 			Provisionable: a.srv.PSK != nil && a.srv.PSK.IsZero(),
 			IPs:           ips,
 		})
 		if err != nil {
-			// Only the first failure is worth a warning: after that it is the expected state of a
-			// device waiting for its network, and saying so every few seconds buries everything else.
 			if attempt == 1 {
 				slog.Warn("mdns advertise failed, retrying", "err", err)
 			} else {
@@ -72,8 +62,6 @@ func (a *API) advertise(ctx context.Context, port int) {
 			netaddress.AddressKey(ips),
 		)
 
-		// The registration stands until the addresses it was made with are no longer the ones the
-		// device has: a lease that changed, or a network that arrived late.
 		for netaddress.AddressKey(netaddress.Addresses()) == netaddress.AddressKey(ips) {
 			if !pause(ctx, mdnsRetry) {
 				adv.Close()
@@ -85,7 +73,6 @@ func (a *API) advertise(ctx context.Context, port int) {
 	}
 }
 
-// pause sleeps unless ctx ends first, reporting whether there is any point carrying on.
 func pause(ctx context.Context, d time.Duration) bool {
 	select {
 	case <-ctx.Done():

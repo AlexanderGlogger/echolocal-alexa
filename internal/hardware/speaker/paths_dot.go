@@ -10,8 +10,7 @@ var initSequence = []kctl{
 	{name: "biquad coefficients", blob: speakerEQ},
 }
 
-// speakerEQ is the DAC's filter chain: six unity blocks and one tuned filter, which is the vendor's
-// tuning for this speaker. The coefficients read back as zeros until something writes them.
+// The vendor's tuning: six unity blocks and one filter; the coefficients read back as zeros until written.
 var speakerEQ = []byte{
 	128, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	128, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -39,7 +38,7 @@ var pathSequence = map[Output][]kctl{
 	},
 }
 
-// headphoneOff is the ext_headphone_output turnoff sequence.
+// The ext_headphone_output turnoff sequence.
 var headphoneOff = []kctl{
 	{name: "Audio_DacMux_Setting", value: "Off"},
 	{name: "Right Channel Only", value: "On"},

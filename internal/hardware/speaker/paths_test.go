@@ -13,11 +13,11 @@ func TestGainForStep(t *testing.T) {
 	}{
 		{OutputSpeaker, 0, 0},
 		{OutputSpeaker, 30, 1},
-		{OutputSpeaker, 15, 0.398}, // -8 dB
-		{OutputSpeaker, 5, 0.0708}, // -23 dB
+		{OutputSpeaker, 15, 0.398},
+		{OutputSpeaker, 5, 0.0708},
 		{OutputHeadphone, 0, 0},
 		{OutputHeadphone, 30, 1},
-		{OutputHeadphone, 15, 0.112}, // -19 dB
+		{OutputHeadphone, 15, 0.112},
 	}
 
 	for _, c := range cases {
@@ -28,7 +28,6 @@ func TestGainForStep(t *testing.T) {
 	}
 }
 
-// Steps outside the range clamp rather than panicking on the curve index.
 func TestGainForStepClamps(t *testing.T) {
 	if got := gainForStep(OutputSpeaker, -5); got != 0 {
 		t.Errorf("gainForStep(speaker, -5) = %v, want 0", got)
@@ -38,8 +37,6 @@ func TestGainForStepClamps(t *testing.T) {
 	}
 }
 
-// An unknown output falls back to the speaker curve rather than a zero curve, which would be
-// silence.
 func TestGainForStepUnknownOutput(t *testing.T) {
 	if got := gainForStep(Output("bluetooth"), 30); got != 1 {
 		t.Errorf("gainForStep(bluetooth, 30) = %v, want 1", got)

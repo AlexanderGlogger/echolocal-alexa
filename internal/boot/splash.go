@@ -3,17 +3,11 @@ package boot
 import (
 	"context"
 
-	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+
+	"github.com/ygelfand/echolocal/internal/hardware/led"
 )
 
-// startSplash runs the boot animation and lets go of the ring once the device can actually answer.
-//
-// Not a service: it finishes, and nothing waits on it or restarts it. It holds the boot claim, which
-// outranks everything, so nothing has to be withheld while it runs — the light entity and the saved
-// volume can arrive whenever they like and sit underneath until the claim goes away.
-// A board with no ring has nowhere to run it. The claim would be held and never rendered, which is
-// harmless and still a goroutine waiting on a boot that has nothing to show.
 func startSplash(ctx context.Context, leds *led.Driver, ready func() bool) {
 	if !leds.Present() {
 		return
@@ -23,7 +17,6 @@ func startSplash(ctx context.Context, leds *led.Driver, ready func() bool) {
 		claim := leds.Claim(led.PriorityBoot)
 		defer claim.Release()
 
-		// Buffered and sent to without blocking, so finishing cannot wedge the driver.
 		done := make(chan struct{}, 1)
 		claim.Show(led.Content{Animate: func(actx context.Context, r *led.Ring) error {
 			err := led.Splash(actx, r, ready)

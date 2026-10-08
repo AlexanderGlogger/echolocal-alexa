@@ -9,10 +9,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 )
 
-// sock is a path short enough to bind. sockaddr_un holds 104 bytes on darwin, and t.TempDir builds
-// its path out of the test's name, which is enough to overrun it.
+// sockaddr_un holds 104 bytes on darwin.
 func sock(t *testing.T) string {
 	t.Helper()
 
@@ -20,12 +21,10 @@ func sock(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.RemoveAll(dir) })
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
 	return filepath.Join(dir, "s")
 }
 
-// dial brings a socket up on a path of its own and connects to it. The real address is a fixed
-// name, and two tests binding it at once is a race with the device.
 func connect(t *testing.T) net.Conn {
 	t.Helper()
 
@@ -47,7 +46,6 @@ func connect(t *testing.T) net.Conn {
 	return conn
 }
 
-// say sends one command and reads back to the line that ends it.
 func say(t *testing.T, conn net.Conn, in *bufio.Scanner, line string) (string, bool) {
 	t.Helper()
 
@@ -56,19 +54,10 @@ func say(t *testing.T, conn net.Conn, in *bufio.Scanner, line string) (string, b
 	}
 
 	var out strings.Builder
-	for in.Scan() {
-		got := in.Text()
-		if got == "ok" {
-			return out.String(), true
-		}
-		if strings.HasPrefix(got, "error: ") {
-			return got, false
-		}
-		out.WriteString(got)
-		out.WriteByte('\n')
+	if err := harness.Answer(in, &out); err != nil {
+		return "error: " + err.Error(), false
 	}
-	t.Fatalf("the connection closed before %q was answered", line)
-	return "", false
+	return out.String(), true
 }
 
 func TestACommandIsAnsweredAndTerminated(t *testing.T) {
@@ -84,8 +73,6 @@ func TestACommandIsAnsweredAndTerminated(t *testing.T) {
 	}
 }
 
-// Every reply ends in exactly one of ok or error:, or a caller reading a sequence hangs waiting for
-// a command that already finished.
 func TestAnUnknownCommandIsAnError(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)
@@ -99,8 +86,6 @@ func TestAnUnknownCommandIsAnError(t *testing.T) {
 	}
 }
 
-// A blank line is what a sequence file full of comments sends, and it must not be an error or the
-// rest of the sequence stops.
 func TestABlankLineIsAnswered(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)
@@ -110,8 +95,6 @@ func TestABlankLineIsAnswered(t *testing.T) {
 	}
 }
 
-// One connection takes commands until the caller goes away, which is what lets a sequence run in
-// order without reconnecting between each.
 func TestOneConnectionTakesSeveralCommands(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)
@@ -123,7 +106,6 @@ func TestOneConnectionTakesSeveralCommands(t *testing.T) {
 	}
 }
 
-// down has to release the address, or nothing can open it again without a restart.
 func TestDownReleasesTheAddress(t *testing.T) {
 	c := &Control{addr: sock(t)}
 	if err := c.up(); err != nil {

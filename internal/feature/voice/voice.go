@@ -1,17 +1,11 @@
-// Package voice is a turn: hearing a wake word, listening, waiting for an answer and playing it.
-//
-// Two halves. The conversation is a state machine on its own goroutine, so a button press, a pipeline
-// event and a timeout cannot race each other. Around it sits the voice satellite, which is what Home
-// Assistant talks to.
-//
-// Nothing here has an entity: a turn is not a setting and not a reading.
 package voice
 
 import (
 	"context"
-	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 	"log/slog"
 	"sync"
+
+	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 
 	esphome "github.com/ygelfand/go-esphome-device"
 	"google.golang.org/protobuf/proto"
@@ -30,8 +24,6 @@ func init() {
 	component.Register(component.Device, Get, component.Order(30))
 }
 
-// Features is what the device claims it can do with a voice pipeline. Announce and
-// StartConversation go together and both need a media player, which this device has.
 const Features = esphome.DefaultVoiceFeatures |
 	esphome.FeatureSpeaker |
 	esphome.FeatureAnnounce |
@@ -54,11 +46,6 @@ func Get() *Voice {
 	return shared
 }
 
-// build makes the satellite and the conversation together: the satellite's callbacks are the
-// conversation's inputs, and the conversation answers back through it.
-//
-// What the device can hear is not stored — it is worked out on every configuration request, because
-// models arrive and are deleted while the device runs.
 func build() *Voice {
 	ours := wake.Lib().Ours()
 	slots := wanted(ours, wakeword.Slots)
@@ -84,8 +71,6 @@ func build() *Voice {
 
 	wakeword.Requested.Listen(v.Start)
 
-	// The action button is the only one where a hold means something different from a press, and what
-	// it means is the conversation's to decide. The other buttons are somebody else's listeners.
 	buttons.Get().Events.Listen(func(e buttons.Event) {
 		if e.Name != buttons.Action {
 			return
@@ -102,49 +87,28 @@ func build() *Voice {
 
 func (v *Voice) Name() string { return "conversation" }
 
-// Handle is the satellite's own protocol messages, which have no entity to arrive through.
 func (v *Voice) Handle(ctx context.Context, c *esphome.Conn, msg proto.Message) error {
 	return v.vs.Handle(ctx, c, msg)
 }
 
-// Run owns the conversation until ctx is cancelled. Nothing happens on a wake word until it is
-// running.
 func (v *Voice) Run(ctx context.Context) error {
 	v.turn.Run(ctx)
 	return nil
 }
 
-// Ready reports whether Home Assistant has a voice pipeline listening. Wake detection runs before
-// that happens, but nothing can be done with a detection until it does, so this is what the device
-// shows on the ring while it comes up.
 func (v *Voice) Ready() bool { return v.vs.Subscribed() }
 
-// Start asks for a turn as if that slot's wake word had fired, which is how detection and the
-// buttons both reach a pipeline. What that means from the phase the conversation is already in is
-// the conversation's decision, not the caller's.
 func (v *Voice) Start(slot int) { v.turn.Start(slot) }
 
-// Action is the action button: it gives up on whatever is happening, or starts something if nothing
-// is. Cancelling is the more useful half — it is the way out of a turn that is waiting on a pipeline
-// that is not going to answer.
 func (v *Voice) Action() {
-	// Anything audible is what the press meant. Asking a question is what the button is for when the
-	// device is doing nothing; while it is talking or playing, reaching for it means make it stop.
 	if v.Stop() {
 		return
 	}
 
-	// No wake word, so no slot to pair with: the first pipeline is the one Home Assistant falls back
-	// to for anything that reports no phrase.
+	// Home Assistant falls back to the first pipeline for a wake word with no phrase.
 	v.turn.Start(0)
 }
 
-// Interrupt is the stop word.
-//
-// It only acts while the device is making a sound. "Stop" is an ordinary word: somebody halfway through
-// "stop the timer" is talking to Home Assistant, not to the device, and cutting their turn off there
-// would be worse than not listening for it at all. Nothing is playing then, so there is nothing the word
-// could sensibly mean.
 func (v *Voice) Interrupt() {
 	if v.turn.Phase() == phaseListening {
 		slog.Debug("stop word ignored, the turn is listening")
@@ -159,13 +123,7 @@ func (v *Voice) Interrupt() {
 	v.Stop()
 }
 
-// Stop ends whatever the device is doing audibly, and reports whether there was anything to end.
-//
-// One ladder, because there is one meaning: a turn is cancelled, a sound is silenced, a track is
-// stopped. The action button falls through to starting a turn when it returns false; a stop word has
-// nothing to fall through to and simply does nothing.
 func (v *Voice) Stop() bool {
-	// Before the turn, because a timer ringing over one is what the person is reaching for.
 	if timer.Get().Stop() {
 		return true
 	}
@@ -175,7 +133,6 @@ func (v *Voice) Stop() bool {
 		return true
 	}
 
-	// An announcement outside a turn: nothing is listening, but something is playing.
 	if sound := speaker.Sound(); sound.Busy() {
 		sound.Silence()
 		return true
@@ -188,18 +145,9 @@ func (v *Voice) Stop() bool {
 	return false
 }
 
-// ActionHold is holding the action button, which reaches the second assistant. Holding does not
-// cancel: a press is the way out of a turn, so holding while one is running interrupts it with the
-// other assistant instead, which is the same thing saying the other wake word would do.
 func (v *Voice) ActionHold() { v.turn.Start(1) }
 
-// OnWakeWord is called when Home Assistant changes the selection, so the engine can follow. It is
-// given every slot: load reports which of them it accepted, and only those are echoed back as
-// active, because Home Assistant takes the echo as authoritative and reverts a slot whose word is
-// missing from it. A slot the device will not run therefore reverts in the interface rather than
-// sitting there looking armed.
-//
-// selected is called after the slots have been written, for whatever else a new selection changes.
+// Home Assistant takes the active echo as authoritative and reverts a slot missing from it.
 func (v *Voice) OnWakeWord(load func(ids []string) []string, selected func()) {
 	v.vs.OnSetActiveWakeWords = func(ids []string) {
 		accepted := load(ids)

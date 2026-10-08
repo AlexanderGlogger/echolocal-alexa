@@ -18,8 +18,6 @@ func Streams() []Stream {
 	return []Stream{StreamMain, StreamMedia, StreamVoice, StreamAlerts, StreamFeedback}
 }
 
-// Volume is how loud each kind of sound is, as a percentage. Main lives in Speaker.Volume, which
-// is the level the hardware itself carries.
 type Volume struct {
 	Media    int `json:"media"`
 	Voice    int `json:"voice"`
@@ -27,7 +25,6 @@ type Volume struct {
 	Feedback int `json:"feedback"`
 }
 
-// DefaultLevel is where a kind of sound sits until somebody moves it.
 const DefaultLevel = 100
 
 func defaultVolume() Volume {
@@ -39,7 +36,6 @@ func defaultVolume() Volume {
 	}
 }
 
-// Level is how loud one kind of sound is.
 func (v Volume) Level(s Stream) int {
 	switch s {
 	case StreamMedia:

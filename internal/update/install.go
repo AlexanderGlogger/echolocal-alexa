@@ -16,22 +16,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// downloadTimeout bounds the fetch. Sixteen megabytes over a satellite's wifi is not quick, and a stalled
-// download should give up rather than hold the device in an installing state for ever.
 const downloadTimeout = 10 * time.Minute
 
-// installing is held for the whole of an install, so a second request while one is running is refused
-// rather than racing it onto the same file.
 var installing sync.Mutex
 
-// Install replaces this binary with the one the manifest describes for this architecture and asks for
-// a restart.
-//
-// Nothing is written to /system until the download has been fetched whole and its hash checked. What
-// this replaces is kept as echod.prev, which is what the boot hook restores if the new one never gets
-// far enough to be believed.
-//
-// progress is called with a fraction as the download runs, for whoever is watching in Home Assistant.
 func Install(ctx context.Context, m Manifest, progress func(float32)) error {
 	if !installing.TryLock() {
 		return fmt.Errorf("update: an install is already running")
@@ -59,9 +47,6 @@ func Install(ctx context.Context, m Manifest, progress func(float32)) error {
 	return swap(staged, m.Version)
 }
 
-// download fetches the binary and proves it before it is allowed near /system. The hash is taken as the
-// bytes go past rather than by reading the file back, so nothing has to hold sixteen megabytes in memory
-// on a device with half a gigabyte.
 func download(ctx context.Context, b Binary, to string, progress func(float32)) error {
 	ctx, cancel := context.WithTimeout(ctx, downloadTimeout)
 	defer cancel()
@@ -109,9 +94,6 @@ func download(ctx context.Context, b Binary, to string, progress func(float32)) 
 	return nil
 }
 
-// swap puts the new binary in place, keeping what it replaced. The order matters: the old one is moved
-// aside first, so at no point is there no binary at all, and the version being tried is recorded before
-// anything is replaced, so a rollback can say what it took out.
 func swap(staged, version string) error {
 	if err := os.WriteFile(layout.UpdatingPath, []byte(version), 0o644); err != nil {
 		slog.Error("recording the version being installed failed", "err", err)
@@ -119,17 +101,17 @@ func swap(staged, version string) error {
 
 	part := prev + ".part"
 	if err := copyTo(binary, part); err != nil {
-		os.Remove(part)
+		_ = os.Remove(part)
 		return fmt.Errorf("update: keeping the running binary: %w", err)
 	}
 	if err := os.Rename(part, prev); err != nil {
-		os.Remove(part)
+		_ = os.Remove(part)
 		return fmt.Errorf("update: keeping the running binary: %w", err)
 	}
 
 	if err := onSystem(func() error { return replace(staged) }); err != nil {
 		if exists(binary) {
-			os.Remove(prev)
+			_ = os.Remove(prev)
 		}
 		return fmt.Errorf("update: installing: %w", err)
 	}
@@ -142,15 +124,13 @@ func replace(staged string) error {
 		return err
 	}
 	if err := copyTo(staged, binary); err != nil {
-		os.Remove(binary)
+		_ = os.Remove(binary)
 		if back := os.Rename(aside, binary); back != nil {
 			slog.Error("could not put the running binary back", "err", back)
 		}
 		return err
 	}
 
-	// The label decides whether init will start the service at all, and which firmware this is decides
-	// what it has to be. The running binary kept its own through the rename.
 	if err := copyLabel(aside, binary); err != nil {
 		slog.Warn("labelling the new binary failed", "err", err)
 	}
@@ -158,8 +138,7 @@ func replace(staged string) error {
 	return nil
 }
 
-// copyTo writes the staged binary into /system. A rename would be cheaper and atomic, but /data and
-// /system are different filesystems, so there is nothing to rename across.
+// /data and /system are different filesystems.
 func copyTo(from, to string) error {
 	src, err := os.Open(from)
 	if err != nil {
@@ -179,7 +158,6 @@ func copyTo(from, to string) error {
 	return dst.Sync()
 }
 
-// counter reports how far a download has got, as a fraction.
 type counter struct {
 	from   io.Reader
 	size   int64
@@ -197,7 +175,6 @@ func (c *counter) Read(p []byte) (int, error) {
 		return n, err
 	}
 
-	// Only when it has moved a percent, since every update is a message to Home Assistant.
 	if at := float32(c.read) / float32(c.size); at-c.last >= 0.01 {
 		c.last = at
 		c.report(at)

@@ -2,8 +2,7 @@ package installer
 
 import "testing"
 
-// getprop prints one property per line as [name]: [value], and the state matters: a service init knows
-// about but is not running must not be stopped, and a value that merely contains "running" is not one.
+// getprop prints one property per line as [name]: [value].
 func TestRunningServices(t *testing.T) {
 	const props = `[init.svc.adbd]: [running]
 [init.svc.mixer]: [running]

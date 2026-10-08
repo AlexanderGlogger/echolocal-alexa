@@ -45,7 +45,7 @@ func newButtonsCmd() *cobra.Command {
 						if err != nil {
 							return
 						}
-						// SYN just terminates each event group; it carries no information here.
+						// SYN terminates each event group.
 						if e.Type == input.EvSyn {
 							continue
 						}
@@ -74,8 +74,6 @@ func newButtonsCmd() *cobra.Command {
 	return c
 }
 
-// cover is where this node's camera cover is sitting, for a node that has one. A switch only reports
-// when it moves, so watching alone never says where one already is.
 func cover(d *input.Device) string {
 	if !d.HasSwitch(input.SwCameraLensCover) {
 		return ""

@@ -6,10 +6,8 @@ import (
 	"math"
 )
 
-// FullScale is the peak magnitude of a 24-bit sample.
 const FullScale = 1 << 23
 
-// DecodeS24LE3 sign-extends one packed 24-bit little-endian sample.
 func DecodeS24LE3(b []byte) int32 {
 	v := int32(b[0]) | int32(b[1])<<8 | int32(b[2])<<16
 	if v&0x800000 != 0 {
@@ -18,10 +16,6 @@ func DecodeS24LE3(b []byte) int32 {
 	return v
 }
 
-// Stats accumulates per-channel level measurements over a capture.
-//
-// TruncErr tracks what a 24→16-bit truncation would discard, which is the only way to tell
-// whether the low bits carry signal or only converter noise.
 type Stats struct {
 	N        int64
 	Peak     int32
@@ -62,8 +56,7 @@ func (s *Stats) TruncErrRMS() float64 {
 	return math.Sqrt(s.sumSqErr / float64(s.N))
 }
 
-// LowBitsUsed is the fraction of samples with any of the low 8 bits set. Acoustic capture
-// sits near 100%; a digital loopback shifted into the top 16 bits reads exactly 0.
+// Acoustic capture sets the low 8 bits; a digital loopback in the top 16 bits never does.
 func (s *Stats) LowBitsUsed() float64 {
 	if s.N == 0 {
 		return 0
@@ -71,7 +64,6 @@ func (s *Stats) LowBitsUsed() float64 {
 	return float64(s.nonzero) / float64(s.N)
 }
 
-// DBFS converts a linear magnitude to dB relative to 24-bit full scale.
 func DBFS(v float64) float64 {
 	if v <= 0 {
 		return math.Inf(-1)
@@ -79,7 +71,6 @@ func DBFS(v float64) float64 {
 	return 20 * math.Log10(v/FullScale)
 }
 
-// WriteReport prints a per-channel table.
 func WriteReport(w io.Writer, st []Stats) {
 	fmt.Fprintf(w, "\n%3s  %10s  %10s  %12s  %10s  %s\n",
 		"ch", "peak dBFS", "rms dBFS", "trunc-err dB", "trunc SNR", "low-8-bits")

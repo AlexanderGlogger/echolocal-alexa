@@ -1,6 +1,3 @@
-// Package reboot is the one thing Home Assistant can ask for that ends this process for good: a
-// reboot of the device. It is a button the dashboard shows, and pressing it is the same as pulling
-// the plug — the whole device comes back, and echod with it.
 package reboot
 
 import (
@@ -8,9 +5,10 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/update"
-	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -22,8 +20,6 @@ var (
 	shared *Reboot
 )
 
-// Reboot asks init to bring the whole device back, which unwinds the services it started rather than
-// dropping the device where it stands.
 type Reboot struct {
 	button *esphome.Button
 }

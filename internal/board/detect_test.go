@@ -24,8 +24,6 @@ func TestDetectReadsTheDevice(t *testing.T) {
 	}
 }
 
-// A board-specific binary knows what it is without asking, since the pin is what decided which
-// packages were linked into it.
 func TestAPinnedBuildDoesNotAskTheDevice(t *testing.T) {
 	withPin(t, "checkers")
 	withDevice(t, "biscuit_puffin", nil)
@@ -35,7 +33,6 @@ func TestAPinnedBuildDoesNotAskTheDevice(t *testing.T) {
 	}
 }
 
-// Pinning to a codename with no entry is a build mistake, and biscuit is the safe landing.
 func TestAPinNothingMatchesFallsBackToBiscuit(t *testing.T) {
 	withPin(t, "nonesuch")
 	withDevice(t, "", errNoProp)
@@ -45,8 +42,6 @@ func TestAPinNothingMatchesFallsBackToBiscuit(t *testing.T) {
 	}
 }
 
-// Every device in the field is a biscuit, so a binary that cannot identify itself carries on as one
-// rather than coming up with no hardware.
 func TestDetectFallsBackToBiscuit(t *testing.T) {
 	for _, tc := range []struct {
 		name, said string

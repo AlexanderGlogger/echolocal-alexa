@@ -1,11 +1,12 @@
 package videoplayer
 
 import (
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedpage "github.com/ygelfand/libcountertop/pkg/display/videopage"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
-	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	sharedpage "github.com/ygelfand/libcountertop/pkg/display/videopage"
 )
 
 type Page = sharedpage.Page

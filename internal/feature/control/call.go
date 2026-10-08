@@ -4,10 +4,11 @@ package control
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/ygelfand/echolocal/internal/feature/call"
-	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 	sharedcmd "github.com/ygelfand/libcountertop/pkg/runtime/control/callcmd"
+
+	"github.com/ygelfand/echolocal/internal/feature/call"
+	"github.com/ygelfand/echolocal/internal/feature/discovery"
 )
 
 func init() { boardCommands = append(boardCommands, callCommand) }

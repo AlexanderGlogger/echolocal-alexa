@@ -12,11 +12,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
-// resolveEchod is the binary to install: a file when one was named, otherwise the build this
-// device's board is served by, fetched from a manifest.
-//
-// Per board because what is compiled in differs — a board with a panel carries the screen and the
-// artwork, and a board without it must not.
 func resolveEchod(
 	ctx context.Context,
 	out io.Writer,
@@ -56,7 +51,6 @@ func resolveEchod(
 	return fetchImage(ctx, out, title, b.Resolve)
 }
 
-// deviceArch is GOARCH for the device, from the ABI it reports.
 func deviceArch(d *device.Device) (string, error) {
 	abi, err := d.Getprop("ro.product.cpu.abi")
 	if err != nil {

@@ -5,8 +5,6 @@ import (
 	"testing"
 )
 
-// A wake engine is routinely several frames behind: measured on the Dot at worst 120 ms a frame, six
-// frames, against a channel eight deep.
 const behind = 8
 
 type reusedBuffer struct {

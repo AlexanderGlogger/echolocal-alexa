@@ -1,9 +1,10 @@
 package media
 
 import (
+	"github.com/ygelfand/libcountertop/pkg/media/pcm"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	"github.com/ygelfand/libcountertop/pkg/media/pcm"
 )
 
 type Stream = pcm.Stream

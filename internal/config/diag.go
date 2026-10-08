@@ -2,24 +2,16 @@ package config
 
 import "github.com/ygelfand/echolocal/internal/defaults"
 
-// Diag is how the device reports on itself.
 type Diag struct {
-	// Interval is how often the readings that drift are collected, in seconds.
 	Interval int `json:"interval"`
 
 	ADB bool `json:"remote_adb"`
 
-	// MinCores holds cores online that the governor would otherwise park.
 	MinCores int `json:"min_cores"`
 }
 
-// DefaultInterval is five minutes. The readings move slowly and every one of them costs a read of
-// sysfs or proc, so this is a compromise between a stale card and a device busying itself for
-// nobody.
 const DefaultInterval = 300
 
-// How many cores are worth holding online is a question about the cores a board has, so it comes
-// from defaults.
 func defaultDiag(d defaults.Set) Diag {
 	return Diag{Interval: DefaultInterval, MinCores: d.MinCores}
 }

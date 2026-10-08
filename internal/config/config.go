@@ -1,22 +1,3 @@
-// Package config is everything the device is set to, and the one place that decides it.
-//
-// Reading takes no lock and carries no default:
-//
-//	c := config.Get()
-//	c.Speaker.Volume
-//
-// Writing names the thing being changed, and persists it:
-//
-//	config.Set().Speaker().Volume(8)
-//
-// Each part of the device gets a file here holding its own struct, its defaults and its writer, so
-// a setting and everything about it is in one place. Nothing distinguishes "never set" from "set to
-// the default": loading starts from the defaults and lets the file write over what it mentions.
-//
-// The values the user can choose between are named here too, as closed sets of identifiers with a
-// label — the identifier is written to the file and branched on, the label is what Home Assistant
-// shows. Keeping both here means persistence does not import the subsystem a setting belongs to,
-// and the subsystem does not import persistence.
 package config
 
 import (
@@ -26,7 +7,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/defaults"
 )
 
-// Config is what the device is set to.
 type Config struct {
 	Feedback   Feedback   `json:"feedback"`
 	Time       Time       `json:"time"`
@@ -56,11 +36,6 @@ type Config struct {
 	Call       Call       `json:"call"`
 }
 
-// Defaults is a device nobody has set anything on.
-//
-// The values that are statements about a board rather than choices come from defaults, which has
-// been told which board this is. Everything here is what the file is merged over, so a setting
-// absent from the file is the board's answer and not a Dot's.
 func Defaults() Config {
 	d := defaults.Current()
 
@@ -89,30 +64,17 @@ func Defaults() Config {
 		Weather:    defaultWeather(),
 		Call:       defaultCall(),
 
-		// Only the stop word. The slots are absent until something chooses one, and Slot fills in the
-		// defaults for whichever have not been.
 		Wake: Wake{Stop: defaultStop()},
 	}
 }
 
-// Device is what echod was told at start-up rather than what anyone chose. It is read like
-// everything else, and not written to the file: the next process is told again.
-//
-// Nothing here is readable until boot has called Started, so a component built during init must not
-// reach for it.
 type Device struct {
 	Name string
 	Addr string
 
-	// Board is which model this is. Everything that presents the device to Home Assistant reads it
-	// from here rather than detecting again, so there is one answer per process.
 	Board board.Board
 }
 
-// Writer is what Set hands back: one method per part of the device, each with its own settings.
-//
-// Nothing here holds a lock. The leaf call does the whole thing — take the lock, change the value,
-// write the file — and returns whether the file was written.
 type Writer struct{ st *Store }
 
 func (w Writer) Time() TimeWriter             { return TimeWriter(w) }
@@ -139,19 +101,14 @@ func (w Writer) Home() HomeWriter             { return HomeWriter(w) }
 func (w Writer) Weather() WeatherWriter       { return WeatherWriter(w) }
 func (w Writer) Call() CallWriter             { return CallWriter(w) }
 
-// Wake names one slot, since every wake word setting belongs to one.
 func (w Writer) Wake(slot int) WakeWriter { return WakeWriter{st: w.st, slot: slot} }
 
-// Stop is the stop word, which is not a slot.
 func (w Writer) Stop() StopWriter { return StopWriter(w) }
 
 func errSlot(n int) error { return fmt.Errorf("config: wake slot %d", n) }
 
-// Labelled is a setting whose values name themselves. The entity layer binds any of these to a
-// select without knowing which setting it is.
 type Labelled interface{ Label() string }
 
-// Labels is the list Home Assistant shows for a set of values, in the order given.
 func Labels[T Labelled](values []T) []string {
 	out := make([]string, 0, len(values))
 	for _, v := range values {
@@ -160,8 +117,6 @@ func Labels[T Labelled](values []T) []string {
 	return out
 }
 
-// ByLabel resolves what Home Assistant sent back to the value it names. A select speaks labels,
-// everything else speaks values, and this is the one place the two meet.
 func ByLabel[T Labelled](values []T, label string) (T, bool) {
 	for _, v := range values {
 		if v.Label() == label {

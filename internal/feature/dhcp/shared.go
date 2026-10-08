@@ -1,16 +1,16 @@
-// Package dhcp binds the shared lease client to product identity and persisted configuration.
 package dhcp
 
 import (
 	"sync"
 	"time"
 
+	shared "github.com/ygelfand/libcountertop/pkg/network/dhcp"
+	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/wifi"
 	"github.com/ygelfand/echolocal/internal/service"
-	shared "github.com/ygelfand/libcountertop/pkg/network/dhcp"
-	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
 )
 
 const Interface = shared.Interface

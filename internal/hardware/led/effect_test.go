@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-// frames is ten seconds of an effect at the rate the driver runs it, which is long enough for the
-// slowest thing in the catalogue to come round more than once.
 func frames(f Frame) [][]Color {
 	out := make([][]Color, 0, 250)
 	for step := range cap(out) {
@@ -17,16 +15,9 @@ func frames(f Frame) [][]Color {
 	return out
 }
 
-// built is an effect as the driver would run it, on a ring set to base, through the same constructor
-// the driver uses so that palette defaulting and the room are wired the way they really are.
-//
-// An effect that reacts to the room is handed a room that rises and falls, a step per frame, because
-// that is where its animation comes from: hand one a silent room and it is right to hold still.
 func built(t *testing.T, e Effect, base Color) Frame {
 	t.Helper()
 
-	// A room that rises and falls, and a talker that walks round it, so an effect that watches either has
-	// something to watch.
 	var heard int
 	frame, err := effect(e.Name, base, Room{
 		Level: func() float64 {
@@ -41,10 +32,6 @@ func built(t *testing.T, e Effect, base Color) Frame {
 	return frame
 }
 
-// Whatever else an effect does, it has to be twelve colours, it has to change, and it has to light
-// something. A frame function that returns the wrong length fails the write for as long as the
-// effect is up, and one that never changes or never lights anything is a broken effect that looks
-// exactly like a ring nobody has asked for anything.
 func TestEveryEffectAnimatesAndLightsTheRing(t *testing.T) {
 	for _, e := range effects {
 		t.Run(e.Name, func(t *testing.T) {
@@ -71,11 +58,6 @@ func TestEveryEffectAnimatesAndLightsTheRing(t *testing.T) {
 	}
 }
 
-// The catalogue says which colours an effect uses, and the two answers are worth holding to. An
-// effect that inherits may only dim the colour it was given: adding a channel of its own means Home
-// Assistant asks for red and gets something that is not red, which is the one thing a light entity
-// promises. An effect with a palette must ignore the ring's colour completely, or the same name means
-// something different depending on what the light was last set to.
 func TestEffectsUseTheColoursTheCatalogueSaysTheyDo(t *testing.T) {
 	for _, e := range effects {
 		t.Run(e.Name, func(t *testing.T) {
@@ -104,8 +86,6 @@ func TestEffectsUseTheColoursTheCatalogueSaysTheyDo(t *testing.T) {
 	}
 }
 
-// Settings store the effect by name — the wake animation per assistant, and the default. A rename
-// reads back as an effect that does not exist, which turns the animation off without saying so.
 func TestNamesThatSettingsStoreAreStillOffered(t *testing.T) {
 	for _, name := range []string{"Comet", "Rainbow", "Pulse"} {
 		if _, ok := byName[name]; !ok {
@@ -114,9 +94,6 @@ func TestNamesThatSettingsStoreAreStillOffered(t *testing.T) {
 	}
 }
 
-// Every entry has to be buildable and has to say where it may be used, and the two have to agree:
-// an effect that watches the room cannot be offered to a light that has no room to give it, and one
-// that watches nothing cannot be offered as something that reacts.
 func TestEveryEffectIsBuildableAndSaysWhereItBelongs(t *testing.T) {
 	for _, e := range effects {
 		t.Run(e.Name, func(t *testing.T) {
@@ -140,8 +117,6 @@ func TestEveryEffectIsBuildableAndSaysWhereItBelongs(t *testing.T) {
 	}
 }
 
-// The lists Home Assistant is shown are the point of the split. An effect that needs a room in the
-// light's dropdown is a broken option: choosing it would fail every time.
 func TestTheListsOfferOnlyWhatFitsThem(t *testing.T) {
 	for _, name := range Names(KindLight) {
 		if byName[name].Senses != nil {
@@ -154,7 +129,6 @@ func TestTheListsOfferOnlyWhatFitsThem(t *testing.T) {
 		}
 	}
 
-	// And asking for one the wrong way round says so rather than showing a dark ring.
 	if _, err := effect(EffectRoomGlow, HomeAssistant, Room{}); err == nil {
 		t.Error("building a room effect without a room succeeded, want an error")
 	}
@@ -173,9 +147,6 @@ func TestEffectNamesAreUnique(t *testing.T) {
 	}
 }
 
-// A palette laid round the ring has to meet itself, and one laid along a gradient has to keep its
-// ends apart. Getting these the wrong way round is a seam where the hottest colour touches the
-// coldest, which is exactly what the two samplers exist to avoid.
 func TestPaletteWrapsRoundAndClampsAlong(t *testing.T) {
 	p := Palette{{R: 255}, {G: 255}, {B: 255}}
 
@@ -188,7 +159,6 @@ func TestPaletteWrapsRoundAndClampsAlong(t *testing.T) {
 	if got, want := p.At(-1.0/3), p[2]; got != want {
 		t.Errorf("At(-1/3) is %+v, want the last colour %+v", got, want)
 	}
-	// Half way between the first two, give or take where the division lands.
 	if mid := p.At(
 		1.0 / 6,
 	); mid.R < 127 || mid.R > 128 || mid.G < 127 || mid.G > 128 ||
@@ -206,8 +176,6 @@ func TestPaletteWrapsRoundAndClampsAlong(t *testing.T) {
 		t.Errorf("Along(2) is %+v, want it held at the end %+v", got, want)
 	}
 
-	// One colour is what an inheriting effect gets, and neither sampler may turn it into anything
-	// else however it is asked.
 	one := Palette{HomeAssistant}
 	if got := one.Along(0.7); got != HomeAssistant {
 		t.Errorf("Along on a single colour gave %+v, want %+v", got, HomeAssistant)
@@ -217,8 +185,6 @@ func TestPaletteWrapsRoundAndClampsAlong(t *testing.T) {
 	}
 }
 
-// The two thumps are the whole point of a heartbeat: one beat per period is a slow blink, and a
-// decay that outlasts the gap merges them into a single lump.
 func TestHeartbeatThumpsTwiceThenRests(t *testing.T) {
 	const period = 1400 * time.Millisecond
 	frame := heartbeat(Palette{{R: 255}})
@@ -239,15 +205,11 @@ func TestHeartbeatThumpsTwiceThenRests(t *testing.T) {
 		t.Errorf("%d thumps in a period, want 2", peaks)
 	}
 
-	// And it is dark by the end, or the rest is not a rest.
 	if end := frame(period - FrameInterval)[0]; end != (Color{}) {
 		t.Errorf("period ends at %+v, want dark", end)
 	}
 }
 
-// The marquee only looks right if the gaps are even, including across the seam from segment 11 back
-// to segment 0, and if the whole pattern moves rather than one lamp hopping. Each lamp also has to
-// keep its colour as the pattern steps, or a wheel turns into a flicker of changing colours.
 func TestChaseKeepsEvenGapsAndStepsWithItsColours(t *testing.T) {
 	const step = 110 * time.Millisecond
 	p := Palette{{R: 255}, {G: 255}, {B: 255}, {R: 255, G: 255}}
@@ -278,7 +240,6 @@ func TestChaseKeepsEvenGapsAndStepsWithItsColours(t *testing.T) {
 		case 0:
 			first = lit
 		case 3:
-			// Three steps at a spacing of three is back where it started.
 			if !slices.Equal(lit, first) {
 				t.Errorf("after a full cycle lit %v, want %v", lit, first)
 			}

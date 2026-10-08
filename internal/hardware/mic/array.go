@@ -8,11 +8,9 @@ const (
 	CaptureDevice = 24
 )
 
-// Mics is how many of the nine channels are microphones. ch7 and ch8 are the playback loopback.
+// ch7 and ch8 are the playback loopback.
 const Mics = 7
 
-// CenterMic is the middle microphone: no arrival delay relative to the array, and usable with no
-// beamformer at all.
 const CenterMic = 6
 
 // adcs are the four converters the seven microphones arrive on.

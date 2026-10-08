@@ -1,13 +1,14 @@
 package sendspin
 
 import (
+	core "github.com/ygelfand/libcountertop/pkg/audio/sendspin"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
-	core "github.com/ygelfand/libcountertop/pkg/audio/sendspin"
-	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	sharedplayer "github.com/ygelfand/libcountertop/pkg/media/sendspin"
 )
 
 const Port = core.Port
@@ -19,7 +20,13 @@ func (s outputSink) Written() uint64        { return s.p.Written() }
 
 func newOutput() *core.Output {
 	return core.NewOutput(outputSink{speaker.Get()}, core.Controls{
-		Volume: sharedvolume.Steps(media.Get(), speaker.VolumeSteps), Media: media.Get(), Settings: config.MediaSection, HardwareTail: speaker.HardwareTail,
+		Volume: sharedvolume.Steps(
+			media.Get(),
+			speaker.VolumeSteps,
+		),
+		Media:        media.Get(),
+		Settings:     config.MediaSection,
+		HardwareTail: speaker.HardwareTail,
 	})
 }
 

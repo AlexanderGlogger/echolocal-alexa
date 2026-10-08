@@ -2,9 +2,6 @@ package led
 
 import "time"
 
-// helix turns two dots in opposite directions. They meet twice a revolution, and because dots add
-// rather than overwrite, the meeting is a single brighter light for a moment before they separate
-// again — which is the whole illusion: two things crossing read as one strand passing behind another.
 func helix(p Palette) Frame {
 	const revolution = 2400 * time.Millisecond
 

@@ -15,7 +15,6 @@ func TestSetRejectsOversizedFields(t *testing.T) {
 	}
 }
 
-// The message layout is the whole protocol, and a device is the only other way to check it.
 func TestMessageLayout(t *testing.T) {
 	msg := make([]byte, msgLen)
 	binary.LittleEndian.PutUint32(msg[:4], cmdSetProp)

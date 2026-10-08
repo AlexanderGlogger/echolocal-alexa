@@ -16,10 +16,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/audio"
 )
 
-// maxLag is how far apart the reference and a microphone may be, in samples at the capture rate.
-// The loopback is sample-aligned with the microphones by construction, so the only delay is the
-// acoustic path — a metre is 47 samples at 16 kHz, and the enclosure is far smaller than that. The
-// window is wide because being wrong about this is the thing the measurement is meant to catch.
 const maxLag = 800
 
 func newEchoCmd() *cobra.Command {
@@ -62,7 +58,6 @@ func newEchoCmd() *cobra.Command {
 			go func() { _ = source.Run(ctx) }()
 			go func() { _ = p.Run(ctx) }()
 
-			// The same wait a reply gets, for the mixer sequence and the amplifier.
 			time.Sleep(1500 * time.Millisecond)
 
 			raw, unlisten := source.ListenRaw()
@@ -106,11 +101,6 @@ func newEchoCmd() *cobra.Command {
 	return c
 }
 
-// noise is white noise at the voice rate, half scale with the same edge ramp the sweep uses. It
-// excites every frequency at once, which is what identifying a filter needs: a sweep is one
-// frequency at a time, so an adaptive filter only ever converges where it currently is.
-//
-// The sequence is fixed rather than seeded from the clock, so two captures are comparable.
 func noise(ms int) []int16 {
 	frames := speaker.VoiceRate * ms / 1000
 	out := make([]int16, frames)
@@ -123,8 +113,6 @@ func noise(ms int) []int16 {
 	return out
 }
 
-// collect gathers raw frames for a while. They are kept whole rather than decoded as they arrive,
-// so the microphones and the reference are split from the same bytes and cannot drift apart.
 func collect(ctx context.Context, raw <-chan []byte, secs float64) ([]byte, error) {
 	var all []byte
 	deadline := time.After(time.Duration(secs * float64(time.Second)))
@@ -152,8 +140,7 @@ func report(w io.Writer, frames []byte) {
 		return
 	}
 
-	// One reference to correlate against: the speaker is mono into a single driver, so left and
-	// right carry the same programme and either would do. Their sum is what reached it.
+	// The speaker is mono into a single driver.
 	ref := make([]float64, len(refs[0]))
 	for i := range ref {
 		for c := range refs {
@@ -193,8 +180,6 @@ func report(w io.Writer, frames []byte) {
 	fmt.Fprintln(w, "better; this is the floor, and it says the echo is there to be found.")
 }
 
-// residual subtracts the best single scaled copy of the reference at the lag that fits it, which is
-// least squares over one tap. What is left is what a one-tap canceller could not explain.
 func residual(got, ref []float64, lag int) []float64 {
 	a, b := align(got, ref, lag)
 
@@ -215,7 +200,6 @@ func residual(got, ref []float64, lag int) []float64 {
 	return out
 }
 
-// align trims the two to the overlap a lag implies, so the same sample of each lines up.
 func align(got, ref []float64, lag int) (a, b []float64) {
 	switch {
 	case lag < 0:
@@ -227,8 +211,7 @@ func align(got, ref []float64, lag int) (a, b []float64) {
 	return got[:n], ref[:n]
 }
 
-// dbfs is the rms level of int16-scale samples. audio.DBFS is against a 24-bit full scale, which is
-// where the microphones start, so the narrowing Decode does has to be undone to ask it.
+// audio.DBFS is against a 24-bit full scale.
 func dbfs(x []float64) float64 {
 	if len(x) == 0 {
 		return math.Inf(-1)

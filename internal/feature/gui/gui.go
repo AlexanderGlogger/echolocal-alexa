@@ -11,6 +11,11 @@ import (
 	"time"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	backend "github.com/ygelfand/libcountertop/pkg/display/gogui"
+	navigation "github.com/ygelfand/libcountertop/pkg/display/navigation"
+	sharedplayer "github.com/ygelfand/libcountertop/pkg/display/playerview"
+	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -26,10 +31,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/touch"
 	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	backend "github.com/ygelfand/libcountertop/pkg/display/gogui"
-	navigation "github.com/ygelfand/libcountertop/pkg/display/navigation"
-	sharedplayer "github.com/ygelfand/libcountertop/pkg/display/playerview"
-	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 )
 
 const (

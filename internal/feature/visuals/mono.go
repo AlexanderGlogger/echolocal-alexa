@@ -2,7 +2,6 @@ package visuals
 
 import "github.com/ygelfand/echolocal/internal/hardware/mic"
 
-// listenMono is the microphone mix as stereo, the same frame on both sides.
 func listenMono() (<-chan []int16, func()) {
 	in, stop := mic.Get().ListenUnleveled("visuals")
 	out := make(chan []int16, cap(in))

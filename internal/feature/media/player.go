@@ -1,8 +1,3 @@
-// Package media is the speaker as Home Assistant sees it: one media_player entity carrying the
-// level, the mute and what is playing, plus the playback behind it.
-//
-// A turn takes the speaker away from a track and gives it back, so music through the middle of a
-// conversation is heard by neither the room nor the microphones.
 package media
 
 import (
@@ -14,11 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/hardware/buttons"
-	"github.com/ygelfand/echolocal/internal/hardware/led"
-	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/audio/noise"
 	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
@@ -26,17 +16,21 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/media/ownership"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+
+	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/hardware/buttons"
+	"github.com/ygelfand/echolocal/internal/hardware/led"
+	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
 
 func init() {
 	component.Register(component.Device, Get, component.Order(25))
 }
 
-// VolumeSteps runs 0..30, the range Android gives STREAM_MUSIC and the one the vendor's volume
-// curves are indexed by, so a step here is a step there. Home Assistant works in 0..1.
+// Android's STREAM_MUSIC and the vendor volume curves run 0..30.
 const VolumeSteps = speaker.VolumeSteps
 
-// volumeFlash is how long the ring shows the level after a change.
 const volumeFlash = 2 * time.Second
 
 type Player struct {
@@ -44,43 +38,28 @@ type Player struct {
 	jack   *esphome.BinarySensor
 	stream *Stream
 
-	// resampling is how voice is stretched to the playback rate. A reply arrives at the pipeline's
-	// rate and the speaker runs at the codec's, so something has to bridge them and which filter does
-	// it is audible.
 	resampling *esphome.Select
 	duck       *esphome.Number
 
-	// asp is the driver's tuning: on applies it, off sends the signal as it came.
 	asp *esphome.Switch
 
-	// layers are sounds the device makes on its own, for as long as they are left set. More than one,
-	// because a bed with a texture over it — crickets under wind — is worth having and the native API
-	// has no entity that holds more than one value.
+	// The native API has no entity that holds more than one value.
 	layers []*esphome.Select
 
-	// speaking is set while a reply or an announcement is sounding, which Home Assistant is told is
-	// playing: its mapper has no case for announcing and raises on it.
+	// Home Assistant's media player state mapper has no case for announcing and raises on it.
 	speaking atomic.Bool
 
-	// external is whatever else is driving the speaker, and nil when nothing is.
 	owner     *ownership.Owner[Source]
 	ownerInit sync.Once
 
-	// Begun carries each source that has just started playing.
 	Begun hook.Hook[Source]
 
-	// Volume carries the level whenever it moves in a way somebody should see.
 	Volume hook.Hook[int]
 
-	// turns takes a volume button where something else is what it moves.
 	turns atomic.Pointer[func(delta int) bool]
 
 	step atomic.Int64
 }
-
-// Source is audio this player did not start: a group the room has joined, playing through the same
-// speaker. Home Assistant has one media player entity for the device either way, so the transport
-// controls have to reach whoever is actually playing.
 
 var (
 	once   sync.Once
@@ -137,7 +116,6 @@ func build() *Player {
 	}
 	p.layers = noiseLayers()
 
-	// The player itself stays on the device: it is what people reach for. These are how it behaves.
 	bases := []*esphome.Base{
 		&p.resampling.Base,
 		&p.duck.Base,
@@ -155,7 +133,6 @@ func build() *Player {
 	component.Bind(p.resampling, speaker.Resamplings(), speaker.Get().SetResampling,
 		config.Set().Speaker().Resampling)
 
-	// The speaker settles this: a device whose tuning would not load stays off however it is set.
 	p.asp.OnCommand = func(want bool) {
 		settled := speaker.Get().SetASP(want)
 		p.asp.Set(settled)
@@ -165,8 +142,6 @@ func build() *Player {
 		slog.Info("setting changed", "setting", p.asp.ObjectID, "using", settled, "asked", want)
 	}
 
-	// Not saved and not restored: it is a sound somebody asked for, and a device that came back from an
-	// update hissing in a dark room would be a fault as far as anyone in it is concerned.
 	for _, sel := range p.layers {
 		sel.OnCommand = func(chosen string) {
 			if chosen != noiseOff && !noise.Has(chosen) {
@@ -181,7 +156,6 @@ func build() *Player {
 
 	p.stream = NewStream(speaker.Sound(), speaker.Get(), p.refresh)
 
-	// Volume acts on every tap and on every repeat, so a held button ramps.
 	buttons.Get().Events.Listen(func(e buttons.Event) {
 		if e.Kind == buttons.Hold {
 			return
@@ -207,7 +181,6 @@ func build() *Player {
 
 func (p *Player) Name() string { return "media player" }
 
-// WatchVolume follows the saved hardware volume step until unsubscribed.
 func (p *Player) WatchVolume(changed func(int)) func() { return p.Volume.Listen(changed) }
 
 func (p *Player) Entities() []esphome.Entity {
@@ -218,8 +191,6 @@ func (p *Player) Entities() []esphome.Entity {
 	return out
 }
 
-// Restore puts the volume back where it was, without flashing the arc: nothing happened, the device
-// is starting where it left off.
 func (p *Player) Restore(c config.Config) {
 	p.apply(c.Speaker.Volume, false)
 	slog.Info("restored", "what", "volume", "step", c.Speaker.Volume, "of", VolumeSteps)
@@ -234,12 +205,8 @@ func (p *Player) Restore(c config.Config) {
 	slog.Info("restored", "what", p.asp.ObjectID, "using", settled, "asked", c.Speaker.ASP)
 }
 
-// noiseOff is the way out of the list, and what the entities read whenever the speaker is doing
-// anything else.
 const noiseOff = "None"
 
-// noiseLayers are the slots a sound can be put in. They are peers: any sound in any slot, one on its
-// own or both mixed.
 func noiseLayers() []*esphome.Select {
 	const slots = 2
 
@@ -257,7 +224,6 @@ func noiseLayers() []*esphome.Select {
 	return out
 }
 
-// sound starts whatever the slots add up to, and stops when they add up to nothing.
 func (p *Player) sound() {
 	var sounds []string
 	for _, sel := range p.layers {
@@ -273,18 +239,11 @@ func (p *Player) sound() {
 	p.stream.PlayNoise(sounds...)
 }
 
-// command handles what Home Assistant sends. Volume arrives as a fraction; the buttons and the
-// vendor's curves work in steps, so it is rounded to one.
-//
-// It runs on the connection's read loop, so nothing here may wait for audio: starting a track hands
-// it to a goroutine and returns.
 func (p *Player) command(c esphome.MediaCommand) {
 	if c.HasVolume {
 		p.Set(int(math.Round(float64(c.Volume) * VolumeSteps)))
 	}
 
-	// An announcement is a url too, but a short one at the pipeline's rate, and it interrupts rather
-	// than replacing what is playing. It goes through the same path as one from the voice assistant.
 	if c.HasMediaURL && c.MediaURL != "" {
 		if c.Announcement {
 			p.announce(c.MediaURL)
@@ -320,8 +279,6 @@ func (p *Player) command(c esphome.MediaCommand) {
 	}
 }
 
-// announce plays a url over whatever is going on, which is what Home Assistant means by one: a
-// doorbell or a spoken alert, not a track.
 func (p *Player) announce(url string) {
 	p.Sounding(true)
 	claim := speaker.Sound().
@@ -335,8 +292,6 @@ func (p *Player) announce(url string) {
 			return nil
 		})
 
-	// The claim ends once the audio has been heard, not once it has been queued, so this is where
-	// the player stops saying it is playing.
 	safe.Go("announce", func() {
 		<-claim.Done()
 		p.Sounding(false)
@@ -347,14 +302,11 @@ func (p *Player) announce(url string) {
 	})
 }
 
-// Sounding marks a reply or an announcement as playing, and puts back whatever the player was doing
-// once it ends.
 func (p *Player) Sounding(on bool) {
 	p.speaking.Store(on)
 	p.refresh()
 }
 
-// External hands the speaker to something this player did not start, and takes it back with nil.
 func (p *Player) External(s Source) {
 	if s == nil {
 		p.sourceOwner().Clear()
@@ -364,7 +316,6 @@ func (p *Player) External(s Source) {
 	p.refresh()
 }
 
-// Changed is how an external source says it is doing something different now.
 func (p *Player) Changed() { p.refresh() }
 
 func (p *Player) SetIdle(v config.Delay) {
@@ -375,8 +326,6 @@ func (p *Player) SetIdle(v config.Delay) {
 
 func (p *Player) source() Source { s, _ := p.sourceOwner().Get(); return s }
 
-// Playing reports what is playing, which is what decides whether a turn has anything to take the
-// speaker from and whether the stop word has anything to stop.
 func (p *Player) Playing() (playing, paused bool) {
 	playing, paused = p.stream.Playing()
 	if s := p.source(); s != nil {
@@ -387,7 +336,6 @@ func (p *Player) Playing() (playing, paused bool) {
 	return playing, paused
 }
 
-// Pause leaves what is playing where it is, so it can be picked up again.
 func (p *Player) Pause() {
 	p.stream.Pause()
 	if s := p.source(); s != nil {
@@ -395,7 +343,6 @@ func (p *Player) Pause() {
 	}
 }
 
-// Unpause picks up whatever Pause left.
 func (p *Player) Unpause() {
 	p.stream.Unpause()
 	if s := p.source(); s != nil {
@@ -403,7 +350,6 @@ func (p *Player) Unpause() {
 	}
 }
 
-// Stop ends what is playing. There is nothing to come back to afterwards.
 func (p *Player) Stop() {
 	p.stream.Stop()
 	if s := p.source(); s != nil {
@@ -411,9 +357,6 @@ func (p *Player) Stop() {
 	}
 }
 
-// refresh tells Home Assistant what the player is doing. Anything that displaces the noise — a track,
-// a stop, the action button — clears both entities, rather than leaving them naming a sound nobody can
-// hear.
 func (p *Player) refresh() {
 	p.mp.SetState(p.state())
 
@@ -437,7 +380,6 @@ func (p *Player) state() esphome.MediaPlayerState {
 	}
 }
 
-// Set applies a level and remembers it.
 func (p *Player) Set(step int) {
 	applied := p.apply(step, true)
 	if err := config.Set().Speaker().Volume(applied); err != nil {
@@ -445,9 +387,6 @@ func (p *Player) Set(step int) {
 	}
 }
 
-// apply drives the speaker and reports the step it settled on. tell is false when nothing happened that
-// anyone needs to see or read about, which is a restore: the arc is a response to being turned up, not a
-// readout of the current level.
 func (p *Player) apply(step int, tell bool) int {
 	step = max(0, min(step, VolumeSteps))
 	p.step.Store(int64(step))
@@ -464,10 +403,8 @@ func (p *Player) apply(step int, tell bool) int {
 	return step
 }
 
-// Step is how loud the speaker is, out of VolumeSteps.
 func (p *Player) Step() int { return int(p.step.Load()) }
 
-// Mute drops the output without losing the level it was at.
 func (p *Player) Mute(muted bool) {
 	p.mp.SetMuted(muted)
 	if muted {
@@ -477,8 +414,6 @@ func (p *Player) Mute(muted bool) {
 	speaker.Get().SetVolume(p.Step())
 }
 
-// SetTurns says what a volume button moves when it is not the device's own level. It returns false
-// to leave the press to the device.
 func (p *Player) SetTurns(fn func(delta int) bool) { p.turns.Store(&fn) }
 
 func (p *Player) turn(delta int) {
@@ -488,18 +423,11 @@ func (p *Player) turn(delta int) {
 	p.Adjust(delta)
 }
 
-// Adjust moves the level by a step and says so, which is what the buttons and Home Assistant's own
-// up and down both do.
 func (p *Player) Adjust(delta int) {
 	p.Set(p.Step() + delta)
 	speaker.Sound().Chime(sharedtone.ToneVolume)
 }
 
-// show lights the level as a clockwise arc, the leading segment dimmed by the fraction of a segment
-// the level does not fill. It takes its own claim each time and lets it expire, which is what puts
-// back whatever was underneath — including a conversation that is still running.
-// A board with no ring has no arc to light. The chime that goes with a volume change is the
-// speaker's and happens either way.
 func (p *Player) show(step int) {
 	leds := led.Get()
 	if !leds.Present() {

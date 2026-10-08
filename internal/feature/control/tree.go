@@ -7,13 +7,6 @@ import (
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 )
 
-// What the harness can do, in one place.
-//
-// A command carries its own description, so there is one of them and it cannot go stale against a
-// help string written out beside it.
-//
-// Built per invocation rather than once: commands hold parsed state, and these arrive down a socket
-// from whoever is poking at the device, not from a process that starts and exits.
 func (c *Control) tree() *cobra.Command {
 	root := harness.NewRoot()
 
@@ -32,7 +25,6 @@ func (c *Control) tree() *cobra.Command {
 
 var boardCommands []func() *cobra.Command
 
-// telling is what the device will say about itself.
 func telling() []*cobra.Command {
 	commands := harness.DeviceCommands(deviceInfo)
 
@@ -55,7 +47,3 @@ func telling() []*cobra.Command {
 }
 
 func waiting() *cobra.Command { return harness.WaitCommand() }
-
-var says = harness.Says
-var group = harness.Group
-var does = harness.Does

@@ -10,12 +10,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// logPage is how much log text goes in one answer. The transport caps a message at 65515 bytes and
-// JSON escaping only adds to what a line costs, so half of that leaves room to spare.
+// The transport caps a message at 65515 bytes.
 const logPage = 32 * 1024
 
-// Logs is one page of the device's log. Pages is the whole count, so a caller knows when to stop
-// without a second round trip.
 type Logs struct {
 	Version int      `json:"version"`
 	Page    int      `json:"page"`
@@ -23,8 +20,6 @@ type Logs struct {
 	Lines   []string `json:"lines"`
 }
 
-// Actions is how Home Assistant reads the log after the fact. The live stream only carries what
-// happens while something is subscribed; this is what the daemon still holds either way.
 func (d *Diag) Actions() []*esphome.Action {
 	return []*esphome.Action{
 		{
@@ -59,8 +54,6 @@ func logs(page int) (*Logs, error) {
 	return &Logs{Version: 1, Page: page, Pages: len(pages), Lines: pages[page]}, nil
 }
 
-// split cuts the lines into pages the transport will carry, never splitting a line. Always at least
-// one page: a device with nothing to say still answers.
 func split(lines []string) [][]string {
 	pages := [][]string{nil}
 	size := 0

@@ -11,12 +11,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// ErrNoKey means the device is running unprovisioned.
 var ErrNoKey = errors.New("device has no encryption key")
 
-// installKey gives the device a per-device key, generated here so it can be shown once for
-// pasting into Home Assistant. An existing key is never replaced: rotating it silently would
-// break the pairing without saying so.
 func installKey(r *run) (string, bool, error) {
 	existing, err := ReadKey(r.d)
 	if err != nil {
@@ -36,11 +32,9 @@ func installKey(r *run) (string, bool, error) {
 	if err := writeKey(r.d, k.String()); err != nil {
 		return "", false, err
 	}
-	// The key itself is shown once at the end, where it cannot be missed.
 	return "generated", false, nil
 }
 
-// ReadKey returns the device's key, or empty when it has none.
 func ReadKey(d *device.Device) (string, error) {
 	have, err := d.Exists(layout.KeyPath)
 	if err != nil || !have {
@@ -53,8 +47,6 @@ func ReadKey(d *device.Device) (string, error) {
 	return strings.TrimSpace(string(b)), nil
 }
 
-// RotateKey replaces the device's key and returns the new one. Home Assistant has to be told the
-// new value, so this is deliberately explicit rather than part of an install.
 func RotateKey(d *device.Device) (string, error) {
 	k, err := esphome.GeneratePSK()
 	if err != nil {
@@ -76,7 +68,6 @@ func writeKey(d *device.Device, key string) error {
 	return d.WriteFile(layout.KeyPath, []byte(key+"\n"), 0o600)
 }
 
-// KeyOrError is ReadKey with a typed error, for commands that cannot proceed without one.
 func KeyOrError(d *device.Device) (string, error) {
 	k, err := ReadKey(d)
 	if err != nil {

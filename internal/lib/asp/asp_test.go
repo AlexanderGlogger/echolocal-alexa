@@ -11,8 +11,6 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
-// convolve is the definition the FIR has to meet: every output sample is the filter run against the
-// samples up to it. Slow, and the only thing here that is obviously correct.
 func convolve(x, h []float32) []float32 {
 	out := make([]float32, len(x))
 	for n := range x {
@@ -27,8 +25,6 @@ func convolve(x, h []float32) []float32 {
 	return out
 }
 
-// A block-at-a-time filter that carried the wrong history would still sound like something, so this
-// is the check that says the transform is doing a convolution and not an approximation of one.
 func TestFIRMatchesDirectConvolution(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	h := make([]float32, 256)
@@ -57,9 +53,6 @@ func TestFIRMatchesDirectConvolution(t *testing.T) {
 	}
 }
 
-// The bands are summed straight back together, so anything the split does to their relative phase
-// shows up as a comb in the sum. Flat here means a band can be turned down on its own without the
-// others changing around it.
 func TestCrossoverSumsFlat(t *testing.T) {
 	const (
 		rate  = Rate
@@ -88,8 +81,6 @@ func TestCrossoverSumsFlat(t *testing.T) {
 	}
 	fft.New(n).Forward(sum)
 
-	// Only up to a little under Nyquist: the highest split sits at 7.5 kHz and the sections there are
-	// warped enough by the bilinear transform that the top of the band is not worth holding to this.
 	for k := 1; k < n/2; k++ {
 		hz := float64(k) * rate / n
 		if hz < 20 || hz > 18000 {
@@ -108,8 +99,6 @@ func cmagf(c complex64) float64 {
 	return math.Hypot(float64(real(c)), float64(imag(c)))
 }
 
-// Whatever the compressor does above it, the chain is the last thing before the DAC and nothing may
-// leave it above full scale.
 func TestFullBandLimiterHoldsCeiling(t *testing.T) {
 	tuning := &Tuning{taps: unitTaps(), mbcl: testMBCL()}
 	c, err := tuning.Chain(512)
@@ -133,8 +122,7 @@ func TestFullBandLimiterHoldsCeiling(t *testing.T) {
 	}
 }
 
-// The band below 115 Hz is compressed 20:1 from -50 dB, which is what keeps the tuning's bass boost
-// off the driver. A change that quietly stopped doing that would not be audible until something broke.
+// The vendor tuning compresses the band below 115 Hz 20:1 from -50 dB.
 func TestLowBandIsHeldDown(t *testing.T) {
 	tuning := &Tuning{taps: unitTaps(), mbcl: testMBCL()}
 	c, err := tuning.Chain(512)
@@ -187,10 +175,7 @@ func testMBCL() mbcl {
 	}
 }
 
-// vendorTuning is the real tuning, which is not ours to ship:
-//
-//	adb pull /vendor/etc/audio-algorithms /tmp/coefs
-//	ECHOLOCAL_VENDOR_DIR=/tmp/coefs go test ./internal/lib/asp/ -run Vendor -v
+// The vendor tuning is not ours to ship.
 func vendorTuning(t *testing.T) *Tuning {
 	t.Helper()
 	dir := os.Getenv("ECHOLOCAL_VENDOR_DIR")
@@ -205,9 +190,6 @@ func vendorTuning(t *testing.T) *Tuning {
 	return v
 }
 
-// The shape of the filter is the whole point of loading it, so this states the shape we measured off
-// a stock device: a large lift through the low mids and a cut across the presence region. A tuning
-// that does not look like this is not the one we think we are applying.
 func TestVendorFilterHasTheShapeWeMeasured(t *testing.T) {
 	v := vendorTuning(t)
 

@@ -1,7 +1,3 @@
-// Package touch reads the touchscreen.
-//
-// A Goodix gt9xx in multi-touch protocol B. It reports in the panel's own portrait, so positions are
-// turned into the coordinates the drawing uses before anyone sees them.
 package touch
 
 import (
@@ -11,12 +7,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ygelfand/libcountertop/pkg/hook"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/lib/input"
 	"github.com/ygelfand/echolocal/internal/service"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
@@ -25,13 +22,10 @@ func init() {
 		component.Supervise(service.Restart(time.Second, time.Minute)))
 }
 
-// Name is what the driver calls itself.
 const Name = "goodix-ts"
 
-// Contacts is every finger, as it happens.
 var Contacts hook.Hook[Contact]
 
-// Gestures is what those fingers amounted to: a tap, or a swipe and which edge it came from.
 var Gestures hook.Hook[Gesture]
 
 type Touch struct {
@@ -43,7 +37,6 @@ type Touch struct {
 
 var started = time.Now()
 
-// Since is how long it has been since a finger was on the panel, or since start-up if one never was.
 func (t *Touch) Since() time.Duration {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -53,8 +46,6 @@ func (t *Touch) Since() time.Duration {
 	return time.Since(t.last)
 }
 
-// recognize feeds a contact to the recognizer, sized from the panel the first time it is needed.
-// The rotation is fixed on these boards, so it is never rebuilt.
 func (t *Touch) recognize(c Contact) (Gesture, bool) {
 	t.mu.Lock()
 	if t.rec == nil {
@@ -78,7 +69,6 @@ func (t *Touch) Name() string { return "touch" }
 func (t *Touch) Start(context.Context) error {
 	d, err := find()
 	if err != nil {
-		// A device that cannot be touched still answers, so this is said rather than fatal.
 		slog.Error("the touchscreen would not open", "err", err)
 		return nil
 	}
@@ -113,7 +103,6 @@ func (t *Touch) Close() error {
 	return err
 }
 
-// Run reports contacts until the device goes away, which is what the supervisor restarts on.
 func (t *Touch) Run(ctx context.Context) error {
 	t.mu.Lock()
 	d := t.dev
@@ -149,7 +138,6 @@ func (t *Touch) read(d *input.Device) error {
 	}
 }
 
-// Feed puts one contact through, as a finger on the panel and as whatever gesture it completes.
 func (t *Touch) Feed(c Contact) {
 	t.mu.Lock()
 	t.last = time.Now()
@@ -162,12 +150,6 @@ func (t *Touch) Feed(c Contact) {
 	}
 }
 
-// place turns a panel position into a viewed one. The touchscreen reports the same 480x960 the
-// framebuffer is, so there is nothing to scale.
-//
-// Without a panel there is no rotation to apply and the raw position is the best that can be said.
-// Said once: passing these off as viewed coordinates silently would put every touch in the wrong
-// place on a device where nothing looked broken.
 func place(px, py int) (int, int) {
 	fw, fh := display.Get().Native()
 	if fw == 0 {
@@ -193,7 +175,7 @@ func find() (*input.Device, error) {
 			found = d
 			continue
 		}
-		d.Close()
+		_ = d.Close()
 	}
 	if found == nil {
 		return nil, fmt.Errorf("touch: no input device called %q", Name)

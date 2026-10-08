@@ -9,8 +9,7 @@ import (
 	"strings"
 )
 
-// readFloats parses a coefficient file, one float per line with a trailing comma, and insists on the
-// count it should hold: a file of the wrong length is a different tuning.
+// Coefficient files hold one float per line with a trailing comma.
 func readFloats(path string, want int) ([]float32, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -42,7 +41,6 @@ func readFloats(path string, want int) ([]float32, error) {
 	return out, nil
 }
 
-// mbcl is the compressor and limiter's settings, named as the file names them.
 type mbcl struct {
 	Bypass          bool       `json:"Bypass"`
 	PreFilterBypass bool       `json:"PreFilterBypass"`
@@ -53,9 +51,7 @@ type mbcl struct {
 	Full            mbclLimit  `json:"Full-band limiter"`
 }
 
-// mbclBand is one band's compressor and limiter. Thresholds are dB below full scale, gainMin is the
-// furthest the compressor may turn a band down, and release is in milliseconds. Attack times are not
-// in the file; see attack in mbcl.go.
+// Thresholds are dB below full scale and release is in milliseconds; the file has no attack times.
 type mbclBand struct {
 	CompInVol   float64 `json:"comp_inVol"`
 	CompRatio   float64 `json:"comp_ratio"`
@@ -72,8 +68,7 @@ type mbclLimit struct {
 	LimRelease float64 `json:"lim_release"`
 }
 
-// readMBCL parses the compressor's configuration. The file is JSON with C comments in it, which the
-// vendor's own loader strips before parsing.
+// The vendor file is JSON with C comments, which the vendor loader strips.
 func readMBCL(path string) (mbcl, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -100,7 +95,6 @@ func readMBCL(path string) (mbcl, error) {
 	return m, nil
 }
 
-// stripComments removes // and /* */ comments, leaving anything inside a string alone.
 func stripComments(b []byte) []byte {
 	out := make([]byte, 0, len(b))
 	for i := 0; i < len(b); {

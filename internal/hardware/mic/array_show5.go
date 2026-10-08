@@ -16,5 +16,4 @@ var adcs = []string{"A"}
 
 const beamforming = false
 
-// Measured in a silent room beside a Dot: 40-100 Hz sits about 9 dB above it, the rest 3-5 dB.
 const lowCutHz = 100

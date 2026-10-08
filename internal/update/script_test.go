@@ -9,8 +9,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// The two hooks run at different moments and must not be interchangeable: only the one init runs on the
-// way up may put a binary back, because the other fires while a healthy update is still on trial.
 func TestOnlyTheEarlyHookRollsBack(t *testing.T) {
 	early := Script(layout.StartAnimation)
 	late := Script(layout.StopAnimation)
@@ -26,8 +24,6 @@ func TestOnlyTheEarlyHookRollsBack(t *testing.T) {
 	}
 }
 
-// Whatever else it does, it has to end in a way init is happy with and never run ledctrl, which is the
-// original reason for replacing it.
 func TestBothHooksExitCleanlyAndNeverCallLedctrl(t *testing.T) {
 	for _, path := range hooks() {
 		script := Script(path)
@@ -38,15 +34,12 @@ func TestBothHooksExitCleanlyAndNeverCallLedctrl(t *testing.T) {
 		if !strings.HasSuffix(script, "exit 0\n") {
 			t.Errorf("%s does not end by exiting cleanly:\n%s", path, script)
 		}
-		// The comment explains what was replaced, so what must be absent is the executable itself.
 		if strings.Contains(script, "/system/bin/ledctrl") {
 			t.Errorf("%s still calls ledctrl", path)
 		}
 	}
 }
 
-// The rollback has to leave the device in the state everything else expects: the binary back, /system
-// read-only again, and the failure recorded where echod will find it.
 func TestRollbackRestoresAndReports(t *testing.T) {
 	script := Script(layout.StartAnimation)
 
@@ -64,7 +57,6 @@ func TestRollbackRestoresAndReports(t *testing.T) {
 	}
 }
 
-// Ensure only writes what differs, because an ordinary start should not be remounting /system at all.
 func TestEnsureLeavesCurrentHooksAlone(t *testing.T) {
 	dir := t.TempDir()
 	paths := []string{filepath.Join(dir, "start.sh"), filepath.Join(dir, "stop.sh")}
@@ -76,7 +68,6 @@ func TestEnsureLeavesCurrentHooksAlone(t *testing.T) {
 	var remounts int
 	writable = func(bool) error { remounts++; return nil }
 
-	// Written as this build wants them, so there is nothing to do.
 	for _, p := range paths {
 		if err := os.WriteFile(p, []byte(Script(p)), 0o755); err != nil {
 			t.Fatal(err)
@@ -87,7 +78,6 @@ func TestEnsureLeavesCurrentHooksAlone(t *testing.T) {
 		t.Errorf("remounted %d times with both hooks already current", remounts)
 	}
 
-	// One of them behind, so it is rewritten.
 	if err := os.WriteFile(paths[0], []byte("#!/system/bin/sh\nexit 0\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}

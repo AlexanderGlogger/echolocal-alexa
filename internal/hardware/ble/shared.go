@@ -1,11 +1,13 @@
 package ble
 
 import (
-	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/service"
-	sharedhci "github.com/ygelfand/libcountertop/pkg/bluetooth/hci"
 	"sync"
 	"time"
+
+	sharedhci "github.com/ygelfand/libcountertop/pkg/bluetooth/hci"
+
+	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/service"
 )
 
 type Advertisement = sharedhci.Advertisement

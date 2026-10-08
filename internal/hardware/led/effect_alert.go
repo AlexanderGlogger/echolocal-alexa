@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-// alert pulses three times and rests. Three, because one is a glitch and two is a heartbeat; the rest
-// after them is what makes the group read as a thing being said rather than as a rhythm.
-//
-// Each pulse swells rather than snapping on. On twelve segments a hard edge reads as the driver
-// faulting, which is the one impression a failure indication cannot afford.
 func alert(p Palette) Frame {
 	const (
 		period = 2 * time.Second

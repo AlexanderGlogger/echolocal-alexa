@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// A board with nothing to show on still answers, so a feature says what happened without first
-// asking whether anyone is listening.
 func TestAClaimIsAlwaysUsable(t *testing.T) {
 	s := nowhere{}
 
@@ -19,7 +17,6 @@ func TestAClaimIsAlwaysUsable(t *testing.T) {
 		t.Fatal("no claim")
 	}
 
-	// None of these may panic, which is the whole point of answering with something.
 	c.Play("Pulse", Color{R: 0xFF})
 	c.PlayReversed("Pulse", Color{})
 	c.React("Pulse", Color{}, Room{})
@@ -30,19 +27,15 @@ func TestAClaimIsAlwaysUsable(t *testing.T) {
 	s.HoldOnStop(Color{})
 }
 
-// Get always answers, even before any surface has registered.
 func TestGetAlwaysAnswers(t *testing.T) {
 	if got := Get(); got == nil {
 		t.Fatal("Get returned nothing")
 	}
-	// Twice, since it is resolved once and held.
 	if Get() != Get() {
 		t.Error("Get answered with a different surface the second time")
 	}
 }
 
-// The priorities are an order, and the ones that must outrank each other do. A surface resolves
-// competing claims by comparing these, so the order is the contract.
 func TestPrioritiesAreOrdered(t *testing.T) {
 	for _, tc := range []struct {
 		lower, higher Priority

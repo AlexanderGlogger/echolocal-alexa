@@ -10,26 +10,12 @@ import (
 	"testing"
 )
 
-// TestSearchLayout is scaffolding, not a check. The Fire OS 6 coefficient file carries no comments
-// describing its layout, and reading it with Fire OS 5's does not steer, so this drives it through
-// every plausible ordering and reports which ones do.
-//
-// The fitness is the same question direction_test asks: does a different beam win at each bearing?
-// A correct layout answers with every beam, as Fire OS 5's does; a wrong one piles the energy into
-// one or two whatever the source does.
-//
-//	ECHOLOCAL_FBF=/tmp/coefs/coefs_FBFV2_LowLatency_8beams.cfg \
-//	ECHOLOCAL_WINDOW=/tmp/coefs/coefs_FilterBank_AnalysisSynthesis_768cvxGLow.cfg \
-//	go test ./internal/lib/subband/ -run SearchLayout -v
 func TestSearchLayout(t *testing.T) {
 	weights, window := os.Getenv("ECHOLOCAL_FBF"), os.Getenv("ECHOLOCAL_WINDOW")
 	if weights == "" || window == "" {
 		t.Skip("set ECHOLOCAL_FBF and ECHOLOCAL_WINDOW")
 	}
 
-	// Defaults are Fire OS 6's, from its AFE.cfg with bands at half the transform as its own comment
-	// requires. Fire OS 5's numbers go in through the environment, to calibrate the score against a
-	// layout already known to be right.
 	base := geometry{
 		Bands:     envInt("ECHOLOCAL_BANDS", 128),
 		FFTLen:    envInt("ECHOLOCAL_FFT", 256),
@@ -111,7 +97,6 @@ func envInt(name string, def int) int {
 	return def
 }
 
-// ring is the first n microphones of the array.
 func ring(n int) []int {
 	out := make([]int, n)
 	for i := range out {
@@ -120,8 +105,6 @@ func ring(n int) []int {
 	return out
 }
 
-// orderedPicks is every way to take k of n microphones in some order, which is what the coefficient
-// file's microphone axis could mean.
 func orderedPicks(n, k int) [][]int {
 	if k == 0 {
 		return [][]int{{}}
@@ -138,9 +121,6 @@ func orderedPicks(n, k int) [][]int {
 	return out
 }
 
-// fill lays the file out under one candidate ordering. order names the three axes outer to inner,
-// down counts taps backwards the way Fire OS 5 does, and split puts a block's real parts before its
-// imaginary ones rather than interleaving them.
 func fill(w *Weights, values []float32, order string, down, split bool) bool {
 	g := w.g
 	size := map[byte]int{'b': g.Beams, 't': g.Taps, 'm': g.Inputs()}
@@ -177,9 +157,6 @@ func fill(w *Weights, values []float32, order string, down, split bool) bool {
 	return at == len(values)
 }
 
-// steers reports how sharply the beams discriminate: the loudest beam against the average of them
-// all, meaned over a circle of bearings. A layout read correctly answers a source differently
-// depending on where it is; one read wrong gives the same flat pattern whatever the source does.
 func steers(w *Weights) (float64, []int) {
 	var contrast float64
 	seen := map[int]bool{}
@@ -188,7 +165,6 @@ func steers(w *Weights) (float64, []int) {
 	for step := range 12 {
 		bearing := float64(step) * 30 * math.Pi / 180
 
-		// An eighth input would be the echo canceller's reference, silent with nothing playing.
 		frame := planeWave(bearing, 16*testFrame)
 		for len(frame) < w.g.Channels() {
 			frame = append(frame, make([]int16, 16*testFrame))
@@ -210,7 +186,5 @@ func steers(w *Weights) (float64, []int) {
 		seen[loudest] = true
 		order = append(order, loudest)
 	}
-	// Distinct winners is what separates a layout that steers from one that does not; contrast only
-	// breaks ties between layouts that steer equally widely.
 	return float64(len(seen)) + contrast/1000, order
 }

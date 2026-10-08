@@ -48,7 +48,6 @@ func newMediaCmd() *cobra.Command {
 			defer stop()
 			go func() { _ = p.Run(ctx) }()
 
-			// The same wait a reply gets, for the mixer sequence and the amplifier.
 			time.Sleep(1500 * time.Millisecond)
 
 			out := cmd.OutOrStdout()

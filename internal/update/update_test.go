@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-// somewhere writable points the paths at a temp directory, since the real ones are under a read-only
-// /system that only exists on the device.
 func somewhere(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
@@ -26,10 +24,8 @@ func somewhere(t *testing.T) string {
 	binary, aside = filepath.Join(system, "echod"), filepath.Join(system, "echod.aside")
 	systemOld, systemPrev = filepath.Join(system, "echod.old"), filepath.Join(system, "echod.prev")
 
-	// The directory is already writable, so the remount is the one thing that cannot be exercised here.
 	writable = func(bool) error { return nil }
 
-	// Android is not here, so nothing asks init for a reboot unless a test means to.
 	reboot = func() {}
 	return data
 }
@@ -128,9 +124,6 @@ func TestOnTrialIsThePresenceOfPrev(t *testing.T) {
 	}
 }
 
-// Committing files the previous binary one generation back, which is what stops a later boot from
-// treating it as a trial that never finished. Remounting fails off the device, so what is asserted here
-// is the rename, on a directory that is already writable.
 func TestCommitFilesThePreviousBinaryAway(t *testing.T) {
 	somewhere(t)
 
@@ -147,8 +140,6 @@ func TestCommitFilesThePreviousBinaryAway(t *testing.T) {
 	}
 }
 
-// Nothing to keep is the ordinary case — most starts follow no update at all — and it must not touch
-// the filesystem or report anything.
 func TestCommitWithNothingOnTrial(t *testing.T) {
 	dir := somewhere(t)
 
@@ -172,8 +163,6 @@ func TestStartWithNoUpdateSaysSo(t *testing.T) {
 	}
 }
 
-// Two requests are one restart: the channel is buffered at one and a full one is dropped, so a caller
-// that asks twice cannot leave a second request behind to be acted on later.
 func TestRestartCoalesces(t *testing.T) {
 	Restart("first")
 	Restart("second")
@@ -188,8 +177,6 @@ func TestRestartCoalesces(t *testing.T) {
 	}
 }
 
-// Reboot is the ask, not the doing: what happens after the property is set is init's, so the test
-// proves the ask gets made once.
 func TestRebootAsksInit(t *testing.T) {
 	somewhere(t)
 

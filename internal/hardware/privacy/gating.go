@@ -5,8 +5,7 @@ import (
 	"time"
 )
 
-// Writing 1 to enable cuts, writing 0 does nothing, and only the button releases. Measured on
-// checkers.
+// Writing 1 to enable cuts, writing 0 does nothing, and only the button releases.
 type gating struct {
 	dir string
 	sw  func() (cut, known bool)

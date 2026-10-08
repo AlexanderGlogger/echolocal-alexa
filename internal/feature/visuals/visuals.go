@@ -3,12 +3,13 @@ package visuals
 import (
 	"sync"
 
+	sharedinput "github.com/ygelfand/libcountertop/pkg/display/visualinput"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/mute"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	sharedinput "github.com/ygelfand/libcountertop/pkg/display/visualinput"
 )
 
 const LiftMax = sharedinput.LiftMax

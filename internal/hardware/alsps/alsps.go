@@ -1,4 +1,3 @@
-// Package alsps reads the ambient light through MediaTek's alsps driver.
 package alsps
 
 import (
@@ -42,7 +41,6 @@ type Sensor struct {
 	known atomic.Bool
 }
 
-// Open finds the driver's input device, sets its period and turns it on.
 func Open() (*Sensor, error) {
 	devices, err := input.List()
 	if err != nil {
@@ -77,7 +75,6 @@ func Open() (*Sensor, error) {
 	return s, nil
 }
 
-// Run takes readings until ctx ends or the device fails.
 func (s *Sensor) Run(ctx context.Context) error {
 	for {
 		e, err := s.dev.Read()
@@ -93,12 +90,10 @@ func (s *Sensor) Run(ctx context.Context) error {
 	}
 }
 
-// Lux is the last reading, and false before there has been one.
 func (s *Sensor) Lux() (float64, bool) {
 	return math.Float64frombits(s.lux.Load()), s.known.Load()
 }
 
-// Close turns the sensor off and lets the device go.
 func (s *Sensor) Close() error {
 	current.CompareAndSwap(s, nil)
 	err := write("alsactive", "0")

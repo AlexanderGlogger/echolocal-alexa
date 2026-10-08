@@ -9,16 +9,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// Several install steps only land on the next boot: the gating properties init reads at start, the
-// firewall hook Amazon's own script runs, taking over a service that was already running. echod is
-// started at the end so the device works immediately, but that is not the same device as one that
-// booted with all of it in place, and the first boot is where a mistake shows up.
-//
-// So this stage exists to have that boot happen while somebody is watching, and to say whether echod
-// came back by itself — the only part of an install that is not the installer describing its own work.
-
-// residentTimeout is how long echod gets to publish itself after Android is up. It starts as an init
-// service, so it is running well before this.
 const residentTimeout = 60 * time.Second
 
 var rebootSteps = []step{
@@ -27,8 +17,6 @@ var rebootSteps = []step{
 	{"echod started on its own", awaitResident},
 }
 
-// RebootAndWait restarts the device and waits for echod to come back without being told to. Not
-// Restart, which cycles echod through init while Android keeps running.
 func RebootAndWait(ctx context.Context, d *device.Device, report Reporter) error {
 	r := &run{d: d, ctx: ctx}
 	r.board()
@@ -58,8 +46,7 @@ func awaitAndroid(r *run) (string, bool, error) {
 	return fmt.Sprintf("booted, %.0fs up", up), false, nil
 }
 
-// awaitResident waits for echod's own word for it. The properties it publishes do not survive a
-// reboot, so anything read here was published by this boot.
+// Non-persistent properties do not survive a reboot.
 func awaitResident(r *run) (string, bool, error) {
 	deadline := time.Now().Add(residentTimeout)
 

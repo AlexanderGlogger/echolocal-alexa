@@ -62,16 +62,11 @@ func newInstallCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			out := cmd.OutOrStdout()
 
-			// Not connect: the flash stage is what grants root, so demanding it first would refuse
-			// every device that still needs one.
 			d, err := attach(cmd.Context(), out, serial)
 			if err != nil {
 				return err
 			}
 
-			// Which device this is decides everything that follows: the boot image, where its verity
-			// metadata sits, and which of Amazon's services to turn off. A device this build has no
-			// profile for is refused here rather than part way through writing to it.
 			p, err := profileFor(d)
 			if err != nil {
 				return err
@@ -79,8 +74,6 @@ func newInstallCmd() *cobra.Command {
 
 			cfg := installer.Config{ZeroPSK: !genKey, Profile: p, Reflash: reflash}
 
-			// The image is only resolved when it is going to be written. A device that already has root
-			// needs none, so an install onto one never touches the network.
 			state, err := installer.Probe(d)
 			if err != nil {
 				return err
@@ -106,10 +99,6 @@ func newInstallCmd() *cobra.Command {
 				}
 			}
 
-			// The boot image first, and on its own: until it is written there is no root adbd, and
-			// everything below needs one — reading the device's own name included.
-			// Named for what it always does rather than for what it sometimes does: most runs find a
-			// device that already has root and write nothing at all.
 			if err := render(cmd.Context(), out, "Verifying device boot status",
 				"✓ device has root",
 				func(report installer.Reporter) error {
@@ -137,9 +126,6 @@ func newInstallCmd() *cobra.Command {
 			}
 			cfg.Name = chosen
 
-			// settles is whether anything changed that only takes effect on the next boot, which the
-			// installer decides: it is the only thing that knows a run replaced the binary from a run
-			// that gated a service or hid a package that was running.
 			var settles bool
 			if err := render(cmd.Context(), out, "Installing EchoLocal",
 				"✓ echod installed and running",
@@ -151,10 +137,6 @@ func newInstallCmd() *cobra.Command {
 				return err
 			}
 
-			// Wifi before the reboot, because the supplicant keeps what it is given and a device that
-			// comes back on the network is more of the install proven. Home Assistant cannot reach the
-			// device without it, and a device that never gets a network is still installed, so declining
-			// leaves it for `echoctl wifi`.
 			if err := ensureWifi(cmd.Context(), out, d, ssid, password, wps); err != nil {
 				if !errors.Is(err, ErrCancelled) {
 					return err
@@ -166,8 +148,6 @@ func newInstallCmd() *cobra.Command {
 				)
 			}
 
-			// Before the pairing key rather than after, so the one thing to carry off the screen is the
-			// last thing printed.
 			if err := offerReboot(
 				cmd.Context(),
 				out,
@@ -205,8 +185,6 @@ func newInstallCmd() *cobra.Command {
 	return c
 }
 
-// printPairing shows what Home Assistant needs. The key is the one thing a user has to carry
-// off this screen, so it gets a box of its own rather than a line of step detail.
 func printPairing(out io.Writer, d *device.Device, name string) error {
 	key, err := installer.ReadKey(d)
 	if err != nil {
@@ -228,7 +206,6 @@ func printPairing(out io.Writer, d *device.Device, name string) error {
 	return nil
 }
 
-// render drives a step run, live when attached to a terminal and plain lines otherwise.
 func render(
 	ctx context.Context,
 	out io.Writer,
@@ -300,9 +277,6 @@ func (m *installModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case tea.KeyMsg:
-		// Cancelling is a failure, and has to say so: without an error here the view takes the
-		// success branch and the command exits 0, claiming to have done what it was interrupted
-		// half way through.
 		if msg.String() == "ctrl+c" {
 			m.err, m.finished = ErrCancelled, true
 			return m, tea.Quit

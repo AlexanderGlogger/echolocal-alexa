@@ -1,4 +1,3 @@
-// Package brightness drives the panel's backlight, from the slider or from the room's light.
 package brightness
 
 import (
@@ -10,13 +9,14 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	"github.com/ygelfand/echolocal/internal/hardware/alsps"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
@@ -24,17 +24,14 @@ func init() {
 }
 
 const (
-	// settle is how much of each reading moves the level the backlight follows.
 	settle = 0.25
 	tick   = 250 * time.Millisecond
 
-	// change is how far a reading must move from the last one sent, as a fraction of it.
 	change = 0.05
 
 	// The driver reports whole lux.
 	leastLux = 1
 
-	// stale is the longest Home Assistant goes without hearing the light.
 	stale = 5 * time.Minute
 )
 
@@ -131,7 +128,6 @@ func (a *Auto) Close() error {
 	return s.Close()
 }
 
-// Ambient is the smoothed light the backlight follows, and false before there has been a reading.
 func (a *Auto) Ambient() (float64, bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -182,7 +178,6 @@ func (a *Auto) apply(level int) {
 	screen.Get().Lit(level)
 }
 
-// told is the last reading handed to Home Assistant, and when.
 type told struct {
 	value float64
 	at    time.Time

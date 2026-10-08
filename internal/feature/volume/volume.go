@@ -1,4 +1,3 @@
-// Package volume is how loud each kind of sound is, and the control for it on the panel.
 package volume
 
 import (
@@ -6,23 +5,23 @@ import (
 	"slices"
 	"sync"
 
+	esphome "github.com/ygelfand/go-esphome-device"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	esphome "github.com/ygelfand/go-esphome-device"
-	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
 	component.Register(component.Device, Get, component.Order(38), component.Needs(board.Panel))
 }
 
-// Change is a level that just moved.
 type Change struct {
 	Stream config.Stream
 	Level  int
@@ -30,8 +29,7 @@ type Change struct {
 
 type Volume struct {
 	entities *sharedvolume.Entities
-	// Changed carries every change, however it was made.
-	Changed hook.Hook[Change]
+	Changed  hook.Hook[Change]
 
 	card    *sharedview.Card
 	numbers map[config.Stream]*esphome.Number
@@ -58,7 +56,6 @@ func (v *Volume) Name() string { return "volume" }
 
 func (v *Volume) Entities() []esphome.Entity { return v.entities.Entities() }
 
-// Restore puts the levels back where they were left.
 func (v *Volume) Restore(c config.Config) {
 	v.entities.RestoreDuck()
 	for _, s := range config.Streams() {
@@ -70,7 +67,6 @@ func (v *Volume) Restore(c config.Config) {
 	}
 }
 
-// Level is how loud one kind of sound is, as a percentage.
 func (v *Volume) Level(s config.Stream) int {
 	if s == config.StreamMain {
 		return media.Get().Step() * 100 / media.VolumeSteps
@@ -78,7 +74,6 @@ func (v *Volume) Level(s config.Stream) int {
 	return config.Get().Volume.Level(s)
 }
 
-// Set changes a level and remembers it.
 func (v *Volume) Set(s config.Stream, level int) {
 	level = clamp(level)
 	if v.Level(s) == level {
@@ -97,10 +92,8 @@ func (v *Volume) Set(s config.Stream, level int) {
 	v.changed(s)
 }
 
-// Step is how far one press of a volume button moves a level.
 const Step = 5
 
-// turn moves whichever level is being shown, and leaves the device's own to the player.
 func (v *Volume) turn(delta int) bool {
 	s, ok := v.card.Selected()
 	if !ok {
@@ -114,7 +107,6 @@ func (v *Volume) turn(delta int) bool {
 	return true
 }
 
-// wants is a view that says which level the buttons move while it is the screen being looked at.
 type wants interface{ Wants() (config.Stream, bool) }
 
 func wanted() (config.Stream, bool) {
@@ -125,13 +117,11 @@ func wanted() (config.Stream, bool) {
 	return v.Wants()
 }
 
-// hold applies a level without writing it back to the file it may have come from.
 func (v *Volume) hold(s config.Stream, level int) {
 	speaker.Get().SetLevel(s, clamp(level))
 	v.numbers[s].Set(float32(clamp(level)))
 }
 
-// changed says what the level is now, except over a screen already showing it.
 func (v *Volume) changed(s config.Stream) {
 	v.Changed.Emit(Change{Stream: s, Level: v.Level(s)})
 	if showing(s) {
@@ -143,7 +133,10 @@ func (v *Volume) changed(s config.Stream) {
 
 func (v *Volume) build() {
 	streams := config.Streams()
-	streams = slices.DeleteFunc(streams, func(s config.Stream) bool { return s == config.StreamMain })
+	streams = slices.DeleteFunc(
+		streams,
+		func(s config.Stream) bool { return s == config.StreamMain },
+	)
 	v.entities = sharedvolume.NewEntities(v, streams, nil, component.DevicePlayback)
 	v.numbers = v.entities.Numbers
 }
@@ -158,7 +151,6 @@ func clamp(level int) int {
 	return level
 }
 
-// Watch follows one stream's level until the returned function is called.
 func (v *Volume) Watch(stream config.Stream, changed func(int)) func() {
 	return v.Changed.Listen(func(c Change) {
 		if c.Stream == stream {

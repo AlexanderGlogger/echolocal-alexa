@@ -6,13 +6,14 @@ import (
 	"sync"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedview "github.com/ygelfand/libcountertop/pkg/display/playerview"
+	"github.com/ygelfand/libcountertop/pkg/say"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
-	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	sharedview "github.com/ygelfand/libcountertop/pkg/display/playerview"
-	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 var playerViewOnce sync.Once

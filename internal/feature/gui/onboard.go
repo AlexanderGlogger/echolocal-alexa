@@ -7,10 +7,11 @@ import (
 	gogui "github.com/go-gui-org/go-gui/gui"
 	"rsc.io/qr"
 
+	"github.com/ygelfand/libcountertop/pkg/say"
+
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 const (

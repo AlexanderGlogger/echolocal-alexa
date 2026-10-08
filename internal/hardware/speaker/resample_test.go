@@ -7,7 +7,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 )
 
-// sine is n samples of a sine at hz, sampled at rate.
 func sine(hz float64, rate int, n int, amp float64) []int16 {
 	out := make([]int16, n)
 	for i := range out {
@@ -16,7 +15,6 @@ func sine(hz float64, rate int, n int, amp float64) []int16 {
 	return out
 }
 
-// energyAt measures how much of a signal sits at hz, by correlating against that frequency.
 func energyAt(x []int16, hz float64, rate int) float64 {
 	var re, im float64
 	for i, v := range x {
@@ -27,7 +25,6 @@ func energyAt(x []int16, hz float64, rate int) float64 {
 	return math.Hypot(re, im) / float64(len(x))
 }
 
-// left takes one channel of an interleaved stereo buffer.
 func left(x []int16) []int16 {
 	out := make([]int16, 0, len(x)/Channels)
 	for i := 0; i < len(x); i += Channels {
@@ -36,14 +33,11 @@ func left(x []int16) []int16 {
 	return out
 }
 
-// A 3 kHz tone upsampled to 48 kHz has images at 13 kHz and 19 kHz. Holding the sample leaves them
-// most of the way intact, which is what makes speech sound gritty; filtering has to push them well
-// down while leaving the tone itself alone.
 func TestUpsamplerRejectsImages(t *testing.T) {
 	const (
 		hz    = 3000
-		image = 2*VoiceRate - hz // 29 kHz folds to 19 kHz at 48 kHz output
-		other = VoiceRate - hz   // 13 kHz
+		image = 2*VoiceRate - hz
+		other = VoiceRate - hz
 	)
 	in := sine(hz, VoiceRate, 4096, 8000)
 
@@ -51,7 +45,6 @@ func TestUpsamplerRejectsImages(t *testing.T) {
 	got := left(u.Run(in, nil))
 	was := left(hold{}.Run(in, nil))
 
-	// Skip the filter's start-up, where the history is still filling.
 	got, was = got[256:], was[256:]
 
 	wanted := energyAt(got, hz, Rate)
@@ -72,7 +65,6 @@ func TestUpsamplerRejectsImages(t *testing.T) {
 	}
 }
 
-// Silence in, silence out: any leaked offset would be a click at the start of every reply.
 func TestUpsamplerKeepsSilenceSilent(t *testing.T) {
 	var u sinc
 	got := u.Run(make([]int16, 512), nil)
@@ -83,8 +75,6 @@ func TestUpsamplerKeepsSilenceSilent(t *testing.T) {
 	}
 }
 
-// A chunked utterance has to come out the same as the whole thing at once, or every chunk boundary
-// is a discontinuity.
 func TestUpsamplerIsContinuousAcrossChunks(t *testing.T) {
 	in := sine(1000, VoiceRate, 900, 6000)
 
@@ -107,8 +97,6 @@ func TestUpsamplerIsContinuousAcrossChunks(t *testing.T) {
 	}
 }
 
-// Every registered option has to produce the same amount of audio, or picking one would change the
-// reply's length and pitch.
 func TestResamplersAgreeOnRate(t *testing.T) {
 	in := sine(1000, VoiceRate, 300, 6000)
 
@@ -124,8 +112,6 @@ func TestResamplersAgreeOnRate(t *testing.T) {
 	}
 }
 
-// The ordering the setting is offered in is the ordering of how much of the image it removes. If
-// this ever inverts, the labels are lying about what the choice does.
 func TestResamplersRankByImageRejection(t *testing.T) {
 	const hz = 3000
 	in := sine(hz, VoiceRate, 4096, 8000)

@@ -8,13 +8,8 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
-// testFrame is the frame the microphone hands out, 20 ms at 16 kHz. It is deliberately not a whole
-// number of the wider bank's frames.
 const testFrame = 320
 
-// Every test here runs against both front ends. The two differ in every dimension the bank and the
-// beamformer are written in terms of, so a geometry that only one of them handles is the failure
-// this is looking for.
 func eachGeometry(t *testing.T, f func(*testing.T, geometry)) {
 	t.Helper()
 	for _, g := range known {
@@ -22,9 +17,6 @@ func eachGeometry(t *testing.T, f func(*testing.T, geometry)) {
 	}
 }
 
-// testWindow is a prototype the bank reconstructs exactly: the root of a periodic Hann over one
-// transform, zero beyond it. Its squares sum to one at this hop, and having no energy past FFTLen
-// means no aliasing between folds, so any reconstruction error the test sees is the bank's own.
 func testWindow(g geometry) []float32 {
 	w := make([]float32, g.WindowLen)
 	for n := range g.FFTLen {
@@ -51,7 +43,6 @@ func TestBankReconstructs(t *testing.T) {
 		a := newAnalysis(g, window, f)
 		s := newSynthesis(g, window, f)
 
-		// Tones well below the band the bank drops, so what comes back should be what went in.
 		in := make([]float32, frames*g.Hop)
 		for i := range in {
 			tt := float64(i) / 16000
@@ -65,7 +56,6 @@ func TestBankReconstructs(t *testing.T) {
 			s.pull(bands, out[k*g.Hop:(k+1)*g.Hop])
 		}
 
-		// The bank delays by everything but the newest frame.
 		delay := g.WindowLen - g.Hop
 		for i := delay; i < len(in); i++ {
 			if diff := math.Abs(float64(out[i] - in[i-delay])); diff > 1e-3 {
@@ -75,8 +65,6 @@ func TestBankReconstructs(t *testing.T) {
 	})
 }
 
-// passThrough is one weight set per beam that takes a single microphone, so a test can tell which
-// beam ran by which microphone comes out. Fire OS 6 has more beams than microphones, so they share.
 func passThrough(g geometry) *Weights {
 	w := &Weights{
 		g:      g,
@@ -93,7 +81,6 @@ func passThrough(g geometry) *Weights {
 
 func TestBeamFollowsTheLoudestMicrophone(t *testing.T) {
 	eachGeometry(t, func(t *testing.T, g geometry) {
-		// The talker is on the fourth microphone the weights use, whichever array channel that is.
 		const talker = 3
 		b := passThrough(g).New()
 
@@ -114,7 +101,6 @@ func TestBeamFollowsTheLoudestMicrophone(t *testing.T) {
 			got += len(b.Mix(frame))
 		}
 
-		// Whole frames only, so a call can hold samples back, but not for long.
 		if want := 20*testFrame - g.Hop; got < want {
 			t.Errorf("Mix returned %d samples of %d, want at least %d", got, 20*testFrame, want)
 		}
@@ -125,8 +111,6 @@ func TestBeamFollowsTheLoudestMicrophone(t *testing.T) {
 	})
 }
 
-// A frame that is not a whole number of the bank's own frames still has to come out whole
-// eventually, or samples would go missing every call.
 func TestOddFrameSizesKeepEverySample(t *testing.T) {
 	eachGeometry(t, func(t *testing.T, g geometry) {
 		b := passThrough(g).New()
@@ -146,7 +130,6 @@ func TestOddFrameSizesKeepEverySample(t *testing.T) {
 	})
 }
 
-// A device that has neither firmware's files gets an error rather than a beamformer.
 func TestLoadWithoutCoefficients(t *testing.T) {
 	if _, err := Load(t.TempDir()); err == nil {
 		t.Fatal("an empty directory loaded")

@@ -6,16 +6,15 @@ import (
 	"sync"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	sharedcard "github.com/ygelfand/libcountertop/pkg/display/mediacard"
+	"github.com/ygelfand/libcountertop/pkg/say"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	sharedcard "github.com/ygelfand/libcountertop/pkg/display/mediacard"
-	"github.com/ygelfand/libcountertop/pkg/say"
 )
-
-type screen = sharedcard.Screen
 
 var cardOnce sync.Once
 var theCard *sharedcard.Card

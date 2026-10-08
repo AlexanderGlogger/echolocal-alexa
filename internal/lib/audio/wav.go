@@ -1,4 +1,3 @@
-// Package audio holds format helpers shared by the host and device tools.
 package audio
 
 import (
@@ -7,7 +6,6 @@ import (
 	"os"
 )
 
-// WriteWAV writes 16-bit little-endian PCM as a RIFF/WAVE file.
 func WriteWAV(path string, pcm []byte, rate, channels int) error {
 	f, err := os.Create(path)
 	if err != nil {
@@ -41,7 +39,6 @@ func WriteWAV(path string, pcm []byte, rate, channels int) error {
 	return err
 }
 
-// Tone renders a mono sine as 16-bit PCM. amplitude is relative to full scale.
 func Tone(freq float64, secs float64, rate int, amplitude float64) []byte {
 	n := int(secs * float64(rate))
 	out := make([]byte, 0, n*2)

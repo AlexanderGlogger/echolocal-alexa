@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-// Tested without hardware. Nothing is queued, so a claim ends as soon as its errand returns, which
-// is what the arbitration below is about.
 func driver() *Driver { return NewDriver(New()) }
 
 func waitFor(t *testing.T, c *Claim) {
@@ -39,8 +37,6 @@ func TestDriverPlays(t *testing.T) {
 	}
 }
 
-// A second sound takes the speaker from the first, which is what makes a reply interruptible and a
-// wake tone during one heard.
 func TestClaimTakesOverFromWhatWasPlaying(t *testing.T) {
 	d := driver()
 
@@ -60,8 +56,6 @@ func TestClaimTakesOverFromWhatWasPlaying(t *testing.T) {
 	}
 }
 
-// Silence is what the action button does, and it has to reach an errand that is still fetching rather
-// than playing: that is the reply that used to arrive after being cancelled.
 func TestSilenceStopsAClaimBeforeItPlays(t *testing.T) {
 	d := driver()
 
@@ -91,7 +85,6 @@ func TestSilenceStopsAClaimBeforeItPlays(t *testing.T) {
 	}
 }
 
-// Silencing nothing is what the button does most of the time.
 func TestSilenceWithNothingPlaying(t *testing.T) {
 	d := driver()
 	d.Silence()
@@ -113,8 +106,6 @@ func TestClaimFailureIsKept(t *testing.T) {
 	}
 }
 
-// An errand that ignores its context must not hold the next sound up for longer than the driver's own
-// patience, since the point is that something else can always be played.
 func TestAnErrandThatWillNotStopDoesNotBlockForever(t *testing.T) {
 	d := driver()
 

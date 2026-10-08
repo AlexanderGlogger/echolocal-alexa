@@ -1,4 +1,3 @@
-// Package sepolicy edits the binary SELinux policy that init loads before it starts anything.
 package sepolicy
 
 import (
@@ -14,7 +13,7 @@ const (
 	magic = 0xf97cff8c
 	ident = "SE Linux"
 
-	// An ebitmap node carries this many bits, and the kernel rejects a policy that says otherwise.
+	// An ebitmap node carries this many bits; the kernel rejects any other.
 	mapSize = 64
 
 	verValidateTrans   = 19
@@ -28,12 +27,9 @@ const (
 	// The one constraint expression that carries operands after its header.
 	cexprNames = 5
 
-	// Above this the file is being read as something it is not.
 	maxTypes = 1 << 20
 )
 
-// Permissive returns the policy with the named types marked permissive, which makes the kernel log
-// what it would have denied them and allow it. It adds no rule and changes nothing else.
 func Permissive(policy []byte, names ...string) ([]byte, error) {
 	want := make(map[string]bool, len(names))
 	for _, name := range names {
@@ -54,7 +50,6 @@ func Permissive(policy []byte, names ...string) ([]byte, error) {
 
 	out := slices.Concat(policy[:found.at], ebitmap(found.bits), policy[found.end:])
 
-	// The splice is only correct if the rest of the stream still parses from its new position.
 	again, err := scan(out, want)
 	if err != nil {
 		return nil, fmt.Errorf("the patched policy does not read back: %w", err)
@@ -67,15 +62,13 @@ func Permissive(policy []byte, names ...string) ([]byte, error) {
 	return out, nil
 }
 
-// found is where the permissive bitmap lives, what it holds, and the value of each type asked about.
 type found struct {
 	at, end int
 	bits    map[uint32]bool
 	types   map[string]uint32
 }
 
-// scan reads the policy as far as the type table, which is the fourth of eight symbol tables. Nothing
-// before it is needed, but a policy is a serial stream, so it all has to be walked to get there.
+// The type table is the fourth of eight symbol tables in a serial stream.
 func scan(policy []byte, want map[string]bool) (*found, error) {
 	c := &cursor{b: policy}
 
@@ -127,7 +120,6 @@ func scan(policy []byte, want map[string]bool) (*found, error) {
 
 	c.each(c.u32(), func() {
 		name, value := c.typ(vers)
-		// A wrong record stride shows up here long before it runs off the end of the file.
 		if value == 0 || value > types {
 			c.err = fmt.Errorf("type %q has value %d, outside 1..%d", name, value, types)
 			return
@@ -142,7 +134,6 @@ func scan(policy []byte, want map[string]bool) (*found, error) {
 	return out, nil
 }
 
-// ebitmap serialises a set of bits the way the kernel reads one back.
 func ebitmap(bits map[uint32]bool) []byte {
 	nodes := map[uint32]uint64{}
 	var high uint32
@@ -164,7 +155,6 @@ func ebitmap(bits map[uint32]bool) []byte {
 	return out
 }
 
-// cursor walks the stream, holding the first error it hit so each read need not be checked.
 type cursor struct {
 	b   []byte
 	at  int
@@ -199,8 +189,6 @@ func (c *cursor) bytes(n uint32) []byte {
 
 func (c *cursor) skip(n uint32) { c.bytes(n) }
 
-// each runs f n times. Every caller consumes at least one word, so a length read out of nonsense runs
-// off the end of the file rather than spinning.
 func (c *cursor) each(n uint32, f func()) {
 	for i := uint32(0); i < n && c.err == nil; i++ {
 		f()

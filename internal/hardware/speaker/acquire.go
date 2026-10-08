@@ -3,15 +3,15 @@ package speaker
 import (
 	"context"
 	"errors"
-	"github.com/ygelfand/echolocal/internal/component"
 	"log/slog"
 	"time"
+
+	"github.com/ygelfand/echolocal/internal/component"
 
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 )
 
-// MediaService is the init service that owns Android's audio HAL.
 const MediaService = "media"
 
 const (
@@ -19,11 +19,7 @@ const (
 	acquireAttempts = 8
 )
 
-// Start takes the playback device, off Android if it got there first.
-//
-// mediaserver retries the open and wins it within a few hundred milliseconds of echod releasing,
-// so a restart can leave us with no speaker. Stopping the service releases it; it is started again
-// either way, because leaving it down trips the framework watchdog.
+// mediaserver retakes the device within a few hundred ms; leaving it stopped trips the framework watchdog.
 func (p *Player) Start(context.Context) (err error) {
 	defer func() {
 		state := component.Progress{Done: err == nil}
@@ -63,8 +59,6 @@ func (p *Player) Start(context.Context) (err error) {
 	return err
 }
 
-// Acquire is New and Start together, for a tool that wants the speaker for the length of one command.
-// The supervised path holds the Player from the start and lets the service take the device.
 func Acquire() (*Player, error) {
 	p := New()
 	if err := p.Start(context.Background()); err != nil {

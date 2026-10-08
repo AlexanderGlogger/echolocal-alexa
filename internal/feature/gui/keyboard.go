@@ -4,9 +4,10 @@ package gui
 
 import (
 	gogui "github.com/go-gui-org/go-gui/gui"
-	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	"github.com/ygelfand/libcountertop/pkg/say"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 func (a *App) keyboard(w *gogui.Window) gogui.View {

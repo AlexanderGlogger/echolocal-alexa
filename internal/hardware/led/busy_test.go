@@ -30,8 +30,6 @@ func TestBusyShowsWorkUntilItIsDone(t *testing.T) {
 	}
 }
 
-// Several things may be working at once, and the ring is only given back when the last of them
-// finishes — otherwise whichever finished first would take the indication away from the rest.
 func TestBusyHoldsUntilTheLastWorkFinishes(t *testing.T) {
 	b := busyFixture()
 
@@ -48,8 +46,6 @@ func TestBusyHoldsUntilTheLastWorkFinishes(t *testing.T) {
 	}
 }
 
-// Done is what a caller defers, so calling it again must not take the ring away from work that started
-// since.
 func TestBusyDoneTwiceLeavesOtherWorkAlone(t *testing.T) {
 	b := busyFixture()
 

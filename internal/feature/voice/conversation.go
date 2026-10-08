@@ -3,6 +3,10 @@ package voice
 import (
 	"context"
 
+	esphome "github.com/ygelfand/go-esphome-device"
+	"github.com/ygelfand/libcountertop/pkg/assistant/turn"
+	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/activity"
 	"github.com/ygelfand/echolocal/internal/feature/feedback"
@@ -12,13 +16,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
-	esphome "github.com/ygelfand/go-esphome-device"
-	"github.com/ygelfand/libcountertop/pkg/assistant/turn"
-	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 )
 
 type conversation = turn.Conversation
-type phase = turn.Phase
 
 const (
 	phaseIdle      = turn.Idle
@@ -58,7 +58,6 @@ func newConversation(vs *esphome.VoiceSatellite) *conversation {
 	})
 }
 
-// wanted retains assistant positions and explicit disables. Only a fresh configuration gets a default.
 func wanted(models []wake.Model, count int) []string {
 	saved := config.Get().Wake.Words
 	var ids []string

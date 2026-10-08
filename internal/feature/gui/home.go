@@ -6,14 +6,15 @@ import (
 	_ "embed"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	sharedview "github.com/ygelfand/libcountertop/pkg/display/homeview"
+	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
+	"github.com/ygelfand/libcountertop/pkg/say"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	sharedview "github.com/ygelfand/libcountertop/pkg/display/homeview"
-	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
-	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 //go:embed esphome.svg

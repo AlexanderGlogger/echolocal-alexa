@@ -16,8 +16,6 @@ func TestVendorUnder(t *testing.T) {
 	}
 }
 
-// build.prop is read back, edited and written whole, so the edit has to leave every other line alone
-// and must not turn a missing key into a duplicate.
 func TestSetProp(t *testing.T) {
 	for name, tc := range map[string]struct{ in, want string }{
 		"replaces in place": {

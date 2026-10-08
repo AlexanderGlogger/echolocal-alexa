@@ -1,8 +1,3 @@
-// Package led drives the Echo Dot's ring through the is31fl3236 driver's sysfs attributes.
-//
-// This deliberately bypasses Amazon's LedController service. A direct frame write works even
-// when that service has brightness set to 0, and keeps working once the Amazon stack is
-// disabled — which the binder path does not.
 package led
 
 import (
@@ -20,26 +15,14 @@ import (
 // DefaultPath is the is31fl3236 i2c device directory.
 const DefaultPath = "/sys/bus/i2c/devices/0-003f"
 
-// Channels is the number of PWM outputs: 12 ring segments x RGB.
 const Channels = 36
 
-// Segments is the number of addressable RGB positions on the ring.
 const Segments = 12
 
-// Layout, established by walking channels and then segments:
-//
-//   - The 36 channels are consecutive RGB triplets in R, G, B order, so segment n occupies
-//     channels 3n, 3n+1, 3n+2.
-//   - Segment 0 is at the bottom-right of the top face, between the microphone and
-//     volume-down buttons.
-//   - Increasing segment index runs clockwise, 30 degrees per segment.
-//   - Each channel is a linear 0-255 brightness, 0 being dark.
+// Segment n is channels 3n..3n+2 in RGB order; segment 0 sits between mic and volume-down, indices run clockwise.
 
-// Color is one segment's colour, which is indicate's: a feature asks for a colour without knowing
-// what shows it.
 type Color = indicate.Color
 
-// SetSegments writes all 12 segments at once.
 func (r *Ring) SetSegments(c []Color) error {
 	if len(c) != Segments {
 		return fmt.Errorf("led: need %d segments, got %d", Segments, len(c))
@@ -51,7 +34,6 @@ func (r *Ring) SetSegments(c []Color) error {
 	return r.SetFrame(buf)
 }
 
-// SetSegment lights one segment and blanks the rest.
 func (r *Ring) SetSegment(n int, c Color) error {
 	if n < 0 || n >= Segments {
 		return fmt.Errorf("led: segment %d out of range 0-%d", n, Segments-1)
@@ -61,7 +43,6 @@ func (r *Ring) SetSegment(n int, c Color) error {
 	return r.SetSegments(all)
 }
 
-// SetAll paints every segment the same color.
 func (r *Ring) SetAll(c Color) error {
 	all := make([]Color, Segments)
 	for i := range all {
@@ -70,32 +51,19 @@ func (r *Ring) SetAll(c Color) error {
 	return r.SetSegments(all)
 }
 
-// Ring writes whole frames to the LED driver.
 type Ring struct {
 	Path string
 
-	// absent is a board with no ring. Writes go nowhere and reads report nothing, rather than
-	// failing: everything that shows something on a ring — a conversation, a failure, a timer —
-	// takes its claim unconditionally, and a device with no ring is one where that says nothing
-	// rather than one where it goes wrong.
 	absent bool
 
-	// last is what was written, so a frame identical to it can be skipped. An animation is a ticker
-	// that redraws whether or not anything moved, and the ring holds what it was given with nothing
-	// driving it — the same property that lets a frame outlive the process.
-	//
-	// Nil until the first write. Start takes the ring off the kernel driver mid boot animation, so
-	// what is on it before that is not ours to assume.
 	mu   sync.Mutex
 	last []byte
 }
 
 func New() *Ring { return &Ring{Path: DefaultPath} }
 
-// NewAbsent is the ring on a board that has none. See Ring.absent.
 func NewAbsent() *Ring { return &Ring{absent: true} }
 
-// Present reports whether there is hardware behind this ring.
 func (r *Ring) Present() bool { return !r.absent }
 
 func (r *Ring) path() string {
@@ -107,8 +75,6 @@ func (r *Ring) path() string {
 
 func (r *Ring) attr(name string) string { return r.path() + "/" + name }
 
-// SetFrame writes all 36 channel brightnesses: twelve segments, three channels each. A frame the
-// ring is already showing is not written again — see last.
 func (r *Ring) SetFrame(vals []byte) error {
 	if len(vals) != Channels {
 		return fmt.Errorf("led: need %d channels, got %d", Channels, len(vals))
@@ -135,16 +101,12 @@ func (r *Ring) SetFrame(vals []byte) error {
 	return nil
 }
 
-// Forget drops what SetFrame believes is showing, so the next write happens whatever it is. Taking
-// the ring back off the kernel driver goes through here: it was animating until a moment ago and may
-// have left anything in the registers.
 func (r *Ring) Forget() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.last = nil
 }
 
-// Frame reads back the current frame.
 func (r *Ring) Frame() ([]byte, error) {
 	if r.absent {
 		return make([]byte, Channels), nil
@@ -156,7 +118,6 @@ func (r *Ring) Frame() ([]byte, error) {
 	return hex.DecodeString(strings.TrimSpace(string(b)))
 }
 
-// Fill sets every channel to the same value.
 func (r *Ring) Fill(v byte) error {
 	buf := make([]byte, Channels)
 	for i := range buf {
@@ -165,10 +126,8 @@ func (r *Ring) Fill(v byte) error {
 	return r.SetFrame(buf)
 }
 
-// Off blanks the ring.
 func (r *Ring) Off() error { return r.Fill(0) }
 
-// Current reads the global drive-current setting.
 func (r *Ring) Current() (int, error) {
 	if r.absent {
 		return 0, nil
@@ -180,7 +139,6 @@ func (r *Ring) Current() (int, error) {
 	return strconv.Atoi(strings.TrimSpace(string(b)))
 }
 
-// SetCurrent sets the global drive current.
 func (r *Ring) SetCurrent(v int) error {
 	if r.absent {
 		return nil
@@ -188,7 +146,6 @@ func (r *Ring) SetCurrent(v int) error {
 	return os.WriteFile(r.attr("led_current"), []byte(strconv.Itoa(v)), 0o644)
 }
 
-// SetBootAnimation toggles the driver's built-in boot animation.
 func (r *Ring) SetBootAnimation(on bool) error {
 	if r.absent {
 		return nil

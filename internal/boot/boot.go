@@ -1,8 +1,3 @@
-// Package boot brings the device up.
-//
-// It owns what echod is made of and in what order: which hardware is taken, which parts are
-// supervised, and what is only needed once at start-up. The command line's job is to parse flags and
-// call Run.
 package boot
 
 import (
@@ -28,14 +23,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
-// Run brings everything up and stays until ctx is cancelled.
-//
-// Hardware that cannot be taken is logged and left out: a device with no speaker still answers, and
-// nothing here is worth refusing to start over.
 func Run(ctx context.Context) error {
-	// Which device this is, before anything that depends on the answer. The registry needs it to know
-	// what to build, the settings need it for the values a board decides, and both are read the moment
-	// a component is restored.
 	b := board.Detect()
 
 	slog.Info("echod starting", "version", layout.Version, "board", b,
@@ -48,9 +36,6 @@ func Run(ctx context.Context) error {
 	defaults.Use(b)
 	update.Use(b.Codename)
 
-	// What this process was told, put where everything else reads its settings from, so nothing has to
-	// be handed a struct to find out what the device is called or where it listens. Before anything
-	// else: the components were built during init and read this the moment they are asked to restore.
 	config.Started(config.Device{
 		Name:  name(b),
 		Addr:  listenAddr(),
@@ -60,30 +45,19 @@ func Run(ctx context.Context) error {
 		slog.Error("reading the saved config failed, continuing with defaults", "err", err)
 	}
 
-	// Before any hardware: an update that was installed and never settled either gets its turn here or
-	// sends the device round for another boot, where something outside this binary can put the old one
-	// back.
 	_, rebooting := update.Start()
 	if rebooting {
 		slog.Warn("waiting for the reboot rather than taking the hardware")
 		return nil
 	}
 
-	// The boot hooks are what undoes a bad update, so they are kept current by the running binary rather
-	// than only by an install. Writes nothing when nothing differs.
 	update.Ensure()
 	firmware.Get().RebootPending(parts.Ensure())
 
-	// restarting is the reason echod is going away, and empty means it is not.
 	var restarting string
 
-	// The boot animation runs until Home Assistant has a pipeline listening, which is the point the
-	// device can actually answer. It only takes a claim, so it can be asked for before the ring is up.
 	startSplash(ctx, led.Get(), voice.Get().Ready)
 
-	// Everything the device remembers, put back in the order the components registered and before
-	// anything is listening: how the device behaves is not Home Assistant's business. Silent —
-	// restoring is not an event, so nothing chimes and nothing reaches the logbook.
 	component.Default().Restore(config.Get())
 	slog.Info("state restored")
 
@@ -100,12 +74,6 @@ func Run(ctx context.Context) error {
 	return err
 }
 
-// run keeps everything going until the context is done or something asks to be restarted, and reports
-// which it was through restarting.
-//
-// A restart cancels the same context a shutdown does, so the services unwind the way they always do:
-// the speaker gating the amplifier before it lets go of the device is what keeps a restart from ending
-// in a pop, and there is no separate path here that could forget to do it.
 func run(ctx context.Context, group *service.Group, restarting *string) error {
 	inner, stop := context.WithCancel(ctx)
 	defer stop()
@@ -120,7 +88,6 @@ func run(ctx context.Context, group *service.Group, restarting *string) error {
 		*restarting = why
 		slog.Info("restarting", "why", why)
 
-		// Something is coming back, so the ring says so rather than going dark for the gap.
 		led.Get().HoldOnStop(led.UpdateColor)
 
 		stop()
@@ -128,9 +95,6 @@ func run(ctx context.Context, group *service.Group, restarting *string) error {
 	}
 }
 
-// selinuxContext is the domain echod is running in, which decides what it may touch. Logging it makes
-// a permission failure obvious: as the ledcontroller service it runs in init's domain, and anywhere
-// else it will not reach the hardware.
 func selinuxContext() string {
 	b, err := os.ReadFile("/proc/self/attr/current")
 	if err != nil {

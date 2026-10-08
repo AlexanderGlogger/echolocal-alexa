@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	sharedgpu "github.com/ygelfand/libcountertop/pkg/display/gpu"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
 	"github.com/ygelfand/echolocal/internal/feature/voice"
@@ -14,7 +16,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
-	sharedgpu "github.com/ygelfand/libcountertop/pkg/display/gpu"
 )
 
 const (
@@ -70,7 +71,7 @@ type slot struct {
 
 func (sl *slot) close() {
 	if sl != nil && sl.layer != nil {
-		sl.layer.Close()
+		_ = sl.layer.Close()
 		sl.layer = nil
 	}
 }

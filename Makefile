@@ -20,29 +20,19 @@ LDFLAGS := -X '$(BUILDVARS).Version=$(VERSION)' \
 
 BUILD_DIR := bin
 
-# echod targets the Echo Dot 2: MT8163, Android 5.1 (API 22). FireOS 5 runs an arm64 kernel; FireOS 6
-# ships a 32-bit kernel on the same hardware, which cannot exec arm64 at all.
-# The ALSA path is pure Go over /dev/snd ioctls, so no cgo and no NDK. Keep it that way unless
-# something genuinely needs C, which is what would make a toolchain image worth having.
+# Echo Dot 2: MT8163, Android 5.1 (API 22); Fire OS 5 runs an arm64 kernel, Fire OS 6 a 32-bit one that cannot exec arm64.
 ARCHES := arm64 arm
 
-# Every board with a build of its own runs Fire OS 6, which is 32-bit: checkers and biscuit both
-# report armeabi-v7a. arm64 is the shared build's alone, for a Dot still on Fire OS 5.
 BOARD_ARCHES := arm
 
 DOT_ARCH ?= arm
 DEVICE_ENV := GOOS=linux GOARCH=$(DOT_ARCH) CGO_ENABLED=0
 
-# BOARD builds for one board: links its board_<codename> packages and pins Detect. Unset builds for all.
 BOARD ?=
 
-# Boards needing a build of their own, read off the board tags in component/all. Empty is the normal
-# case, where every board takes the shared binary.
 BOARD_BUILDS := $(shell grep -h '^//go:build' internal/component/all/*.go 2>/dev/null | \
 	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)
 
-# TAGS passes build tags through to echod, which is how the same device can be measured both ways:
-# `make install-echod TAGS=noasm` builds the portable dot instead of the NEON one.
 TAGS ?=
 empty :=
 space := $(empty) $(empty)
@@ -56,36 +46,23 @@ DEVICE_BIN := $(BUILD_DIR)/echod$(if $(BOARD),-$(BOARD))-$(DOT_ARCH)
 ADB ?= adb
 DEVICE_TMP := /data/local/tmp
 
-# DEVICE names which attached device the device targets act on, when there is more than one.
 DEVICE ?=
 ifneq ($(DEVICE),)
 ADB := $(ADB) -s $(DEVICE)
 SERIAL := --serial $(DEVICE)
 endif
 
-# What the attached device is, as shell assignments: codename, device and service. echoctl reads the
-# board table, so this is not a second copy of it.
 BOARD_SH = go run ./cmd/echoctl board --sh $(SERIAL)
 
-# The device targets build with BOARD only for a board with packages of its own. Everywhere else the
-# plain binary is what the manifest serves, and installing another would be debugging the wrong one.
-
-# echod lives under /system/app because that tree is labelled u:object_r:system_file:s0,
-# the label that leaves an init-started service in init's own domain rather than the narrow
-# per-service domain its stock *_exec label would select.
-#
-# It is installed as one of Amazon's own services — which one is the board's, see internal/board —
-# so init starts echod from on post-fs-data and restarts it if it exits.
+# /system/app is labelled u:object_r:system_file:s0.
 ECHOD_DIR := /system/app/echod
 STATE_DIR := /data/misc/echolocal
 
-# Native helper ABI comes from the selected board, never the application identity.
 NDK ?= $(firstword $(ANDROID_NDK_HOME) $(ANDROID_NDK_LATEST_HOME) $(wildcard /opt/homebrew/Caskroom/android-ndk/*/AndroidNDK*.app/Contents/NDK))
 NDK_HOST := $(if $(filter Darwin,$(shell uname -s)),darwin-x86_64,linux-x86_64)
 NATIVE_API = $(shell go run ./cmd/native-target $(BOARD))
 NDK_CC = $(NDK)/toolchains/llvm/prebuilt/$(NDK_HOST)/bin/armv7a-linux-androideabi$(NATIVE_API)-clang
 LIBCOUNTERTOP_MODULE := github.com/ygelfand/libcountertop
-# Lazy: biscuit builds never resolve native sources or need the NDK.
 LIBCOUNTERTOP_DIR = $(shell go list -m -f '{{.Dir}}' $(LIBCOUNTERTOP_MODULE))
 SURFACE_SRC = $(LIBCOUNTERTOP_DIR)/native/surface
 SURFACE_BIN = $(BUILD_DIR)/echolocal-surface-api$(NATIVE_API)
@@ -175,7 +152,11 @@ cover: ## Run tests and open a coverage report
 
 .PHONY: fmt
 fmt: ## Format Go source
-	go fmt ./...
+	golangci-lint fmt
+
+.PHONY: fmt-check
+fmt-check: ## Fail when any Go source is unformatted
+	golangci-lint fmt --diff
 
 .PHONY: vet
 vet: ## Run go vet
@@ -222,9 +203,6 @@ install: dist ## Install onto an attached device from the locally built manifest
 
 .PHONY: install-echod
 install-echod: ## Install echod into /system/app/echod, built for whatever board is attached
-# This is a manual copy, not an upgrade, so the trial an update may have left open is cleared with it.
-# Otherwise the restart below looks like a binary that took an update and died without committing, and
-# echod reboots the device to put the old one back — taking this install with it.
 	@$(MAKE) --no-print-directory device
 	@eval "$$($(BOARD_SH))"; \
 		board=$$(echo "$(BOARD_BUILDS)" | tr ' ' '\n' | grep -x "$$codename" || true); \
@@ -289,10 +267,6 @@ manifest: build-echod-all ## Write the manifest a device fetches to find this bu
 		-out $(BUILD_DIR)/manifest.json
 	@cat $(BUILD_DIR)/manifest.json
 
-# Boot images are published once per board, under one tag of their own, and never republished: the
-# hashes are compiled into echoctl, so what this tag serves has to keep matching every build that
-# has already shipped. That is why they are not goreleaser extra_files, which attach to whichever
-# tag is being released.
 BOOT_TAG := boot-images
 BOOT_DIR := internal/host/assets/boot
 

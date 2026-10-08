@@ -10,11 +10,12 @@ import (
 	"sync"
 	"time"
 
+	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/states"
-	sharedha "github.com/ygelfand/libcountertop/pkg/homeassistant"
 )
 
 const (
@@ -193,7 +194,11 @@ func (w *Weather) SetEntity(v string) {
 
 func (w *Weather) SetLook(v config.WeatherLook) { w.save("look", config.Set().Weather().Look(v)) }
 
-func (w *Weather) SetDashboard(on bool) { w.save("dashboard", config.Set().Weather().Dashboard(on)) }
+func (w *Weather) SetDashboard(
+	on bool,
+) {
+	w.save("dashboard", config.Set().Weather().Dashboard(on))
+}
 
 func (w *Weather) SetIdle(on bool) { w.save("idle", config.Set().Weather().Idle(on)) }
 

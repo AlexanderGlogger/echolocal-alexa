@@ -1,4 +1,3 @@
-// Package livecam supplies board-specific configuration to the shared camera-session hub.
 package livecam
 
 import (
@@ -6,13 +5,14 @@ import (
 	"log/slog"
 	"time"
 
+	camerasession "github.com/ygelfand/libcountertop/pkg/camera/session"
+
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/mtkcamera"
 	"github.com/ygelfand/echolocal/internal/hardware/privacy"
 	"github.com/ygelfand/echolocal/internal/layout"
-	camerasession "github.com/ygelfand/libcountertop/pkg/camera/session"
 )
 
 const FPS = 30
@@ -27,7 +27,6 @@ type Picture = camerasession.Picture
 type Session = camerasession.Session
 type Size = camerasession.Size
 
-// Sizes is each stream as it is encoded.
 func Sizes() []Size { return hub.Sizes() }
 
 const noTurn = -1
@@ -67,7 +66,6 @@ func cameraSnapshot() camerasession.Snapshot {
 func Join(at int) (*Session, <-chan mtkcamera.Frame, error) { return hub.Join(at) }
 func Leave(s *Session, frames <-chan mtkcamera.Frame)       { hub.Leave(s, frames) }
 
-// Sessions returns the camera owner used by streaming consumers.
 func Sessions() *camerasession.Hub { return hub }
 
 func RequestKey() error                           { return hub.RequestKey() }

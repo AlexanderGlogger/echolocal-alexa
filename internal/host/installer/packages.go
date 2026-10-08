@@ -5,10 +5,7 @@ import (
 	"strings"
 )
 
-// hidePackages hides the Amazon packages the board names and stops the ones running.
-//
-// A hide persists, so this is install-time work rather than something echod redoes. `pm list
-// packages` omits what is already hidden, which is what makes a second run find nothing to do.
+// pm list packages omits hidden packages.
 func hidePackages(r *run) (string, bool, error) {
 	want := r.cfg.Profile.Hide
 	if len(want) == 0 {
@@ -34,15 +31,13 @@ func hidePackages(r *run) (string, bool, error) {
 		return fmt.Sprintf("all %d already hidden", len(want)), true, nil
 	}
 
-	// Both in one invocation each. A shell per package is two adb round trips apiece, which on a list
-	// this long is most of a minute of doing nothing.
 	var hide, stop strings.Builder
 	for _, name := range todo {
 		fmt.Fprintf(&hide, "pm hide %s;", name)
 		fmt.Fprintf(&stop, "am force-stop %s;", name)
 	}
 
-	// pm reports the state it ended in rather than failing, so the answer is the thing to read.
+	// pm reports the state it ended in instead of failing.
 	said, err := r.d.Shell(hide.String())
 	if err != nil {
 		return "", false, err
@@ -53,14 +48,12 @@ func hidePackages(r *run) (string, bool, error) {
 		}
 	}
 
-	// Hiding blocks the next launch and leaves a running process alone, and a live audio client keeps
-	// mediaserver holding the PCM devices.
+	// Hiding blocks the next launch and leaves a running process alone.
 	if _, err := r.d.Shell(stop.String()); err != nil {
 		return "", false, err
 	}
 
-	// A package marked persistent is restarted by system_server whatever the force-stop does, so a
-	// boot is what settles this.
+	// system_server restarts a persistent package whatever the force-stop does.
 	r.reboot = true
 	return fmt.Sprintf("%d of %d hidden", len(todo), len(want)), false, nil
 }

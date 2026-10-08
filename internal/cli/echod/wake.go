@@ -41,7 +41,6 @@ func newWakeCmd() *cobra.Command {
 				return err
 			}
 
-			// Same selection the agent uses: Home Assistant's, via the saved config.
 			m := wake.Pick(models, config.Get().Wake.Slot(0).ID)
 
 			det, err := microwakeword.NewDetector(m.Config)
@@ -115,8 +114,6 @@ func newWakeCmd() *cobra.Command {
 					hit := det.ProcessAudio(frame)
 					took := time.Since(start)
 
-					// A miss is invisible otherwise, and the interesting question is how close it
-					// came, so report the peak score and level between hits.
 					if s := det.SlidingAverage(); s > best {
 						best = s
 					}
@@ -156,7 +153,6 @@ func newWakeCmd() *cobra.Command {
 				return fmt.Errorf("no frames arrived")
 			}
 
-			// Frames are 20 ms of audio, so the real-time budget per frame is 20 ms.
 			avg := spent / time.Duration(processed)
 			fmt.Fprintf(out, "\n%d frames, %d detections\n", processed, hits)
 			fmt.Fprintf(out, "inference: avg %s, worst %s, %.1f%% of real time\n",
@@ -175,7 +171,6 @@ func newWakeCmd() *cobra.Command {
 	return c
 }
 
-// wakeFromWAV checks the model and the interpreter without the microphones in the way.
 func wakeFromWAV(out io.Writer, det *microwakeword.Detector, path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -224,10 +219,8 @@ func wakeFromWAV(out io.Writer, det *microwakeword.Detector, path string) error 
 	return nil
 }
 
-// wavHeader is the size of a canonical RIFF/WAVE header.
 const wavHeader = 44
 
-// amplify scales a frame, clipping rather than wrapping.
 func amplify(frame []int16, gain float64) []int16 {
 	out := make([]int16, len(frame))
 	for i, s := range frame {
@@ -237,8 +230,6 @@ func amplify(frame []int16, gain float64) []int16 {
 	return out
 }
 
-// clipping counts samples at or near full scale, which is what loud speech close to the array
-// looks like when the codec's 20 dB of microphone gain runs out of headroom.
 func clipping(frame []int16) int {
 	const ceiling = 32000
 

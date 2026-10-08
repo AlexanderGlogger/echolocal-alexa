@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-// at records where it was asked to render, which is the whole point of a Source: the same audio has to
-// land at the same output frame on every device in the group.
 type recorder struct {
 	at   []uint64
 	fill int16
@@ -53,7 +51,6 @@ func TestNothingAttachedPlaysTheQueueAlone(t *testing.T) {
 	}
 }
 
-// A reply is queued while a room stream is rendered, and both have to be audible.
 func TestASourceIsSummedWithTheQueue(t *testing.T) {
 	p := newTestPlayer()
 	p.pending = []int16{100, 200}
@@ -79,7 +76,6 @@ func TestSummingTwoLoudThingsClampsInsteadOfWrapping(t *testing.T) {
 	}
 }
 
-// Where audio lands must follow from the frame index, and the index only moves on a completed write.
 func TestTheSourceIsAskedForTheFramesAboutToBePlayed(t *testing.T) {
 	p := newTestPlayer()
 	rec := &recorder{}

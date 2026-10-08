@@ -10,9 +10,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
-// deployed is the manifest as every device released before the binaries map existed parses it. Those
-// devices update through these four fields and nothing else, so a release that stops filling them in
-// leaves every one of them stuck on the build it is running.
 type deployed struct {
 	Version string `json:"version"`
 	URL     string `json:"url"`
@@ -68,7 +65,6 @@ func TestADeployedDeviceCanStillReadIt(t *testing.T) {
 		t.Fatalf("a device on the old manifest reads %+v, which it will refuse", old)
 	}
 
-	// Those fields have to be the arm64 build: every deployed device is one.
 	arm64 := now.Binaries["arm64"]
 	if old.URL != arm64.URL || old.SHA256 != arm64.SHA256 || old.Size != arm64.Size {
 		t.Errorf("the top-level fields describe %+v, want the arm64 build %+v", old, arm64)
@@ -101,8 +97,6 @@ func TestEachArchitectureGetsItsOwnBuild(t *testing.T) {
 	}
 }
 
-// A board missing from the manifest is a board that stops seeing updates, so every board echoctl
-// installs onto has to be in there — without anyone remembering to add it.
 func TestEverySupportedBoardGetsABuild(t *testing.T) {
 	_, now := write(t)
 
@@ -128,8 +122,6 @@ func TestEverySupportedBoardGetsABuild(t *testing.T) {
 	}
 }
 
-// With no build of its own a board names the shared file, so introducing one later is a change to
-// that board and to nothing else.
 func TestABoardWithNoBuildOfItsOwnNamesTheSharedFile(t *testing.T) {
 	_, now := write(t)
 

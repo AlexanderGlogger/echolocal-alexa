@@ -1,7 +1,3 @@
-// Package api presents the Dot to Home Assistant over the ESPHome native API.
-//
-// It owns no entities. What it serves is whatever the components registered, collected at start-up:
-// their entities, and the handlers that answer without one.
 package api
 
 import (
@@ -19,6 +15,8 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -26,15 +24,13 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 )
 
 func init() {
-	// Last: it serves the registry, so nothing should still be coming up when it starts listening.
 	component.Register(component.Network, Get, component.Order(99))
 }
 
-// One of Home Assistant's keepalive intervals; it gives up on us at 4.5 of them.
+// Home Assistant drops the connection after 4.5 keepalive intervals.
 const writeTimeout = 20 * time.Second
 
 type API struct {
@@ -44,8 +40,6 @@ type API struct {
 	reconnect chan struct{}
 	announced sync.Once
 
-	// listening is set once the port is open, which is what the boot screen waits for: a device
-	// Home Assistant cannot reach is not up yet however much of it is running.
 	listening atomic.Bool
 }
 
@@ -72,8 +66,6 @@ func (a *API) Startup() component.Progress {
 	return component.Progress{Done: true, Doing: fmt.Sprintf("port %d", layout.Port)}
 }
 
-// Start builds the server. Not the constructor, because what the server serves is the registry, and
-// the registry is only complete once every package's init has run.
 func (a *API) Start(context.Context) error {
 	psk, err := loadPSK(layout.KeyPath)
 	if err != nil {
@@ -111,9 +103,8 @@ func (a *API) Start(context.Context) error {
 
 			Devices: subDevices(device.Name, registered),
 		},
-		PSK:    psk,
-		Logger: slog.Default(),
-		// Persist a key Home Assistant pushes, or the next connection reverts to the old one.
+		PSK:                psk,
+		Logger:             slog.Default(),
 		OnSetEncryptionKey: func(k esphome.PSK) error { return writePSK(layout.KeyPath, k) },
 
 		OnSubscribed: func() {
@@ -121,21 +112,12 @@ func (a *API) Start(context.Context) error {
 			component.Subscribed.Emit(struct{}{})
 		},
 
-		// The handlers components answer for themselves rather than through an entity: the voice
-		// satellite's pipeline traffic, and the Bluetooth proxy's subscribe and set-mode messages.
 		Handler: esphome.Chain(
 			append([]esphome.Handler{ents}, component.Default().Handlers()...)...),
 	}
 	return nil
 }
 
-// subDevices groups entities onto pages of their own, since Home Assistant puts every entity a device has
-// on one page and there are more here than anyone wants to read.
-//
-// Each name carries the device's own, because Home Assistant shows what it is given verbatim: a bare "Ring"
-// or "Assistant 1" is unreadable in a house with several satellites.
-//
-// Only a sub-device some entity names is announced.
 func subDevices(name string, ents []esphome.Entity) []esphome.Device {
 	all := []esphome.Device{
 		{ID: component.DeviceRing, Name: name + " ring"},
@@ -165,7 +147,6 @@ func subDevices(name string, ents []esphome.Entity) []esphome.Device {
 	return out
 }
 
-// deviceOf is the sub-device an entity names, read from the DeviceID its Base carries.
 func deviceOf(e esphome.Entity) uint32 {
 	v := reflect.ValueOf(e)
 	if v.Kind() == reflect.Pointer {
@@ -180,14 +161,10 @@ func deviceOf(e esphome.Entity) uint32 {
 	return 0
 }
 
-// Run listens until ctx is cancelled, advertising over mDNS so Home Assistant finds the device
-// without being told an address.
 func (a *API) Run(ctx context.Context) error {
 	defer a.listening.Store(false)
 	safe.Go("logs", func() { a.pipeLogs(ctx) })
 
-	// A second way in to the port the install's hook already opens. It costs nothing, and it means a
-	// hook that is missing, or older than the device, is not a lockout.
 	if err := firewall.Open(firewall.API, layout.Port); err != nil {
 		slog.Error("opening the api port failed", "port", layout.Port, "err", err)
 	}
@@ -221,16 +198,11 @@ func (a *API) Run(ctx context.Context) error {
 			return err
 		}
 
-		// Between serving and listening again nothing reads Info, which is the only moment it can be
-		// changed: a client is told what the device is once, when it connects.
 		a.srv.Info.BluetoothFeatures = bluetooth.Get().Features()
 		slog.Info("serving again", "bluetooth", a.srv.Info.BluetoothFeatures)
 	}
 }
 
-// fire puts an event on Home Assistant's bus. Nothing happens before the server is up or while no
-// client is subscribed: an event nobody is listening for is not a failure, and the component that
-// asked for it has nothing useful to do about one.
 func (a *API) fire(e component.Event) {
 	if a.srv == nil {
 		return
@@ -240,8 +212,6 @@ func (a *API) fire(e component.Event) {
 	}
 }
 
-// Reconnect drops every client and serves afresh, which is how a change to what the device says it is
-// reaches Home Assistant.
 func (a *API) Reconnect() {
 	select {
 	case a.reconnect <- struct{}{}:
@@ -249,10 +219,6 @@ func (a *API) Reconnect() {
 	}
 }
 
-// loadPSK reads the key echoctl wrote at install. With no key the device runs unprovisioned —
-// Noise with the reserved zero key — so Home Assistant can push a real one, which is what
-// `echoctl install --zero-psk` leaves behind. echod never invents a key: one that appeared on
-// first boot would be unknown to Home Assistant and nobody would be told it changed.
 func loadPSK(path string) (*esphome.PSK, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -265,11 +231,8 @@ func loadPSK(path string) (*esphome.PSK, error) {
 	return &k, nil
 }
 
-// Adopted reports whether Home Assistant has ever had this device, which is what takes the
-// onboarding screen away.
 func Adopted() bool { return config.Get().API.Adopted }
 
-// Key is the encryption key Home Assistant pairs with, empty on a device running unprovisioned.
 func Key() string {
 	b, err := os.ReadFile(layout.KeyPath)
 	if err != nil {
@@ -278,7 +241,6 @@ func Key() string {
 	return strings.TrimSpace(string(b))
 }
 
-// adopted records the first subscription. Written once: every one after it is the same answer.
 func adopted() {
 	if Adopted() {
 		return

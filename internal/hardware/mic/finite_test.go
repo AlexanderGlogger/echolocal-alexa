@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-// The denoiser was permanently deafened by a frame of exact zeros, and nothing in the pipeline
-// noticed. The leveler carries recursive gain and works in dB, so it has the same shape of exposure:
-// a log or a divide reached with the wrong input, and every later frame inherits it.
-//
-// This drives it into those regimes directly instead of waiting for a room to do it.
 func TestLevelerStaysFiniteUnderAdversarialInput(t *testing.T) {
 	patterns := []struct {
 		name  string
@@ -33,7 +28,6 @@ func TestLevelerStaysFiniteUnderAdversarialInput(t *testing.T) {
 		}},
 	}
 
-	// Two minutes, which is where the floors stop moving: floorRise is a 60 s time constant.
 	const frames = 6000
 
 	for _, p := range patterns {
@@ -41,7 +35,6 @@ func TestLevelerStaysFiniteUnderAdversarialInput(t *testing.T) {
 			l := newLeveler()
 			name := p.name
 			if settled {
-				// A room heard first, so the floors and gain hold real values before the pattern lands.
 				settle(l, -57, 200)
 				name += " (after a real room)"
 			}
@@ -65,8 +58,6 @@ func TestLevelerStaysFiniteUnderAdversarialInput(t *testing.T) {
 				}
 			}
 
-			// Speech afterwards has to survive whatever it learned. State can be finite and the output
-			// still silence, which is the failure the denoiser had.
 			var loudest int16
 			for k := 0; k < 300; k++ {
 				say := speech(-30)

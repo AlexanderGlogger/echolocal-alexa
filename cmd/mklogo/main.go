@@ -1,10 +1,3 @@
-// Command mklogo scales the artwork down to what a panel can show.
-//
-// The originals are committed at whatever size they were drawn, and are far larger than any board's
-// screen. What echod carries is the output of this, so a Show build embeds a couple of hundred
-// kilobytes rather than a couple of megabytes.
-//
-//	mklogo -in assets/logo_dark.png -out internal/feature/splash/assets/logo_dark.png
 package main
 
 import (
@@ -33,8 +26,6 @@ func main() {
 	}
 }
 
-// flagString is a tiny reader for -name value, since this takes two of them and a flag set is more
-// ceremony than that is worth.
 func flagString(name string) string {
 	for i, a := range os.Args {
 		if a == name && i+1 < len(os.Args) {
@@ -86,12 +77,6 @@ func run(in, out string, w, h int) error {
 	return nil
 }
 
-// scale is a box filter: every output pixel is the average of the input pixels it covers. Right for
-// making something smaller, which is the only direction this goes, and it needs nothing outside the
-// standard library.
-//
-// Averaging happens in premultiplied alpha. Mixing straight colours would let the colour of a fully
-// transparent pixel bleed into its neighbours, which is what puts a dark halo around artwork.
 func scale(src image.Image, w, h int) *image.RGBA {
 	b := src.Bounds()
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
@@ -114,7 +99,7 @@ func scale(src image.Image, w, h int) *image.RGBA {
 			var sr, sg, sb, sa, n float64
 			for y := y0; y < y1 && y < b.Dy(); y++ {
 				for x := x0; x < x1 && x < b.Dx(); x++ {
-					// RGBA returns premultiplied, which is what should be averaged.
+					// RGBA returns premultiplied alpha.
 					r, g, bl, a := src.At(b.Min.X+x, b.Min.Y+y).RGBA()
 					sr += float64(r)
 					sg += float64(g)
@@ -134,7 +119,7 @@ func scale(src image.Image, w, h int) *image.RGBA {
 				continue
 			}
 
-			// image.RGBA is premultiplied too, so the averages go in as they are.
+			// image.RGBA is premultiplied.
 			dst.Pix[at+0] = byte(math.Round(sr / n / 257))
 			dst.Pix[at+1] = byte(math.Round(sg / n / 257))
 			dst.Pix[at+2] = byte(math.Round(sb / n / 257))

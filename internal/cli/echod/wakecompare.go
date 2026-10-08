@@ -12,12 +12,10 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
-// variant is one way of turning seven microphones into the single channel the model wants.
 type variant struct {
 	name string
 	gain float64
 
-	// sum says whether to average all seven microphones instead of taking the center one.
 	sum bool
 
 	det  *microwakeword.Detector
@@ -25,9 +23,6 @@ type variant struct {
 	hits int
 }
 
-// compareMixes scores several channel mixes on the same audio, which is the only fair way to
-// compare them: detection varies enough between utterances that testing one mix at a time proves
-// nothing.
 func compareMixes(
 	ctx context.Context,
 	out io.Writer,
@@ -95,8 +90,7 @@ func compareMixes(
 	return nil
 }
 
-// meanOf averages the microphones. Arrival delays across the array are under two samples at
-// 16 kHz, so speech stays largely in phase while uncorrelated noise averages down.
+// Arrival delays across the array are under two samples at 16 kHz.
 func meanOf(chans [][]int16) []int16 {
 	out := make([]int16, len(chans[0]))
 	for i := range out {

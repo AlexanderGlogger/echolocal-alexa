@@ -1,4 +1,3 @@
-// Package privacy marks the panel while the microphones are cut or the camera is covered.
 package privacy
 
 import (
@@ -6,17 +5,17 @@ import (
 	"log/slog"
 	"sync"
 
+	esphome "github.com/ygelfand/go-esphome-device"
+	"github.com/ygelfand/libcountertop/pkg/hook"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/mute"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
-	esphome "github.com/ygelfand/go-esphome-device"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
-	// After mute, whose line this shows.
 	component.Register(component.Device, Get, component.Order(35), component.Needs(board.Panel))
 }
 
@@ -71,14 +70,12 @@ func (p *Privacy) Entities() []esphome.Entity {
 	return []esphome.Entity{p.camera, p.sw}
 }
 
-// Restore puts the marks back to what was chosen.
 func (p *Privacy) Restore(c config.Config) {
 	p.sw.Set(c.Screen.Marks)
 	p.show()
 	slog.Info("restored", "what", p.sw.ObjectID, "on", c.Screen.Marks)
 }
 
-// SetMarks turns the corner marks on or off, and applies it at once.
 func (p *Privacy) SetMarks(on bool) {
 	if err := config.Set().Screen().Marks(on); err != nil {
 		slog.Error("saving the privacy marks setting failed", "err", err)
@@ -88,7 +85,6 @@ func (p *Privacy) SetMarks(on bool) {
 	p.show()
 }
 
-// Start reads where both controls already are. Neither says anything until it is next touched.
 func (p *Privacy) Start(context.Context) error {
 	if component.Board().Has(board.Shutter) {
 		p.covered(buttons.Get().Covered())
@@ -128,7 +124,6 @@ func (p *Privacy) muted(on bool) {
 	p.show()
 }
 
-// Current is the marks to show, none while they are turned off.
 func (p *Privacy) Current() Marks {
 	if !config.Get().Screen.Marks {
 		return Marks{}
@@ -140,7 +135,6 @@ func (p *Privacy) Current() Marks {
 
 func (p *Privacy) show() { p.Changed.Emit(p.Current()) }
 
-// Watch calls changed when a physical privacy control changes.
 func (p *Privacy) Watch(changed func()) func() {
 	return p.Changed.Listen(func(Marks) { changed() })
 }

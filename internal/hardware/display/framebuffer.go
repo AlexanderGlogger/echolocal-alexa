@@ -8,12 +8,12 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ygelfand/echolocal/internal/lib/surface"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+
+	"github.com/ygelfand/echolocal/internal/lib/surface"
 )
 
-// The framebuffer ioctls we need. MDSS video-mode panels reject write(2) with ENODEV, so drawing
-// means mmap, and the panel only stays lit while this process holds the fd open.
+// MDSS video-mode panels reject write(2) with ENODEV and stay lit only while the fd is held open.
 const (
 	iocGetVScreenInfo = 0x4600
 	iocGetFScreenInfo = 0x4602
@@ -26,8 +26,7 @@ const (
 
 type bitfield struct{ Offset, Length, MSBRight uint32 }
 
-// varInfo is fb_var_screeninfo. Its size is not encoded in the ioctl number, but the layout still
-// has to match the kernel's exactly or the fields read as nonsense.
+// fb_var_screeninfo; its size is not encoded in the ioctl number.
 type varInfo struct {
 	Xres, Yres               uint32
 	XresVirtual, YresVirtual uint32
@@ -60,7 +59,6 @@ type fixInfo struct {
 	Reserved                      [2]uint16
 }
 
-// Panel is the screen, held open.
 type Panel struct {
 	f    *os.File
 	mem  []byte
@@ -69,30 +67,21 @@ type Panel struct {
 	Dropped hook.Hook[error]
 
 	stride int
-	fbW    int // framebuffer width, portrait
-	fbH    int // framebuffer height, portrait
+	fbW    int
+	fbH    int
 
-	// rot is how the picture sits on the panel. Everything above here draws in viewed
-	// coordinates and this is what reconciles them.
 	rot Orientation
 
-	// Width and Height are what a person sees, at the current rotation.
 	Width  int
 	Height int
 
-	// back is the byte offset of the buffer drawn into, front the one on screen.
 	back, front int
 	doubled     bool
 
-	// clip bounds what may be painted, in viewed coordinates. Empty means the whole panel. It is
-	// how a frame that changed one row costs one row: the drawing code carries on describing the
-	// whole screen and everything outside the clip is discarded before it reaches memory.
 	clip Rect
 
 	fbmem []byte
 
-	// BlankErr is what the unblank said. Reported so a dark panel is distinguishable from a
-	// drawing mistake.
 	BlankErr error
 
 	surf  *surface.Client
@@ -101,7 +90,7 @@ type Panel struct {
 	seq   uint32
 }
 
-// Open takes the panel. SurfaceFlinger has to be stopped first or it draws over us.
+// SurfaceFlinger has to be stopped first or it draws over the panel.
 func Open(path string) (*Panel, error) {
 	f, err := os.OpenFile(path, os.O_RDWR, 0)
 	if err != nil {
@@ -109,8 +98,7 @@ func Open(path string) (*Panel, error) {
 	}
 
 	p := &Panel{f: f}
-	// The driver powers the panel down once SurfaceFlinger lets go, and a sysfs unblank only holds
-	// while someone has the fd. Not fatal: some kernels refuse it on an already-lit panel.
+	// Some kernels refuse an unblank on an already-lit panel.
 	p.BlankErr = p.ioctlValue(iocBlank, blankUnblank)
 
 	if err := p.ioctl(iocGetVScreenInfo, unsafe.Pointer(&p.var_)); err != nil {
@@ -152,8 +140,7 @@ func Open(path string) (*Panel, error) {
 	second := p.stride * p.fbH
 	p.doubled = int(p.var_.YresVirtual) >= 2*p.fbH && second+p.stride*p.fbH <= len(mem)
 
-	// Draw into whichever buffer is not on screen. This panel is video mode, so the MDP fetches
-	// the live buffer continuously and drawing into it tears.
+	// Video-mode panel: the MDP fetches the live buffer continuously.
 	p.front = 0
 	if p.doubled && p.var_.Yoffset >= uint32(p.fbH) {
 		p.front = second
@@ -165,14 +152,13 @@ func Open(path string) (*Panel, error) {
 	return p, nil
 }
 
-// Close puts the mappings down, leaving on screen whatever was drawn.
 func (p *Panel) Close() error {
 	if p.surf != nil {
 		p.mem = nil
 		return p.surf.Close()
 	}
 	if p.fbmem != nil {
-		syscall.Munmap(p.fbmem)
+		_ = syscall.Munmap(p.fbmem)
 		p.fbmem = nil
 	}
 	p.mem = nil
@@ -181,10 +167,8 @@ func (p *Panel) Close() error {
 
 func (p *Panel) Native() (w, h int) { return p.fbW, p.fbH }
 
-// Doubled reports whether Flip is a real page flip.
 func (p *Panel) Doubled() bool { return p.doubled }
 
-// Info describes the panel, for logs.
 func (p *Panel) Info() string {
 	if p.surf != nil {
 		return fmt.Sprintf(
@@ -215,23 +199,17 @@ func (p *Panel) Info() string {
 	return s
 }
 
-// Orientation is how the picture currently sits on the panel.
 func (p *Panel) Orientation() Orientation { return p.rot }
 
-// Turn changes which way the picture faces. What is on the panel is left alone: whatever draws
-// next does so at the new rotation.
 func (p *Panel) Turn(rot Orientation) {
 	p.rot = rot
 	p.Width, p.Height = rot.Size(p.fbW, p.fbH)
 }
 
-// Clip bounds what the next drawing may paint. An empty rectangle means all of it.
 func (p *Panel) Clip(r Rect) { p.clip = r }
 
-// Clipped is what is currently allowed to be painted.
 func (p *Panel) Clipped() Rect { return p.clip }
 
-// inClip reports whether a point may be painted.
 func (p *Panel) inClip(vx, vy int) bool {
 	c := p.clip
 	if c.W <= 0 || c.H <= 0 {
@@ -240,7 +218,6 @@ func (p *Panel) inClip(vx, vy int) bool {
 	return vx >= c.X && vy >= c.Y && vx < c.X+c.W && vy < c.Y+c.H
 }
 
-// Set paints one pixel in viewed coordinates, rotating into the framebuffer.
 func (p *Panel) Set(vx, vy int, r, g, b byte) {
 	if vx < 0 || vy < 0 || vx >= p.Width || vy >= p.Height {
 		return
@@ -253,7 +230,7 @@ func (p *Panel) Set(vx, vy int, r, g, b byte) {
 	if at+4 > len(p.mem) {
 		return
 	}
-	// RGBA8888: red first (driver reports R off=0, G=8, B=16, A=24).
+	// RGBA8888: driver reports R off=0, G=8, B=16, A=24.
 	p.mem[at], p.mem[at+1], p.mem[at+2], p.mem[at+3] = r, g, b, 0xff
 }
 
@@ -274,12 +251,6 @@ func (p *Panel) Over(vx, vy int, r, g, b, a byte) {
 	d[3] = byte(min(int(a)+(int(d[3])*keep+127)/255, 255))
 }
 
-// Fill paints the whole back buffer one color.
-// FillRect paints a rectangle given in viewed coordinates.
-//
-// A quarter turn maps a rectangle to a rectangle, so the corners are projected once and the span
-// between them filled a row at a time. Going through Set instead costs a Project and a bounds
-// check per pixel, which on a full screen is 2.3 million of each.
 func (p *Panel) FillRect(vx, vy, w, h int, r, g, b byte) {
 	x0, y0 := max(vx, 0), max(vy, 0)
 	x1, y1 := min(vx+w, p.Width)-1, min(vy+h, p.Height)-1
@@ -301,9 +272,7 @@ func (p *Panel) FillRect(vx, vy, w, h int, r, g, b byte) {
 		fy0, fy1 = fy1, fy0
 	}
 
-	// The first row is written a pixel at a time and every other row is copied from it. Copy is a
-	// memmove, which stores a vector at a time: framebuffer memory is write combining, where four
-	// byte stores per pixel is close to the worst thing that can be done to it.
+	// Framebuffer memory is write-combining.
 	first := p.span(fy0, fx0, fx1)
 	if first == nil {
 		return
@@ -320,7 +289,6 @@ func (p *Panel) FillRect(vx, vy, w, h int, r, g, b byte) {
 	}
 }
 
-// span is one row of the back buffer between two columns, inclusive.
 func (p *Panel) span(y, x0, x1 int) []byte {
 	at := p.back + y*p.stride + x0*4
 	end := p.back + y*p.stride + (x1+1)*4
@@ -333,8 +301,6 @@ func (p *Panel) span(y, x0, x1 int) []byte {
 
 func (p *Panel) Fill(r, g, b byte) { p.FillRect(0, 0, p.Width, p.Height, r, g, b) }
 
-// DrawRGBA paints an RGBA image with its top-left at vx, vy in viewed coordinates, each pixel
-// scale times across and down, inside clip as well as the panel's own clip.
 func (p *Panel) DrawRGBA(vx, vy int, pix []byte, stride, w, h, scale int, clip Rect) {
 	scale = max(scale, 1)
 	x0, y0 := max(vx, 0), max(vy, 0)
@@ -440,7 +406,6 @@ func (p *Panel) drawTurned(vx, vy int, pix []byte, stride, scale, x0, y0, x1, y1
 	}
 }
 
-// toPanelOrder turns the back buffer from the RGBA everything draws into the order the framebuffer reports.
 func (p *Panel) toPanelOrder() {
 	if p.surf != nil || p.var_.Red.Offset != 16 {
 		return
@@ -451,7 +416,6 @@ func (p *Panel) toPanelOrder() {
 	}
 }
 
-// Flip shows what was drawn and turns the buffers round.
 func (p *Panel) Flip() error {
 	if p.surf != nil {
 		return p.flipSurface()
@@ -471,7 +435,6 @@ func (p *Panel) Flip() error {
 	return nil
 }
 
-// WaitVSync blocks until the next vertical sync, for pacing an animation without spinning.
 func (p *Panel) WaitVSync() error {
 	if p.surf != nil {
 		time.Sleep(time.Second / 60)
@@ -491,8 +454,6 @@ func (p *Panel) ioctl(req uintptr, arg unsafe.Pointer) error {
 	return nil
 }
 
-// ioctlValue is for the ioctls that take their argument by value rather than by pointer, which is
-// FBIOBLANK. Casting an integer through unsafe.Pointer would work and would also be a lie.
 func (p *Panel) ioctlValue(req, val uintptr) error {
 	if p.f == nil {
 		return syscall.ENODEV
@@ -503,8 +464,6 @@ func (p *Panel) ioctlValue(req, val uintptr) error {
 	return nil
 }
 
-// ClearRect makes a rectangle given in viewed coordinates transparent, so what is under the
-// drawing shows through it.
 func (p *Panel) ClearRect(vx, vy, w, h int) {
 	x0, y0 := max(vx, 0), max(vy, 0)
 	x1, y1 := min(vx+w, p.Width)-1, min(vy+h, p.Height)-1
@@ -528,8 +487,6 @@ func (p *Panel) ClearRect(vx, vy, w, h int) {
 	}
 }
 
-// Shade covers a rectangle in black that runs from one opacity at its top to another at its
-// bottom, premultiplied, for what sits over something showing through.
 func (p *Panel) Shade(vx, vy, w, h int, top, bottom byte) {
 	for y := max(vy, 0); y < min(vy+h, p.Height); y++ {
 		a := byte(int(top) + (int(bottom)-int(top))*(y-vy)/max(h-1, 1))
@@ -560,8 +517,6 @@ func (p *Panel) fbRect(r Rect) (x0, y0, x1, y1 int) {
 	return min(ax, bx), min(ay, by), max(ax, bx) + 1, max(ay, by) + 1
 }
 
-// Front reads a pixel of what is on screen rather than what is being drawn, which is what a
-// screenshot wants: the buffer being drawn into holds the frame before last.
 func (p *Panel) Front(vx, vy int) (r, g, b byte) {
 	mem, at := p.fbmem, p.front
 	if p.surf != nil {
@@ -570,14 +525,6 @@ func (p *Panel) Front(vx, vy int) (r, g, b byte) {
 	return p.read(mem, at, vx, vy)
 }
 
-// Snapshot copies what is on the panel, in viewed coordinates, as RGB triples read row by row.
-//
-// The buffer is resolved once rather than per pixel. Front asks which one is showing every time it
-// is called, so a flip partway through a read returned the frames either side of it blended down
-// the screen — a page transition came back with its header at one offset and its rows at another.
-//
-// Still to be called where nothing is flipping: this closes the window to the width of one memcpy
-// rather than one screen read, and the render loop is what closes it altogether.
 func (p *Panel) Snapshot() (pixels []byte, w, h int) {
 	mem, base := p.fbmem, p.front
 	if p.surf != nil {
@@ -597,8 +544,6 @@ func (p *Panel) Snapshot() (pixels []byte, w, h int) {
 	return pixels, w, h
 }
 
-// At reads a pixel back, in viewed coordinates. Antialiasing needs to know what it is blending
-// with, and the layer buffers are ordinary cached memory.
 func (p *Panel) At(vx, vy int) (r, g, b byte) { return p.read(p.mem, p.back, vx, vy) }
 
 func (p *Panel) read(mem []byte, base, vx, vy int) (r, g, b byte) {

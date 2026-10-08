@@ -1,5 +1,3 @@
-// Package microphone is the array's tuning knobs: how the seven microphones are combined, how hard
-// they are driven, and whether the mix is levelled before anything listens to it.
 package microphone
 
 import (
@@ -17,9 +15,6 @@ func init() {
 	component.Register(component.Device, Get, component.Order(5))
 }
 
-// Names begin with the same word rather than being grouped into a sub-device: Home Assistant shows a
-// sub-device as a device of its own, which would put a bare "Microphone" device in the list for
-// every satellite in the house.
 type Microphone struct {
 	mixing      *esphome.Select
 	gain        *esphome.Number
@@ -135,8 +130,6 @@ func (m *Microphone) Entities() []esphome.Entity {
 	return []esphome.Entity{m.mixing, m.gain, m.leveling, m.cancel, m.sensitivity}
 }
 
-// Restore puts the knobs back. The analog gain is only published here: the capture service applies
-// it when it opens the device, which is the only moment it can be set.
 func (m *Microphone) Restore(c config.Config) {
 	source := mic.Get()
 

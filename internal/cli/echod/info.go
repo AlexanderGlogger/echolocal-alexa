@@ -64,8 +64,7 @@ func catFile(w io.Writer, path string) {
 	fmt.Fprintln(w, readTrim(path))
 }
 
-// reportHolder finds which process has a /dev/snd node open. Both PCM devices are normally
-// held by mediaserver, which makes capture block and playback fail with EINVAL.
+// mediaserver normally holds both PCM devices: capture blocks and playback fails with EINVAL.
 func reportHolder(w io.Writer, node string) {
 	procs, err := filepath.Glob("/proc/[0-9]*")
 	if err != nil {

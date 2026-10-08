@@ -6,8 +6,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/gpio"
 )
 
-// line is the mute as a GPIO echod drives itself. Nothing else moves it, so a button press is echod's
-// to act on and the value reads back as soon as it is written.
 type line struct{ *gpio.Mute }
 
 func (line) HardwareToggles() bool { return false }

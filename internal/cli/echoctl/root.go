@@ -1,4 +1,3 @@
-// Package echoctl is the command tree for the host-side CLI.
 package echoctl
 
 import (

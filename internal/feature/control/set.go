@@ -9,6 +9,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
@@ -21,8 +24,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/weather"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/echolocal/internal/ui/visual"
-	"github.com/ygelfand/libcountertop/pkg/display/style"
-	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 )
 
 type setting struct {

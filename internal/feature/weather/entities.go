@@ -3,10 +3,11 @@
 package weather
 
 import (
+	esphome "github.com/ygelfand/go-esphome-device"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	esphome "github.com/ygelfand/go-esphome-device"
 )
 
 const entityMost = 128

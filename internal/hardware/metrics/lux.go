@@ -5,11 +5,7 @@ import (
 	"strconv"
 )
 
-// LuxPath is the file the light sensor's reading comes from, empty when the board has none. Two parts
-// turn up across units: a tsl2584tsv on an IIO driver, or a tsl2540 on a vendor one with no IIO device
-// at all. Looked for once, at start-up.
-//
-// Reading the calibrated value either driver offers beside these crashes the device.
+// tsl2584tsv (IIO) or tsl2540 (vendor driver); reading either one's calibrated value crashes the device.
 func (r Reader) LuxPath() string {
 	for i := range 8 {
 		at := r.path("sys/bus/iio/devices/iio:device"+strconv.Itoa(i)) + "/illuminance0_input"
@@ -28,14 +24,8 @@ func (r Reader) LuxPath() string {
 	return ""
 }
 
-// Ambient is the light reading on a board whose sensor reports as input events rather than a file.
 var Ambient func() Reading
 
-// Lux is how bright the room is, read from the file LuxPath found, or from Ambient when there is none.
-//
-// The driver holds a converted value and hands back the last one, so a read costs about ten
-// milliseconds rather than the integration time. There is no buffer, trigger or event to wait on, so
-// asking is the only way to have the number.
 func (r Reader) Lux(path string) Reading {
 	if path == "" {
 		if Ambient == nil {

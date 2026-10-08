@@ -2,9 +2,6 @@ package led
 
 import "time"
 
-// spin turns the palette round the ring. It has no motion of its own beyond that, so it is only
-// worth running with colours that have somewhere to go — a single colour spun looks like a ring that
-// is simply on.
 func spin(p Palette) Frame {
 	const revolution = 1500 * time.Millisecond
 

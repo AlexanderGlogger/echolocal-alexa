@@ -4,10 +4,11 @@ package gui
 
 import (
 	gogui "github.com/go-gui-org/go-gui/gui"
+	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
-	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 )
 
 func volumeScreen(v shell.View) *Screen { return &Screen{View: v, Build: volumeCard} }

@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// ringInDir gives a Ring writing to a temporary directory, so the driver can be exercised without
-// hardware. Only the frame attribute is read back.
 func ringInDir(t *testing.T) *Ring {
 	t.Helper()
 
@@ -23,12 +21,6 @@ func ringInDir(t *testing.T) *Ring {
 	return &Ring{Path: dir}
 }
 
-// shown is the color of segment 0 as it reached the hardware: the frame SetFrame last wrote.
-//
-// Not read back from the attribute. A file standing in for the hardware is truncated and refilled on
-// every write, so a read can catch it empty — which the real attribute, taking a whole frame at once,
-// never does. Waiting only for the first frame, because until the driver has drawn one there is
-// nothing to be the answer.
 func shown(t *testing.T, r *Ring) Color {
 	t.Helper()
 
@@ -52,14 +44,8 @@ func shown(t *testing.T, r *Ring) Color {
 	}
 }
 
-// settle waits for the render loop to write. The driver renders as soon as it is woken, so this only
-// has to outlast a scheduling hop. It cannot simply be made generous: a timed claim expires on its own
-// deadline, and a test watching one expire needs to look before it does.
 func settle() { time.Sleep(40 * time.Millisecond) }
 
-// waitFor is settle for something that has to change: it polls until the ring shows what is expected,
-// which is what a test wants when a scheduling hop under load is the only thing in the way. A fixed
-// sleep either flakes or is slower than every run needs to be.
 func waitFor(t *testing.T, r *Ring, want Color) Color {
 	t.Helper()
 
@@ -99,8 +85,6 @@ func running(t *testing.T) *Driver {
 	return d
 }
 
-// A higher priority wins however the claims were taken, and releasing it reveals what was underneath
-// rather than leaving the ring blank or stuck.
 func TestPriorityWinsAndUncovers(t *testing.T) {
 	d := running(t)
 
@@ -118,7 +102,6 @@ func TestPriorityWinsAndUncovers(t *testing.T) {
 		t.Fatalf("with a turn claim the ring shows %+v, want blue", got)
 	}
 
-	// The failure has to win even though the turn claimed the ring first and is still holding it.
 	trouble := d.Claim(PriorityTrouble)
 	trouble.Paint(solid(red))
 	settle()
@@ -126,7 +109,6 @@ func TestPriorityWinsAndUncovers(t *testing.T) {
 		t.Fatalf("with trouble up the ring shows %+v, want red", got)
 	}
 
-	// This is the case that was broken before: the turn ending must not take the failure away.
 	turn.Release()
 	settle()
 	if got := shown(t, d.ring); got != red {
@@ -140,7 +122,6 @@ func TestPriorityWinsAndUncovers(t *testing.T) {
 	}
 }
 
-// A claim taken but never given anything to say must not blank the ring.
 func TestEmptyClaimShowsNothing(t *testing.T) {
 	d := running(t)
 
@@ -156,7 +137,6 @@ func TestEmptyClaimShowsNothing(t *testing.T) {
 	}
 }
 
-// A timed claim releases itself.
 func TestTimedClaimExpires(t *testing.T) {
 	d := running(t)
 
@@ -176,7 +156,6 @@ func TestTimedClaimExpires(t *testing.T) {
 	}
 }
 
-// Among equal priorities the most recent claim wins, so two things of the same kind do not fight.
 func TestLatestOfEqualPriorityWins(t *testing.T) {
 	d := running(t)
 
@@ -197,7 +176,6 @@ func TestLatestOfEqualPriorityWins(t *testing.T) {
 	}
 }
 
-// Changing content on the claim that is showing takes effect without re-claiming.
 func TestContentSwap(t *testing.T) {
 	d := running(t)
 
@@ -218,15 +196,12 @@ func TestContentSwap(t *testing.T) {
 	}
 }
 
-// A claim underneath being repainted must not restart the animation on top of it. This is why the
-// boot walk used to begin again whenever Home Assistant reported anything.
 func TestLowerClaimDoesNotRestartTheTop(t *testing.T) {
 	d := running(t)
 
 	base := d.Claim(PriorityBase)
 	base.Paint(solid(green))
 
-	// Counted from the driver's goroutine and read from this one.
 	var starts atomic.Int32
 	boot := d.Claim(PriorityBoot)
 	boot.Show(Content{Animate: func(ctx context.Context, r *Ring) error {
@@ -243,7 +218,6 @@ func TestLowerClaimDoesNotRestartTheTop(t *testing.T) {
 		t.Fatalf("the animation started %d times before anything changed", n)
 	}
 
-	// Anything at all happening underneath.
 	for range 3 {
 		base.Paint(solid(red))
 		settle()
@@ -258,7 +232,6 @@ func TestLowerClaimDoesNotRestartTheTop(t *testing.T) {
 		t.Errorf("the ring shows %+v, want the boot animation still", got)
 	}
 
-	// Changing the top claim itself does restart it, which is the point of the distinction.
 	boot.Show(Content{Frame: solid(red)})
 	settle()
 	if got := shown(t, d.ring); got != red {
@@ -266,7 +239,6 @@ func TestLowerClaimDoesNotRestartTheTop(t *testing.T) {
 	}
 }
 
-// Using a released claim is harmless, since a holder may outlive its turn on the ring.
 func TestReleasedClaimIsInert(t *testing.T) {
 	d := running(t)
 
@@ -286,16 +258,12 @@ func TestReleasedClaimIsInert(t *testing.T) {
 	}
 }
 
-// A room reaction is dark until something happens, so while it is dark the light underneath has to show
-// through: choosing to follow the room should not mean giving up the ring's own colour for the evenings
-// nobody says anything.
 func TestARoomReactionShowsTheLightThroughItsSilence(t *testing.T) {
 	d := running(t)
 
 	base := d.Claim(PriorityBase)
 	base.Paint(solid(green))
 
-	// A quiet room, then a loud one, from the same source the driver reads every frame.
 	var loud atomic.Bool
 	room := d.Claim(PriorityRoom)
 	room.React(EffectRoomGlow, blue, Room{Level: func() float64 {
@@ -315,25 +283,18 @@ func TestARoomReactionShowsTheLightThroughItsSilence(t *testing.T) {
 		t.Errorf("a loud room shows %+v, want the reaction", got)
 	}
 
-	// And back, without anything being claimed or released in between.
 	loud.Store(false)
 	if got := waitFor(t, d.ring, green); got != green {
 		t.Errorf("once the room went quiet the ring shows %+v, want the light again", got)
 	}
 }
 
-// Repainting the layer showing through has to reach the ring. The frame beneath is read once and handed
-// to the effect above as a still, so without noticing the change the ring goes on compositing a frame
-// that is no longer there — which is a segment turned on by hand doing nothing at all, silently, for as
-// long as anything reacting to the room sits on top of it.
 func TestRepaintingWhatShowsThroughReachesTheRing(t *testing.T) {
 	d := running(t)
 
 	base := d.Claim(PriorityBase)
 	base.Paint(solid(green))
 
-	// Silent throughout, so the reaction never draws anything of its own and what is underneath is the
-	// whole of what the ring shows.
 	room := d.Claim(PriorityRoom)
 	room.React(EffectRoomGlow, blue, Room{Level: func() float64 { return 0 }})
 	settle()
@@ -342,28 +303,21 @@ func TestRepaintingWhatShowsThroughReachesTheRing(t *testing.T) {
 		t.Fatalf("a silent room shows %+v, want the light underneath", got)
 	}
 
-	// Nothing is claimed or released, and the claim on top does not move.
 	base.Paint(solid(red))
 	if got := waitFor(t, d.ring, red); got != red {
 		t.Errorf("after repainting underneath the ring shows %+v, want the new colour", got)
 	}
 }
 
-// Only something reading the room may be seen through. An animation that goes dark on purpose — a
-// heartbeat between thumps, an alert between pulses — owns the ring while it does, or the layer beneath
-// would strobe through every gap.
 func TestADarkAnimationStillOwnsTheRing(t *testing.T) {
 	d := running(t)
 
 	base := d.Claim(PriorityBase)
 	base.Paint(solid(green))
 
-	// Heartbeat is entirely dark for most of its period, which is what makes it the case worth testing.
 	turn := d.Claim(PriorityTurn)
 	turn.Play(EffectHeartbeat, red)
 
-	// Waited for rather than settled: until the animation's first write lands, the frame still holds
-	// what the claim underneath left there, and reading that proves nothing.
 	for shown(t, d.ring) == green {
 		time.Sleep(FrameInterval)
 	}

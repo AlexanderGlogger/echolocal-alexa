@@ -1,4 +1,3 @@
-// Package ui is what the device draws, as distinct from the panel it draws on.
 package ui
 
 import (
@@ -11,8 +10,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
-// The mark, one for each kind of background. Two drawings rather than one and a rule: the dark one
-// is not the light one inverted, the wordmark changes colour. Scaled from assets by `make logos`.
+// Scaled from assets by `make logos`.
 //
 //go:embed logo_light.png
 var lightPNG []byte
@@ -28,15 +26,12 @@ var (
 	dark     image.Image
 )
 
-// Logo is the mark for a light background, decoded once.
 func Logo() image.Image { return decode(&lightOnce, &light, lightPNG) }
 
 func LogoPNG() []byte { return lightPNG }
 
-// Night is the mark for a dark background.
 func Night() image.Image { return decode(&darkOnce, &dark, darkPNG) }
 
-// Mark is whichever of the two reads on this background.
 func Mark(onDark bool) image.Image {
 	if onDark {
 		return Night()
@@ -44,7 +39,6 @@ func Mark(onDark bool) image.Image {
 	return Logo()
 }
 
-// MarkWidth is how wide the mark comes out at a height.
 func MarkWidth(h int) int {
 	img := Logo()
 	if img == nil || img.Bounds().Dy() == 0 {
@@ -54,8 +48,6 @@ func MarkWidth(h int) int {
 	return b.Dx() * h / b.Dy()
 }
 
-// DrawLogo paints the mark to fit inside a box, keeping its proportions and centred in whatever
-// room is left over. on is the background it is composited against.
 func DrawLogo(s Surface, r Rect, on theme.Color) {
 	img := Logo()
 	if theme.Dark(on) {

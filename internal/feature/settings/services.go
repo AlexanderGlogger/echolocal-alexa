@@ -3,12 +3,19 @@
 package settings
 
 import (
+	sharedcast "github.com/ygelfand/libcountertop/pkg/display/settings/castpages"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/chromecast"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	sharedcast "github.com/ygelfand/libcountertop/pkg/display/settings/castpages"
 )
 
 func servicePages() *sharedcast.Pages {
-	return sharedcast.New(sharedcast.Dependencies{Settings: config.CastSection, Shell: shell.Get(), Receiver: chromecast.Get()})
+	return sharedcast.New(
+		sharedcast.Dependencies{
+			Settings: config.CastSection,
+			Shell:    shell.Get(),
+			Receiver: chromecast.Get(),
+		},
+	)
 }

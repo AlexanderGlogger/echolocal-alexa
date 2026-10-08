@@ -2,7 +2,6 @@ package speaker
 
 import "github.com/ygelfand/echolocal/internal/component"
 
-// Startup reports actual acquisition without opening the audio device again.
 func (s *Player) Startup() component.Progress {
 	s.devMu.Lock()
 	open := s.pb != nil

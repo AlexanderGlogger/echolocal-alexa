@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-// standing adds two waves going opposite ways round the ring. Where they meet in step the ring is
-// brightest, where they cancel it is dark, and the difference from ripple is that the dark points
-// stay where they are: the pattern breathes in place instead of travelling. Two crests each way put
-// the still points on segments rather than between them, which twelve allows and most counts do not.
 func standing(p Palette) Frame {
 	const (
 		period = 2600 * time.Millisecond

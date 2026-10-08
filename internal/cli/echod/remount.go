@@ -8,10 +8,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
-// newRemountCmd exists because nothing else on the device can do this. The kernel mounts the root
-// filesystem itself and names its source /dev/root, for which there is no node, so every mount(8) here
-// fails on it; mount(2) with an empty source does not need one. adbd makes that call for `adb remount`
-// and this makes it for the other direction, which adb has no command for.
+// The root source is /dev/root with no node: mount(8) fails, mount(2) with no source works.
 func newRemountCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:       "remount rw|ro",

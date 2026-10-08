@@ -45,14 +45,11 @@ func TestDisableOnlyTheNamed(t *testing.T) {
 		}
 	}
 
-	// A service nobody named keeps its definition exactly.
 	if !strings.Contains(out, "service acepowerd /system/bin/ace_powerd\n    class main\n") {
 		t.Error("acepowerd was changed")
 	}
 }
 
-// Running an install twice must not stack keywords, and a service Amazon already ships disabled is
-// already where we want it.
 func TestDisableIsIdempotent(t *testing.T) {
 	once, _ := Disable(rc, map[string]bool{"mixer": true})
 	twice, changed := Disable(once, map[string]bool{"mixer": true})
@@ -68,8 +65,6 @@ func TestDisableIsIdempotent(t *testing.T) {
 	}
 }
 
-// The keyword only stops a service starting with its class. An explicit start in an on-block runs it
-// regardless, so that has to go too — on this device most of the services we disable have one.
 func TestDisableCommentsOutExplicitStarts(t *testing.T) {
 	out, changed := Disable(rc, map[string]bool{"mixer": true})
 
@@ -91,7 +86,6 @@ func TestDisableCommentsOutExplicitStarts(t *testing.T) {
 	}
 }
 
-// The keyword has to land after the whole command, not in the middle of a wrapped one.
 func TestDisableFollowsAWrappedCommand(t *testing.T) {
 	out, changed := Disable(rc, map[string]bool{"bugreport": true, "mixer": true})
 
@@ -105,8 +99,6 @@ func TestDisableFollowsAWrappedCommand(t *testing.T) {
 	}
 }
 
-// dhcpcd ships disabled and nothing starts it, so init has to. Only the named service loses the
-// keyword, and a service that never had one is left alone.
 func TestEnableDropsTheKeyword(t *testing.T) {
 	const rc = `service dhcpcd-wlan0 /system/bin/dhcpcd wlan0 -AdLK
     class main
@@ -134,8 +126,6 @@ service dhcpcd-eth0 /system/bin/dhcpcd eth0 -AdLK
 	}
 }
 
-// echod takes over a service Amazon declares unprivileged and needs root for the hardware. Only that
-// service loses its user and group; the ones around it keep theirs.
 func TestAsRootDropsOnlyThatServicesUser(t *testing.T) {
 	const takeover = `service ledcontroller /system/bin/ledcontroller
    class main

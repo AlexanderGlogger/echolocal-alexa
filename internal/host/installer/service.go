@@ -7,10 +7,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/parts"
 )
 
-// ownService reports whether the board runs echod as a service of its own.
 func (r *run) ownService() bool { return r.board().ServiceName == layout.Service }
 
-// installService writes echod's service definition. echod puts its other parts in place itself.
 func installService(r *run) (string, bool, error) {
 	if !r.ownService() {
 		return "the board takes over one of Amazon's", true, nil

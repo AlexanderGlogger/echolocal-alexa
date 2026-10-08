@@ -8,20 +8,10 @@ import (
 	"strings"
 )
 
-// The coefficient files are one float per line with a trailing comma, C comments between them, and the
-// two firmwares lay the same numbers out differently. Fire OS 5 says so in its own block comments:
-//
-//	// BAND 00-03   BEAM 00   COEF 3   MIC 0 (4REAL-4IMAG)
-//
-// Fire OS 6's file carries no comments at all. Its layout was found by asking which axis assignment
-// leaves the band axis smooth, since a filter bank's weights change slowly from one band to the next:
-// with the answer read off the Fire OS 5 file first to check the question was a fair one.
+// Fire OS 5 and 6 lay the coefficients out differently; only Fire OS 5's file documents its own.
 
-// axes names the four dimensions in order, outermost first: a band, e beam, t tap, m microphone.
 type axes string
 
-// readFloats parses a coefficient file and insists on the count it should hold: a file of the wrong
-// length is a different tuning, and reading it as this one would point the beams at nothing.
 func readFloats(path string, want int) ([]float32, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -53,7 +43,6 @@ func readFloats(path string, want int) ([]float32, error) {
 	return out, nil
 }
 
-// readFBF fills the beamformer weights, walking the file in whatever order this firmware wrote it.
 func (w *Weights) readFBF(path string) error {
 	g := w.g
 	values, err := readFloats(path, g.Bands*g.Beams*g.Taps*g.Inputs()*2)
@@ -62,8 +51,6 @@ func (w *Weights) readFBF(path string) error {
 	}
 	w.fbf = make([]complex64, g.Bands*g.Beams*g.Taps*g.Inputs())
 
-	// The band axis carries perGroup of them at a time, so it is walked in groups and the block that
-	// lands holds that many bands of each part.
 	size := map[byte]int{
 		'a': g.Bands / g.perGroup,
 		'e': g.Beams,

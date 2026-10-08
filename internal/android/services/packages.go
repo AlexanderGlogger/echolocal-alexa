@@ -1,21 +1,11 @@
 package services
 
-// Package is one Amazon package an install hides, and why it goes.
 type Package struct {
 	Name   string
 	Reason string
 }
 
-// Hidden is what any board with a package manager hides, which is not biscuit: Fire OS 6 there has no
-// framework and nothing to hide.
-//
-// `pm hide` persists, so this is applied once at install rather than on every boot. It is paired with
-// a force-stop, because hiding a package blocks future launches but leaves a running process alive,
-// and a live audio client keeps mediaserver holding the PCM devices. A package marked persistent is
-// restarted by system_server whatever the force-stop does, and only goes on the next boot.
-//
-// The list was established by hand on a Fire OS 5 biscuit; these are the entries a Show still has
-// under the same name. A board adds its own by appending.
+// pm hide blocks launches but leaves a running process alive; a persistent package restarts until reboot.
 var Hidden = []Package{
 	{
 		"amazon.speech.sim",

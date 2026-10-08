@@ -17,7 +17,6 @@ func TestSetFrameSkipsIdenticalWrites(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Removing the file makes a second write detectable: if SetFrame wrote again it would recreate it.
 	if err := os.Remove(frame); err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +36,6 @@ func TestSetFrameSkipsIdenticalWrites(t *testing.T) {
 		t.Fatal("a changed frame was not written:", err)
 	}
 
-	// The caller's slice must not be aliased: reusing a buffer is exactly what an effect does.
 	changed[0] = 0x12
 	if err := os.Remove(frame); err != nil {
 		t.Fatal(err)

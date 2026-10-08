@@ -5,8 +5,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/sysimg"
 )
 
-// rook is the 1st-generation Echo Spot, which runs LineageOS. Its own boot image is kept: what an
-// install changes is all on the system partition.
+// rook is the 1st-generation Echo Spot, which runs LineageOS.
 var rook = Profile{
 	Board:  board.Rook,
 	System: sysimg.Rook,

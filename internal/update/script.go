@@ -10,15 +10,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// The boot hook. Amazon's two animation scripts each run a ledctrl that waits forever on a binder
-// service echod does not publish, so the installer replaces both — and the one init runs at boot is
-// also the only root that exists before echod, which makes it the only thing that can put echod back.
-//
-// It is defined here and written from two places: the installer over adb at install time, and echod
-// itself on every start where the content differs. That second one is what lets this change without a
-// reinstall, and it is why the definition may not be duplicated.
+// Amazon's animation scripts run a ledctrl that waits forever on a binder service echod lacks.
 
-// Rollback is the boot hook, for the script init runs on the way up.
 var Rollback = fmt.Sprintf(`#!/system/bin/sh
 # Installed by EchoLocal, replacing a ledctrl call that waits forever on a binder service echod does
 # not publish. echod drives the ring instead.
@@ -43,20 +36,13 @@ fi
 exit 0
 `, layout.PrevBinary, layout.Binary, layout.UpdatingPath, layout.RolledBackProp, layout.SystemPrevBinary)
 
-// Stub is the boot hook for the script that runs at the end of the boot, which has nothing to do.
 var Stub = `#!/system/bin/sh
 # Installed by EchoLocal, replacing a ledctrl call that waits forever on a binder service echod does
 # not publish. echod drives the ring instead.
 exit 0
 `
 
-// Script is what belongs at one of the paths the installer takes over.
-//
-// Only the hook init runs on the way up carries the rollback. The other fires on
-// amazon.headless.BOOT_COMPLETED, a minute or so into the boot, while a trial is not committed until the
-// first heartbeat several minutes later — a rollback there would tear out an update that was doing
-// nothing wrong.
-// hooks is the board's, indirected so a test can point it at a temporary directory.
+// The other hook fires on amazon.headless.BOOT_COMPLETED, about a minute into the boot.
 var hooks = func() []string { return board.Detect().BootHooks }
 
 func Script(path string) string {
@@ -66,9 +52,6 @@ func Script(path string) string {
 	return Stub
 }
 
-// Ensure writes the boot hooks when they are not already what this build expects, which is how the
-// rollback improves without anybody reinstalling. Nothing is written when nothing differs, so an
-// ordinary start does not touch /system at all.
 func Ensure() {
 	var stale []string
 	for _, path := range hooks() {
@@ -101,12 +84,6 @@ func Ensure() {
 	}
 }
 
-// write replaces a hook and labels it, because a file created here carries whatever the directory gave
-// it and init has to be able to exec it.
-//
-// A label that will not take is logged rather than failing the write: the file is already correct, the
-// kernel is permissive so nothing is denied on it anyway, and a hook with the wrong label still beats no
-// hook at all.
 func write(path, content string) error {
 	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
 		return err

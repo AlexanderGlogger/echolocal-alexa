@@ -10,7 +10,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 )
 
-// flaky underruns a few times before taking anything, and keeps what it was handed each time.
 type flaky struct {
 	fails int
 	got   [][]byte
@@ -25,8 +24,6 @@ func (f *flaky) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// The frames were already taken off the queue, so an underrun must put the same ones back rather than
-// move on to the next period.
 func TestAnUnderrunRetriesTheSameAudio(t *testing.T) {
 	p := &Player{}
 	to := &flaky{fails: 2}
@@ -65,7 +62,6 @@ func TestAWriteThatWorksIsNotCountedOrRepeated(t *testing.T) {
 	}
 }
 
-// dead never recovers, which is how a retry loop becomes a spin.
 type dead struct{ writes int }
 
 func (d *dead) Write(p []byte) (int, error) {

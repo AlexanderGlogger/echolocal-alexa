@@ -1,16 +1,13 @@
 //go:build board_checkers || board_cronos || board_rook
 
-// Package a2dp is the device as a Bluetooth speaker.
-//
-// The pieces all existed and none of them were joined: internal/lib/bt decides what a phone's bytes
-// mean, internal/lib/bt/pair decides a pairing, internal/lib/bt/sbc turns frames into samples, and
-// internal/hardware/ble carries the line. This is the wiring, and nothing else — no protocol lives
-// here, so a fault is in one of the parts rather than spread between them.
 package a2dp
 
 import (
 	"sync"
 	"time"
+
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	sharedspeaker "github.com/ygelfand/libcountertop/pkg/bluetooth/a2dp"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -21,8 +18,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/service"
-	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	sharedspeaker "github.com/ygelfand/libcountertop/pkg/bluetooth/a2dp"
 )
 
 var once sync.Once

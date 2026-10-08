@@ -1,10 +1,3 @@
-// Package device drives a connected Echo Dot through the adb binary, with the shell semantics this
-// device needs: commands carry their own exit status, and output is normalised from CRLF.
-//
-// Shelling out rather than speaking the protocol: every Go adb library talks to the adb server rather
-// than to the device, so platform-tools is a prerequisite either way. Given that, the binary is worth
-// more than a library — it brings wait-for-device, wait-for-recovery, reboot and the sync protocol,
-// all of which a library makes us reimplement.
 package device
 
 import (
@@ -19,17 +12,12 @@ import (
 	"time"
 )
 
-// Binary is what has to be on PATH.
 const Binary = "adb"
 
 const rcMarker = "__echolocal_rc="
 
-// PlatformTools is where to get adb, for an error worth reading.
 const PlatformTools = "https://developer.android.com/tools/releases/platform-tools"
 
-// Require reports whether adb is available, and says what to install when it is not. Every entry
-// point checks this first: a missing binary should be one clear sentence, not a failure part way
-// through talking to a device.
 func Require() error {
 	if _, err := exec.LookPath(Binary); err != nil {
 		return fmt.Errorf("adb is not on PATH: install Android platform-tools and try again\n"+
@@ -40,13 +28,10 @@ func Require() error {
 	return nil
 }
 
-// Device is one connected Echo Dot, addressed by serial so a second device cannot be caught by
-// accident once one has been chosen.
 type Device struct {
 	serial string
 }
 
-// Error is a shell command that ran and failed.
 type Error struct {
 	Cmd    string
 	Output string
@@ -61,7 +46,6 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("device: %q exited %d: %s", e.Cmd, e.Code, out)
 }
 
-// Info identifies a connected device well enough to choose between several.
 type Info struct {
 	Serial  string
 	Model   string
@@ -78,23 +62,15 @@ func (i Info) String() string {
 	return i.Serial
 }
 
-// State is what adb says about a device. Only two matter here: a device that can be installed to, and
-// one in recovery, which is where the boot image is written from.
 const (
 	StateOnline   = "device"
 	StateRecovery = "recovery"
 )
 
-// ErrUnreachable is a device an install cannot open. Whether adb lists it unauthorized or does not
-// list it at all is the same problem seen after a different number of reboots, and the way out of
-// both is the same.
 var ErrUnreachable = errors.New("no device adb can drive")
 
-// List returns the devices adb can actually talk to. Offline and unauthorized entries are skipped:
-// they show up in adb's listing but every command against them fails.
 func List() ([]Info, error) { return list(StateOnline) }
 
-// ListAny is List including devices in recovery, which an install can carry on from.
 func ListAny() ([]Info, error) { return list(StateOnline, StateRecovery) }
 
 func list(states ...string) ([]Info, error) {
@@ -110,7 +86,7 @@ func list(states ...string) ([]Info, error) {
 	return out, nil
 }
 
-// probeTimeout is how long a listing waits on one device. An adb shell into some boards never returns.
+// An adb shell into some boards never returns.
 const probeTimeout = 3 * time.Second
 
 func probe(serial string) Info {
@@ -127,8 +103,6 @@ func probe(serial string) Info {
 	}
 }
 
-// InRecovery reports whether adb lists this device in recovery right now, which decides whether an
-// install still has to get it there.
 func (d *Device) InRecovery() (bool, error) {
 	serials, err := listing(StateRecovery)
 	if err != nil {
@@ -137,8 +111,7 @@ func (d *Device) InRecovery() (bool, error) {
 	return slices.Contains(serials, d.serial), nil
 }
 
-// listing is the serials in any of the given states. `adb devices` reports one per line as
-// "serial<tab>state" after a header.
+// adb devices prints "serial<tab>state" per line after a header.
 func listing(states ...string) ([]string, error) {
 	out, err := run(context.Background(), "devices")
 	if err != nil {
@@ -160,7 +133,6 @@ func listing(states ...string) ([]string, error) {
 	return serials, nil
 }
 
-// Connect selects a device an install can use: online, with a root adbd.
 func Connect(serial string) (*Device, error) {
 	d, err := Attach(serial)
 	if err != nil {
@@ -169,14 +141,10 @@ func Connect(serial string) (*Device, error) {
 	return rooted(d)
 }
 
-// Attach is Connect without the root check, for the one job that runs before root exists: writing the
-// boot image that grants it. Everything else takes Connect and is refused early.
 func Attach(serial string) (*Device, error) {
 	return attach(serial, StateOnline)
 }
 
-// AttachAny also accepts a device in recovery, which is where the boot partition is written and whose
-// adbd is already root.
 func AttachAny(serial string) (*Device, error) {
 	return attach(serial, StateOnline, StateRecovery)
 }
@@ -207,8 +175,6 @@ func attach(serial string, states ...string) (*Device, error) {
 	return &Device{serial: serials[0]}, nil
 }
 
-// rooted refuses a device that cannot do what an install needs, rather than failing partway
-// through a /system edit.
 func rooted(d *Device) (*Device, error) {
 	root, err := d.IsRoot()
 	if err != nil {
@@ -224,10 +190,7 @@ func rooted(d *Device) (*Device, error) {
 
 func (d *Device) Serial() string { return d.serial }
 
-// Reboot restarts the device. An empty target is Android; "recovery" is TWRP, which is the only place
-// the boot partition can be written.
-//
-// The device goes away as this runs, so a caller waits for it to come back with Wait.
+// "recovery" is TWRP, the only place the boot partition can be written.
 func (d *Device) Reboot(target string) error {
 	args := []string{"reboot"}
 	if target != "" {
@@ -237,18 +200,13 @@ func (d *Device) Reboot(target string) error {
 	return err
 }
 
-// Remount makes the system partition writable.
-//
-// adbd does this rather than the shell because the kernel mounted the root filesystem itself and named
-// its source /dev/root, which has no device node. mount(8) resolves that name and fails on it either
-// way; mount(2) with an empty source never needs it, and adbd is what makes that call.
+// The root source is /dev/root with no node: mount(8) fails, mount(2) with no source works.
 func (d *Device) Remount() error {
 	_, err := d.run(context.Background(), "remount")
 	return err
 }
 
-// Wait blocks until the device is back in one of the given states, or ctx is done. It then confirms a
-// shell answers, because adb reports a device as present a moment before it will run anything.
+// adb reports a device present a moment before it will run anything.
 func (d *Device) Wait(ctx context.Context, states ...string) error {
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
@@ -274,10 +232,7 @@ func (d *Device) Wait(ctx context.Context, states ...string) error {
 	}
 }
 
-// WaitBooted waits for Android to finish coming up, not merely to answer: an install that starts
-// while the framework is still starting sees services that are not there yet.
-// WaitRooted waits for the device to come back and answer as root, for a board that never reports a
-// boot: sys.boot_completed is system_server's to set, and echod keeps that switched off.
+// sys.boot_completed is set by system_server, which echod keeps off.
 func (d *Device) WaitRooted(ctx context.Context) error {
 	if err := d.Wait(ctx, StateOnline); err != nil {
 		return err
@@ -318,7 +273,6 @@ func (d *Device) WaitBooted(ctx context.Context) error {
 	}
 }
 
-// Shell runs a command and fails if it exits non-zero.
 func (d *Device) Shell(cmd string) (string, error) {
 	out, code, err := d.shell(cmd)
 	if err != nil {
@@ -330,14 +284,11 @@ func (d *Device) Shell(cmd string) (string, error) {
 	return out, nil
 }
 
-// ShellCode returns the exit status instead of failing on it, for checks where non-zero is an
-// answer rather than a problem.
 func (d *Device) ShellCode(cmd string) (string, int, error) {
 	return d.shell(cmd)
 }
 
-// shell appends its own exit-status marker rather than trusting adb to propagate one, which older
-// adb does not.
+// Older adb does not propagate the shell exit status.
 func (d *Device) shell(cmd string) (string, int, error) {
 	raw, err := d.withRetry(func() (string, error) {
 		raw, err := d.rawShell(cmd)
@@ -356,8 +307,6 @@ func (d *Device) shell(cmd string) (string, int, error) {
 	return out, code, nil
 }
 
-// splitRC separates output from the trailing exit-status marker. Only the marker's own line is read
-// as the status, so anything landing after it is returned rather than failing the parse.
 func splitRC(raw string) (string, int, error) {
 	out := strings.ReplaceAll(raw, "\r\n", "\n")
 
@@ -380,7 +329,6 @@ func splitRC(raw string) (string, int, error) {
 	return text, code, nil
 }
 
-// Exists reports whether a path is present.
 func (d *Device) Exists(path string) (bool, error) {
 	_, code, err := d.ShellCode("ls -d " + quote(path))
 	if err != nil {
@@ -389,7 +337,6 @@ func (d *Device) Exists(path string) (bool, error) {
 	return code == 0, nil
 }
 
-// IsSymlink reports whether a path is a symbolic link.
 func (d *Device) IsSymlink(path string) (bool, error) {
 	_, code, err := d.ShellCode("[ -L " + quote(path) + " ]")
 	if err != nil {
@@ -398,8 +345,7 @@ func (d *Device) IsSymlink(path string) (bool, error) {
 	return code == 0, nil
 }
 
-// ReadFile reads a file into memory through exec-out, which is the only shell that does not translate
-// line endings. Reading a boot partition through `adb shell cat` corrupts it silently.
+// exec-out is the only adb shell that does not translate line endings.
 func (d *Device) ReadFile(path string) ([]byte, error) {
 	out, err := d.withRetry(func() (string, error) {
 		b, err := d.command(context.Background(), "exec-out", "cat "+quote(path)).Output()
@@ -411,7 +357,6 @@ func (d *Device) ReadFile(path string) ([]byte, error) {
 	return []byte(out), nil
 }
 
-// PullFile copies a file off the device.
 func (d *Device) PullFile(remote, local string) error {
 	if _, err := d.run(context.Background(), "pull", remote, local); err != nil {
 		return fmt.Errorf("device: pulling %s: %w", remote, err)
@@ -419,7 +364,6 @@ func (d *Device) PullFile(remote, local string) error {
 	return nil
 }
 
-// WriteFile creates a file on the device with the given contents and mode.
 func (d *Device) WriteFile(remote string, data []byte, mode os.FileMode) error {
 	tmp, err := os.CreateTemp("", "echoctl")
 	if err != nil {
@@ -437,11 +381,7 @@ func (d *Device) WriteFile(remote string, data []byte, mode os.FileMode) error {
 	return d.PushFile(tmp.Name(), remote, mode)
 }
 
-// PushFile copies a file onto the device and sets its mode.
-//
-// A push never lands the mode we ask for: creating a file widens the owner bits to group and
-// other, and overwriting one yields 0644. The chmod is what actually sets it, and without it a
-// re-install leaves a binary init cannot exec.
+// adb push widens a new file's owner bits to group and other, and leaves an overwritten one 0644.
 func (d *Device) PushFile(local, remote string, mode os.FileMode) error {
 	if _, err := d.withRetry(func() (string, error) {
 		return d.run(context.Background(), "push", local, remote)
@@ -453,19 +393,16 @@ func (d *Device) PushFile(local, remote string, mode os.FileMode) error {
 	return err
 }
 
-// Getprop reads a system property. A property that is unset reads as empty, not an error.
 func (d *Device) Getprop(name string) (string, error) {
 	out, err := d.Shell("getprop " + quote(name))
 	return strings.TrimSpace(out), err
 }
 
-// Setprop writes a system property.
 func (d *Device) Setprop(name, value string) error {
 	_, err := d.Shell(fmt.Sprintf("setprop %s %s", quote(name), quote(value)))
 	return err
 }
 
-// Label reads a path's SELinux label.
 func (d *Device) Label(path string) (string, error) {
 	out, err := d.Shell("ls -Zd " + quote(path))
 	if err != nil {
@@ -479,13 +416,12 @@ func (d *Device) Label(path string) (string, error) {
 	return "", fmt.Errorf("device: no SELinux label in %q", strings.TrimSpace(out))
 }
 
-// Chcon sets a path's SELinux label.
 func (d *Device) Chcon(label, path string) error {
 	_, err := d.Shell(fmt.Sprintf("chcon %s %s", quote(label), quote(path)))
 	return err
 }
 
-// IsRoot reports whether the adb shell is uid 0. `id -u` is unsupported, so `id` is parsed.
+// id -u is unsupported on the device.
 func (d *Device) IsRoot() (bool, error) {
 	out, err := d.Shell("id")
 	if err != nil {
@@ -494,7 +430,6 @@ func (d *Device) IsRoot() (bool, error) {
 	return strings.Contains(out, "uid=0("), nil
 }
 
-// Uptime is seconds since boot.
 func (d *Device) Uptime() (float64, error) {
 	out, err := d.Shell("cat /proc/uptime")
 	if err != nil {
@@ -508,7 +443,6 @@ func (d *Device) Uptime() (float64, error) {
 	return v, nil
 }
 
-// command builds an adb invocation aimed at this device.
 func (d *Device) command(ctx context.Context, args ...string) *exec.Cmd {
 	if d.serial != "" {
 		args = append([]string{"-s", d.serial}, args...)
@@ -520,11 +454,8 @@ func (d *Device) run(ctx context.Context, args ...string) (string, error) {
 	return output(d.command(ctx, args...))
 }
 
-// errCutOff is a shell that ended without printing its exit status, with adb still exiting 0.
 var errCutOff = errors.New("the shell ended before its exit status")
 
-// Dropped reports whether adb lost the device: exit 255 mid-command, or exit 1 with adb's own word
-// that the device is not there.
 func Dropped(err error) bool {
 	if errors.Is(err, errCutOff) {
 		return true
@@ -543,7 +474,6 @@ func Dropped(err error) bool {
 			strings.Contains(msg, "no devices/emulators found"))
 }
 
-// withRetry runs a command again once if the transport went away rather than the command failing.
 func (d *Device) withRetry(do func() (string, error)) (string, error) {
 	out, err := do()
 	if !Dropped(err) {
@@ -559,8 +489,6 @@ func (d *Device) withRetry(do func() (string, error)) (string, error) {
 	return do()
 }
 
-// rawShell is shell without the retry, for waiting on a device that has gone away: retrying inside
-// the wait is what the wait is for.
 func (d *Device) rawShell(cmd string) (string, error) {
 	return d.run(context.Background(), "shell", cmd+"; echo "+rcMarker+"$?")
 }
@@ -587,8 +515,7 @@ func run(ctx context.Context, args ...string) (string, error) {
 	return output(exec.CommandContext(ctx, Binary, args...))
 }
 
-// output reports stdout and stderr together, since adb explains refusals on stderr. Errors carry that
-// output on one line: adb's is several, and a multi-line error wrecks any progress display it lands in.
+// adb explains refusals on stderr.
 func output(cmd *exec.Cmd) (string, error) {
 	out, err := cmd.CombinedOutput()
 	text := string(out)

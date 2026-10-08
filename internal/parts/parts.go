@@ -1,5 +1,3 @@
-// Package parts is what echod needs on /system besides itself. Each one is carried inside echod and
-// put in place when it starts, so an update or a rollback brings its own.
 package parts
 
 import (
@@ -16,8 +14,6 @@ import (
 //go:embed echolocal.rc
 var initRC []byte
 
-// Part is one file echod keeps current, and the init service that runs it. Boot is a part init only
-// reads at boot.
 type Part struct {
 	Name    string
 	Path    string
@@ -27,14 +23,12 @@ type Part struct {
 	Boot    bool
 }
 
-// InitRC is echod's own service definition, for a board that has one rather than taking over Amazon's.
 var InitRC = Part{Name: "service", Path: layout.InitRC, Data: initRC, Mode: 0o644, Boot: true}
 
 var registered []Part
 
-func register(p Part) { registered = append(registered, p) }
+func register(p Part) { registered = append(registered, p) } //nolint:unused
 
-// All is what this build carries.
 func All() []Part { return registered }
 
 var (
@@ -43,8 +37,6 @@ var (
 	label    = setLabel
 )
 
-// Ensure rewrites whichever parts differ from the ones this build carries, restarts their services,
-// and reports whether a part init only reads at boot changed. Nothing is written when nothing differs.
 func Ensure() (rebootPending bool) { return ensure(registered) }
 
 func ensure(ps []Part) (rebootPending bool) {
@@ -103,14 +95,14 @@ func replace(p Part) error {
 		return err
 	}
 	if err := os.Chmod(tmp, p.Mode); err != nil {
-		os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return err
 	}
 	if err := label(tmp); err != nil {
 		slog.Warn("labelling a part failed", "path", tmp, "err", err)
 	}
 	if err := os.Rename(tmp, p.Path); err != nil {
-		os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return err
 	}
 	return nil

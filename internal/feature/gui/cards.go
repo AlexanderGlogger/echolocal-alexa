@@ -4,6 +4,8 @@ package gui
 
 import (
 	gogui "github.com/go-gui-org/go-gui/gui"
+	"golang.org/x/exp/shiny/materialdesign/icons"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/message"
@@ -12,7 +14,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const priorityAlert = 30
@@ -134,14 +135,18 @@ func timerCard(w *gogui.Window) gogui.View {
 	if c.Ringing {
 		stop = func(gogui.EventCtx) { timer.Get().Stop() }
 	}
-	card := presentation.Presses.Pressable(gogui.Column, presentation.Toolkit.Panel(gogui.ContainerCfg{
-		ID:      "timer",
-		Width:   float32(vw) * 0.84,
-		Sizing:  gogui.FixedFit,
-		Padding: gogui.PaddingMedium,
-		Spacing: gogui.SpacingSmall,
-		Content: content,
-	}), stop)
+	card := presentation.Presses.Pressable(
+		gogui.Column,
+		presentation.Toolkit.Panel(gogui.ContainerCfg{
+			ID:      "timer",
+			Width:   float32(vw) * 0.84,
+			Sizing:  gogui.FixedFit,
+			Padding: gogui.PaddingMedium,
+			Spacing: gogui.SpacingSmall,
+			Content: content,
+		}),
+		stop,
+	)
 	return gogui.Column(gogui.ContainerCfg{
 		Width:   float32(vw),
 		Height:  float32(vh),

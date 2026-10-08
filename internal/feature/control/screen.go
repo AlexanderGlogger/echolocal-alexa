@@ -14,7 +14,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
 
-// showing is what the panel can be asked.
 func showing() []*cobra.Command {
 	shot := &cobra.Command{
 		Use:   "shot <path>",
@@ -46,8 +45,6 @@ func save(path string) error {
 	return png.Encode(f, img)
 }
 
-// composed is the panel as SurfaceFlinger composed it, turned the way it is viewed, or echod's own
-// layer where there is no helper.
 func composed() (image.Image, error) {
 	c := display.Get().Helper()
 	if c == nil {

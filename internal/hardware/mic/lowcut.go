@@ -2,7 +2,6 @@ package mic
 
 import "math"
 
-// lowCut is a second-order Butterworth high-pass, run in place over the mixed frame.
 type lowCut struct {
 	b0, b1, b2, a1, a2 float64
 	x1, x2, y1, y2     float64

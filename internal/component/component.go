@@ -1,9 +1,10 @@
 package component
 
 import (
-	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	sharedlib "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 type Phase = sharedlib.Phase

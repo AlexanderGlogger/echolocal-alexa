@@ -27,14 +27,13 @@ func (d *Device) switchBits(req uintptr) (uint64, error) {
 	return binary.LittleEndian.Uint64(b[:]), nil
 }
 
-// HasSwitch reports whether this node carries a switch. A node without one answers EVIOCGSW with
-// every bit clear.
+// A node without a switch answers EVIOCGSW with every bit clear.
 func (d *Device) HasSwitch(code uint16) bool {
 	bits, err := d.switchBits(eviocgbitSW)
 	return err == nil && bits&(1<<code) != 0
 }
 
-// Switch is where a switch is now. A switch reports only when it moves.
+// An evdev switch reports only when it moves.
 func (d *Device) Switch(code uint16) (bool, error) {
 	bits, err := d.switchBits(eviocgsw)
 	if err != nil {

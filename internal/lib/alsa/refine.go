@@ -10,7 +10,6 @@ import (
 
 var ioctlHwRefine = ioc(3, 'A', 0x10, hwParamsSize)
 
-// Range is what a device will accept, from the driver's own refinement of an open request.
 type Range struct {
 	Formats                  []int
 	MinChannels, MaxChannels uint32
@@ -23,7 +22,6 @@ func (r Range) String() string {
 		r.Formats, r.MinChannels, r.MaxChannels, r.MinRate, r.MaxRate, r.MinBits, r.MaxBits)
 }
 
-// Refine asks a PCM device what it accepts without configuring it.
 func Refine(card, device int, capture bool) (Range, error) {
 	dir := "p"
 	flags := os.O_WRONLY

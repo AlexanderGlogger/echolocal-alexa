@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-// builder writes the parts of a policy stream that scan walks, so a test can put a type table behind
-// the records that have to be stepped over to reach it.
 type builder struct{ b []byte }
 
 func (w *builder) u32(v ...uint32) {
@@ -35,7 +33,6 @@ func (w *builder) bitmap(bits ...uint32) {
 	}
 }
 
-// constraint is one expression carrying a name set, which is the only shape with operands to skip.
 func (w *builder) constraint() {
 	w.u32(1, 1) // permissions, one expression
 	w.u32(cexprNames, 0, 0)
@@ -50,7 +47,6 @@ type namedType struct {
 	value uint32
 }
 
-// policy builds a stream with one common, one class, one role and the given types.
 func policy(permissive []uint32, types []namedType, tail string) []byte {
 	w := &builder{}
 	w.u32(magic, uint32(len(ident)))
@@ -119,7 +115,6 @@ func TestPermissive(t *testing.T) {
 	}
 }
 
-// A policy that already names the type permissive comes back unchanged, so an install can be run twice.
 func TestPermissiveIsIdempotent(t *testing.T) {
 	in := policy([]uint32{3}, types, "tail")
 
@@ -157,8 +152,6 @@ func TestPermissiveErrors(t *testing.T) {
 	}
 }
 
-// The type table is the first place a wrong record size shows up, and it has to be caught there rather
-// than wherever the stream happens to run out.
 func TestPermissiveRejectsImpossibleTypeValue(t *testing.T) {
 	_, err := Permissive(policy(nil, []namedType{{"init", 9}, {"su", 1}}, "tail"), "init")
 	if err == nil || !strings.Contains(err.Error(), "outside 1..") {

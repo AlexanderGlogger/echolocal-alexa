@@ -7,23 +7,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
-// The boot animation is driven from two init services in /init.csm.project.rc:
-//
-//	service boot2_anim_start /system/bin/start_animation.sh anim_start_phase2
-//	service boot2_anim_stop  /system/bin/stop_animation.sh anim_start_phase2
-//
-// Each script runs /system/bin/ledctrl, a client of the LedController binder service that the
-// stock ledcontroller published. echod does not publish it, so the client blocks in getService
-// and retries once a second for the life of the boot, holding its parent shell open.
-//
-// The rc file is in the boot ramdisk, but the scripts it runs are in /system, so replacing them
-// is enough. echod owns the ring by the time either would run.
-//
-// What goes in them is internal/update's to define, because the one init runs on the way up is also
-// where a failed update is undone — and echod rewrites these itself when they fall behind, so two
-// definitions would drift and the rollback is not a thing to be wrong about.
+// ledctrl blocks in getService for the LedController binder service echod does not publish.
 
-// disableBootAnimation replaces both animation scripts.
 func disableBootAnimation(r *run) (string, bool, error) {
 	hooks := r.board().BootHooks
 	if len(hooks) == 0 {
@@ -44,12 +29,10 @@ func disableBootAnimation(r *run) (string, bool, error) {
 		return "already stubbed", true, nil
 	}
 
-	// These only ever run at boot, so this one is not settled until then by definition.
 	r.reboot = true
 	return strings.Join(done, ", "), false, nil
 }
 
-// stubScript reports whether it had to write the hook.
 func stubScript(r *run, path string) (bool, error) {
 	want := update.Script(path)
 

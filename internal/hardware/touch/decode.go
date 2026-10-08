@@ -16,10 +16,8 @@ const (
 	synReport = 0x00
 )
 
-// released is the tracking id of a slot nobody is touching.
 const released = -1
 
-// Phase is what happened to a contact.
 type Phase int
 
 const (
@@ -40,7 +38,6 @@ func (p Phase) String() string {
 	return "unknown"
 }
 
-// Contact is one finger, in viewed coordinates.
 type Contact struct {
 	Slot  int
 	ID    int
@@ -49,24 +46,19 @@ type Contact struct {
 	At    time.Time
 }
 
-// slot is what is known about one contact between reports.
 type slot struct {
 	id      int
 	x, y    int
 	touched bool
 	changed bool
 
-	// lifting holds the id until the Up has gone out, which is what matches it to its own Down.
 	lifting bool
 }
 
-// decoder turns the event stream into contacts. The kernel sends only what changed, so a finger
-// that is still moving keeps whatever it last said.
 type decoder struct {
 	current int
 	slots   map[int]*slot
 
-	// place maps a panel position into the coordinates the drawing uses.
 	place func(x, y int) (int, int)
 }
 
@@ -80,8 +72,6 @@ func (d *decoder) at(n int) *slot {
 	return d.slots[n]
 }
 
-// event takes one event and returns the contacts to report, which is nothing until SYN_REPORT says
-// the batch is complete.
 func (d *decoder) event(e input.Event, now time.Time) []Contact {
 	switch e.Type {
 	case input.EvAbs:
@@ -116,7 +106,6 @@ func (d *decoder) abs(code uint16, value int) {
 	}
 }
 
-// report drains what changed since the last one.
 func (d *decoder) report(now time.Time) []Contact {
 	var out []Contact
 

@@ -7,8 +7,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/bootimg"
 )
 
-// Everything that writes is skipped on a device that is ready, which is what makes the stage safe to
-// re-run. Recovery is never ready: its root says nothing about the installed system.
 func TestReadyNeedsRootAndPermissiveOutsideRecovery(t *testing.T) {
 	for _, tc := range []struct {
 		rooted, permissive, recovery, want bool
@@ -34,8 +32,6 @@ func TestStateSaysWhatItFound(t *testing.T) {
 	}
 }
 
-// A ready device skips the writing steps, and the detail says why rather than leaving a bare bullet in
-// the progress display.
 func TestWritingStepsSkipWhenReady(t *testing.T) {
 	r := &run{state: state{rooted: true, permissive: true}}
 
@@ -53,7 +49,6 @@ func TestWritingStepsSkipWhenReady(t *testing.T) {
 	}
 }
 
-// checkApproval is the last gate: nothing is written without someone having said so.
 func TestNothingIsWrittenWithoutApproval(t *testing.T) {
 	r := &run{cfg: Config{}, state: state{rooted: false}}
 
@@ -66,7 +61,6 @@ func TestNothingIsWrittenWithoutApproval(t *testing.T) {
 		t.Errorf("approved write refused: %v", err)
 	}
 
-	// A device needing nothing is not asked about at all.
 	r.cfg.Approved = false
 	r.state = state{rooted: true, permissive: true}
 	_, skip, err := checkApproval(r)
@@ -75,8 +69,6 @@ func TestNothingIsWrittenWithoutApproval(t *testing.T) {
 	}
 }
 
-// A board that flashes and was handed no bytes refuses, rather than writing whatever it was given.
-// One that keeps its own boot image skips instead: there is nothing to write and nothing wrong.
 func TestCheckImageRefusesAnEmptyOne(t *testing.T) {
 	flashes := &run{state: state{device: "biscuit", build: "272.6.8.0_user_680767620"}}
 	flashes.cfg.Profile.Boot = bootimg.Biscuit

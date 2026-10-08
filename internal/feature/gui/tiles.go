@@ -7,13 +7,14 @@ import (
 	"math"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
-	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
-	"github.com/ygelfand/echolocal/internal/ui"
-	"github.com/ygelfand/echolocal/internal/ui/theme"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
 	sharedwidgets "github.com/ygelfand/libcountertop/pkg/display/widgets"
 	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
 	"github.com/ygelfand/libcountertop/pkg/say"
+
+	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
+	"github.com/ygelfand/echolocal/internal/ui"
+	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
 var lamp = gogui.RGBA(255, 196, 64, 255)

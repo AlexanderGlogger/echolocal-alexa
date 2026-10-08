@@ -5,6 +5,8 @@ package call
 import (
 	"sync"
 
+	sharedcall "github.com/ygelfand/libcountertop/pkg/media/call"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -17,10 +19,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	sharedcall "github.com/ygelfand/libcountertop/pkg/media/call"
 )
 
-// componentCall binds application configuration restoration to the shared controller.
 type componentCall struct{ *sharedcall.Calls }
 
 func (c *componentCall) Restore(v config.Config) { c.Calls.Restore(v.Call) }

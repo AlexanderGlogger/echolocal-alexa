@@ -2,10 +2,8 @@ package board
 
 import "strings"
 
-// All is every board this build knows by name, whether or not it can be installed to.
 var All = []Board{Biscuit, Crown, Checkers, Cronos, Donut, Rook, Radar}
 
-// For is the board a ro.product.device belongs to. A board with no Device never matches.
 func For(device string) (Board, bool) {
 	device = strings.TrimSpace(device)
 	if device == "" {
@@ -19,7 +17,6 @@ func For(device string) (Board, bool) {
 	return Board{}, false
 }
 
-// ByCodename is the board Amazon calls this. It also matches a board with no Device recorded.
 func ByCodename(name string) (Board, bool) {
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -33,7 +30,6 @@ func ByCodename(name string) (Board, bool) {
 	return Board{}, false
 }
 
-// Intended is the codenames this build means to support and has no Device for.
 func Intended() []string {
 	var out []string
 	for _, b := range All {

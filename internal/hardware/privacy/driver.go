@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// The keypad driver's interface. Reading power_button_state in this directory reboots the device.
+// Reading power_button_state in this directory reboots the device.
 const (
 	dir = "/sys/devices/soc/10010000.keypad/amz_privacy"
 
@@ -16,23 +16,18 @@ const (
 	brightness = dir + "/privacy_brightness"
 )
 
-// driver is the mute as the keypad driver exposes it. Cutting and releasing are different files and
-// neither reports the result, so privacy_state is the only truth.
+// Cutting and releasing are separate files and neither reports the result; privacy_state does.
 type driver struct{}
 
 func (driver) Get() (bool, error) { return reads(state, "1") }
 
-// The driver's own handler runs before the key event is emitted, so the state has already changed by
-// the time echod sees the press. Writing then would be racing the transition that has just happened.
+// The driver's own handler runs before the key event is emitted.
 func (driver) HardwareToggles() bool { return true }
 
-// Cutting the microphones is reported around 300ms after the press that asked for it, while releasing
-// them lands at once. Measured against the key event on 6.5.7.4.
+// A cut is reported about 300 ms after the press, a release at once, on 6.5.7.4.
 func (driver) Lag() time.Duration { return 500 * time.Millisecond }
 
-// Set cuts or releases, and does nothing when the device is already there. Releasing stands the
-// privacy handler down, which leaves the button dead until the second write puts it back, so it is
-// not something to do for no reason.
+// Releasing stands the privacy handler down; the button is dead until the second write.
 func (d driver) Set(muted bool) error {
 	switch is, err := d.Get(); {
 	case err != nil:
@@ -57,8 +52,7 @@ func (d driver) Toggle() (bool, error) {
 	return !is, d.Set(!is)
 }
 
-// driverLED is the LED as the keypad driver exposes it, with the same inversion the line has: the
-// value that lights it fully is 0.
+// The value that lights it fully is 0.
 type driverLED struct{}
 
 func (driverLED) SetBright(bright bool) error {

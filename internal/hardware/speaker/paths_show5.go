@@ -4,7 +4,7 @@ package speaker
 
 import "log/slog"
 
-// showAmp is one of the amplifiers an Echo Show 5 is built with, as audio_device_<name>.xml sets it up.
+// As audio_device_<name>.xml sets it up.
 type showAmp struct {
 	name   string
 	marker string
@@ -76,7 +76,6 @@ var showAmps = []showAmp{
 	},
 }
 
-// whichShowAmp is the amplifier whose own control the mixer has.
 func whichShowAmp(has func(control string) bool) (showAmp, bool) {
 	for _, a := range showAmps {
 		if has(a.marker) {

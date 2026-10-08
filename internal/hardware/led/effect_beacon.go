@@ -2,8 +2,6 @@ package led
 
 import "time"
 
-// beacon sweeps a bright arc round the ring, the way a warning light on a vehicle does: not urgent
-// the way the pulses are, but impossible to mistake for the ring simply being on.
 func beacon(p Palette) Frame {
 	const (
 		revolution = 900 * time.Millisecond

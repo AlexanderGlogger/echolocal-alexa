@@ -8,20 +8,15 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/alsa"
 )
 
-// The array's analog gain. Turning it up buys level, not signal to noise: the floor is the room and
-// the microphones, so both rise together. It costs headroom, so the default is the vendor's 20 dB.
 const (
 	// One control per ADC, each carrying both of its channels.
 	pgaControls = "ADC_%s MICPGA Volume Ctrl"
 
-	// Steps of half a decibel. The mixer declares a maximum of 80 and does not enforce it: the
-	// register is seven bits, writes above 127 wrap, and 119 is the converter's own top of 59.5 dB.
-	// Measured, the gain above 80 is real and costs no signal to noise.
+	// The mixer declares a maximum of 80; the 7-bit register takes up to 119 (59.5 dB) and wraps above 127.
 	pgaStepDB = 0.5
 	pgaMax    = 119
 )
 
-// routeInputs points every ADC at the differential input its microphones are wired to.
 func routeInputs() {
 	m, err := alsa.OpenMixer(Card)
 	if err != nil {
@@ -44,8 +39,6 @@ func routeInputs() {
 	}
 }
 
-// applyGain sets the analog gain on every ADC. A microphone that cannot be turned up is worth a log
-// and nothing more: the array still works, quietly.
 func applyGain(db int) {
 	m, err := alsa.OpenMixer(Card)
 	if err != nil {
@@ -65,14 +58,12 @@ func applyGain(db int) {
 	slog.Info("microphone gain", "db", db)
 }
 
-// SetGain changes the analog gain and remembers it.
 func SetGain(db int) error {
 	if err := config.Set().Microphone().Gain(db); err != nil {
 		return err
 	}
 	applyGain(db)
 
-	// The converter's own noise moves with this, and that is what the room is measured against.
 	Get().leveler.atGain(db)
 	return nil
 }

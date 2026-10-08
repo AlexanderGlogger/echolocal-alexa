@@ -8,11 +8,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/fft"
 )
 
-// The vendor's coefficients are not ours to ship, so the tests that use them run against a copy
-// pulled off a device. Which set is there decides which front end gets exercised:
-//
-//	adb pull /vendor/etc/audio-algorithms /tmp/coefs
-//	ECHOLOCAL_VENDOR_DIR=/tmp/coefs go test ./internal/lib/subband/ -run Vendor -v
+// The vendor coefficients are not ours to ship.
 func vendorWeights(t *testing.T) *Weights {
 	t.Helper()
 	dir := os.Getenv("ECHOLOCAL_VENDOR_DIR")
@@ -29,9 +25,6 @@ func vendorWeights(t *testing.T) *Weights {
 	return w
 }
 
-// Whether the prototype reconstructs at this hop is how we know the fold matches the one it was
-// designed for. A window folded the wrong way still runs and still sounds like something, so this is
-// the check that says our bank is their bank.
 func TestVendorWindowReconstructs(t *testing.T) {
 	w := vendorWeights(t)
 	g := w.g

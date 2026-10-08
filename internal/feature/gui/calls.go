@@ -8,15 +8,16 @@ import (
 	"log/slog"
 
 	gogui "github.com/go-gui-org/go-gui/gui"
+	"github.com/ygelfand/libcountertop/pkg/display/style"
+	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
+	"github.com/ygelfand/libcountertop/pkg/say"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/feature/call"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	"github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
-	"github.com/ygelfand/libcountertop/pkg/display/style"
-	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
-	"github.com/ygelfand/libcountertop/pkg/say"
 )
 
 //go:embed devices/*.svg
@@ -100,7 +101,14 @@ func peerTile(id string, side float32, p sharedpeer.Peer, pal theme.Theme) gogui
 	glyph := iconStyle(t.TextStyleDef.Color)
 	glyph.Size = reach() * 0.4
 	action := func(suffix, icon string, do func(gogui.EventCtx)) gogui.View {
-		return presentation.Toolkit.WideKey(id+"-"+suffix, icon, glyph, reach()*0.9, style.Partial, do)
+		return presentation.Toolkit.WideKey(
+			id+"-"+suffix,
+			icon,
+			glyph,
+			reach()*0.9,
+			style.Partial,
+			do,
+		)
 	}
 	var video func(gogui.EventCtx)
 	if p.Video() && component.Board().CameraWidth > 0 {

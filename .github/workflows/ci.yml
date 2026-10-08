@@ -25,14 +25,12 @@ jobs:
       - name: test
         run: make test
 
-      # The race detector needs cgo, which the rest of the build deliberately does without.
+      # The race detector needs cgo.
       - name: test -race
         run: make test-race
         env:
           CGO_ENABLED: 1
 
-      # Most of this code only ever runs on the device, and a build tagged or arch-gated wrongly
-      # passes on the host while failing there.
       - name: cross-compile biscuit without native tools
         run: |
           make build-echod DOT_ARCH=arm NDK=/nonexistent

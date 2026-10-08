@@ -74,7 +74,6 @@ func newMixerCmd() *cobra.Command {
 					return err
 				}
 
-			// A control with a value per channel takes them all at once, quoted as one argument.
 			case len(fields) > 1:
 				values := make([]uint32, 0, len(fields))
 				for _, f := range fields {

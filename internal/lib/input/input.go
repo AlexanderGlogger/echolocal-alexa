@@ -1,4 +1,3 @@
-// Package input reads Linux evdev devices directly, with no cgo and no getevent.
 package input
 
 import (
@@ -11,7 +10,6 @@ import (
 	"time"
 )
 
-// Event types we care about.
 const (
 	EvSyn = 0x00
 	EvKey = 0x01
@@ -21,7 +19,6 @@ const (
 	EvRep = 0x14
 )
 
-// Switch codes, of which only what something reads is named.
 const (
 	SwCameraLensCover = 0x09
 	SwMuteDevice      = 0x0e
@@ -29,9 +26,7 @@ const (
 
 const AbsX = 0x00
 
-// sizeof(struct input_event): a timeval of two kernel longs, then u16 type, u16 code, s32 value,
-// with the tail padded back out to the timeval's alignment. evdev rejects a read shorter than one
-// whole event with EINVAL rather than returning a truncated one, so this has to be right.
+// evdev rejects a read shorter than one whole input_event with EINVAL.
 const (
 	longSize  = strconv.IntSize / 8
 	eventSize = 2*longSize + 8
@@ -41,7 +36,6 @@ const (
 	evValue = evCode + 2
 )
 
-// Event is one evdev record. The timestamp is kept at the width the kernel reports it.
 type Event struct {
 	Sec, Usec uint64
 	Type      uint16
@@ -49,7 +43,6 @@ type Event struct {
 	Value     int32
 }
 
-// At is when the kernel stamped the event.
 func (e Event) At() time.Duration {
 	return time.Duration(e.Sec)*time.Second + time.Duration(e.Usec)*time.Microsecond
 }
@@ -94,14 +87,12 @@ func (e Event) String() string {
 	return fmt.Sprintf("%-4s %-16s value=%d%s", e.TypeName(), e.CodeName(), e.Value, action)
 }
 
-// Device is an open evdev node.
 type Device struct {
 	Path string
 	Name string
 	f    *os.File
 }
 
-// Open opens one event node and reads its reported name.
 func Open(path string) (*Device, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -110,7 +101,6 @@ func Open(path string) (*Device, error) {
 	return &Device{Path: path, Name: nameFor(path), f: f}, nil
 }
 
-// nameFor reads the device name from sysfs, which avoids an EVIOCGNAME ioctl.
 func nameFor(path string) string {
 	base := filepath.Base(path)
 	b, err := os.ReadFile("/sys/class/input/" + base + "/device/name")
@@ -120,7 +110,6 @@ func nameFor(path string) string {
 	return strings.TrimSpace(string(b))
 }
 
-// Read blocks for the next event.
 func (d *Device) Read() (Event, error) {
 	var buf [eventSize]byte
 	if _, err := readFull(d.f, buf[:]); err != nil {
@@ -135,7 +124,6 @@ func (d *Device) Read() (Event, error) {
 	}, nil
 }
 
-// word reads a kernel long, which is what the timestamp is made of.
 func word(b []byte) uint64 {
 	if longSize == 4 {
 		return uint64(binary.LittleEndian.Uint32(b))
@@ -157,7 +145,6 @@ func readFull(f *os.File, b []byte) (int, error) {
 	return n, nil
 }
 
-// List returns every /dev/input/event* node with its name.
 func List() ([]*Device, error) {
 	paths, err := filepath.Glob("/dev/input/event*")
 	if err != nil {

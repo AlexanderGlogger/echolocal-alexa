@@ -1,16 +1,13 @@
-// Package mute is the microphone mute: the switch in Home Assistant, the button on top of the
-// device, and what the ring shows while the microphones are cut.
-//
-// The cut is real rather than a software flag, so muted here means the microphones are
-// disconnected. Home Assistant asks for a state, the button asks for the other one, and start-up
-// asks for whatever was stored — they move the line differently and then want exactly the same
-// things to follow, so they share settled.
 package mute
 
 import (
 	"log/slog"
 	"sync"
 	"time"
+
+	esphome "github.com/ygelfand/go-esphome-device"
+	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
+	"github.com/ygelfand/libcountertop/pkg/hook"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -20,28 +17,21 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/privacy"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
-	esphome "github.com/ygelfand/go-esphome-device"
-	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 func init() {
 	component.Register(component.Device, Get, component.Order(30))
 }
 
-// The two levels the mute LED has. Neither way of reaching it offers anything between them.
+// The mute LED has two levels.
 const (
 	dim    = "Dim"
 	bright = "Bright"
 )
 
-// mutedColor is what an inheriting animation runs in while the microphones are cut. Red, like the
-// button's own LED and like a failure: the device cannot hear, which is closer to being broken than
-// to being a colour someone chose.
 var mutedColor = led.Color{R: 0xC0, G: 0x00, B: 0x00}
 
 type Mute struct {
-	// Changed carries where the line ended up, every time it settles.
 	Changed hook.Hook[bool]
 
 	sw         *esphome.Switch
@@ -50,10 +40,6 @@ type Mute struct {
 	line       privacy.Mute
 	led        privacy.LED
 
-	// ring is the animation to show while the microphones are cut, and claim is where it goes —
-	// whichever surface this board has. The select lives here rather than with the other settings
-	// because choosing one has to take effect immediately: being muted has no next occurrence to
-	// wait for, it is already happening.
 	ring  *esphome.Select
 	claim indicate.Claim
 }
@@ -103,8 +89,6 @@ func build() *Mute {
 		config.Set().Microphone().MuteSound)
 	component.BindEffect(m.ring, led.EffectNames(), m.show, config.Set().Ring().Muted)
 
-	// The entities exist whether or not the pins do. A device that hides controls when its hardware
-	// fails is a device nobody can tell has failed, and the log says which of the two went missing.
 	m.brightness = &esphome.Select{
 		Base: esphome.Base{
 			ObjectID: "mute_led_brightness",
@@ -133,9 +117,6 @@ func build() *Mute {
 
 func (m *Mute) Name() string { return "microphone mute" }
 
-// The mute switch and the button's own LED are on every board. What the ring shows while the
-// microphones are cut is only a question where there is a ring, so that setting is offered only
-// there — an option that cannot do anything is worse than no option.
 func (m *Mute) Entities() []esphome.Entity {
 	ents := []esphome.Entity{m.sw, m.brightness, m.sound}
 	if component.Board().Has(board.Ring) {
@@ -144,8 +125,6 @@ func (m *Mute) Entities() []esphome.Entity {
 	return ents
 }
 
-// Muted reports whether the line is cut, which is what a turn has to check before opening the
-// microphones.
 func (m *Mute) Muted() (bool, error) {
 	if m.line == nil {
 		return false, nil
@@ -153,10 +132,7 @@ func (m *Mute) Muted() (bool, error) {
 	return m.line.Get()
 }
 
-// Restore cuts the microphones if they were cut when the device was last on. The line does not
-// survive a reboot, so what was stored is applied rather than read — and it is the line that
-// decides, so a device whose mute cannot be reached comes up live and says so rather than claiming
-// to be muted.
+// The mute line does not survive a reboot.
 func (m *Mute) Restore(c config.Config) {
 	component.Restore(m.sound, c.Microphone.MuteSound, func(t config.Tone) config.Tone { return t })
 
@@ -164,7 +140,6 @@ func (m *Mute) Restore(c config.Config) {
 		return
 	}
 
-	// What to show while cut, before cutting, so the ring is right the first time settled looks.
 	component.RestoreEffect(m.ring, c.Ring.Muted, nil, config.Set().Ring().Muted)
 
 	want := c.Microphone.Muted
@@ -178,7 +153,6 @@ func (m *Mute) Restore(c config.Config) {
 	slog.Info("restored", "what", m.brightness.ObjectID, "using", label(c.Microphone.LEDBright))
 }
 
-// Set is the switch in Home Assistant.
 func (m *Mute) Set(muted bool) {
 	if m.line == nil {
 		return
@@ -191,8 +165,6 @@ func (m *Mute) Set(muted bool) {
 	m.settled(true)
 }
 
-// Toggle is the button on top of the device. Where the hardware has already acted on the press, the
-// press is only news: what follows is the same either way.
 func (m *Mute) Toggle() {
 	if m.line == nil {
 		return
@@ -206,8 +178,6 @@ func (m *Mute) Toggle() {
 	m.settled(true)
 }
 
-// pressed is the mute button. A hold only sounds: nothing is bound to it, and the tone says the
-// press was heard.
 func (m *Mute) pressed(e buttons.Event) {
 	if e.Name != buttons.Mute {
 		return
@@ -220,8 +190,6 @@ func (m *Mute) pressed(e buttons.Event) {
 	}
 }
 
-// settled publishes what the line now reads — not what was asked for, so a line that did not move
-// says so — and shows it on the ring. asked is false at start-up, where nobody asked.
 func (m *Mute) settled(asked bool) {
 	if asked {
 		m.await(m.sw.Get())
@@ -249,12 +217,8 @@ func (m *Mute) settled(asked bool) {
 	speaker.Sound().Chime(speaker.MuteTone(config.Get().Microphone.MuteSound, muted))
 }
 
-// pollInterval is how often await looks while it waits.
 const pollInterval = 25 * time.Millisecond
 
-// await gives the hardware the time it says it needs to leave from, so what gets published is where
-// the microphones ended up rather than where they were. It returns as soon as they have moved, and
-// gives up quietly: a request that changed nothing is not an error.
 func (m *Mute) await(from bool) {
 	for waited := time.Duration(0); waited < m.line.Lag(); waited += pollInterval {
 		if is, err := m.line.Get(); err != nil || is != from {
@@ -264,11 +228,6 @@ func (m *Mute) await(from bool) {
 	}
 }
 
-// show puts an animation on the ring for as long as the microphones are cut, or takes it off. Unlike
-// a failure this has no duration of its own, so the claim is held and cleared rather than timed.
-//
-// It takes the name rather than reading the setting, because it is called both when the mute state
-// changes and when the choice does, and on that second path the setting has not been written yet.
 func (m *Mute) show(name string) {
 	if name == "" || !m.sw.Get() {
 		m.claim.Clear()

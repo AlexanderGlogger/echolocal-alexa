@@ -1,4 +1,3 @@
-// Package vision is the camera as Home Assistant sees it: one picture, when it asks.
 package vision
 
 import (
@@ -21,7 +20,6 @@ func init() {
 	component.Register(component.Device, Get, component.Order(40), component.Needs(board.Camera))
 }
 
-// Wait is how long one picture is given.
 const Wait = 5 * time.Second
 
 type Vision struct {
@@ -59,10 +57,8 @@ func (v *Vision) build() {
 	}
 }
 
-// ErrCovered is the shutter being closed, which is a person's decision and not a fault.
 var ErrCovered = errors.New("vision: the camera is covered")
 
-// Still takes one picture.
 func (v *Vision) Still() ([]byte, error) {
 	if buttons.Get().Covered() {
 		return nil, ErrCovered
@@ -91,6 +87,4 @@ func encode(pic livecam.Picture) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-// Quality is what a snapshot is compressed at. Home Assistant shows it as a photograph rather than
-// as evidence, and the step from 85 to 95 is most of the bytes for little of the picture.
 const Quality = 85

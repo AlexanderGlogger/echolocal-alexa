@@ -3,6 +3,8 @@ package homecontrol
 import (
 	"sync"
 
+	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -10,7 +12,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/states"
-	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
 )
 
 var get = sync.OnceValue(func() *sharedhome.Engine {

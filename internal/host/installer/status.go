@@ -10,7 +10,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-// State is what echod's installation looks like on a device.
 type State struct {
 	Serial  string
 	Model   string
@@ -18,12 +17,9 @@ type State struct {
 	SDK     string
 	Uptime  float64
 
-	// Name is what Home Assistant calls the device, and Provisioned whether it has a key.
 	Name        string
 	Provisioned bool
 
-	// Board is what the device says it is, and Service the init service echod is installed as there.
-	// Reported so that whatever displays this does not have to work out the board a second time.
 	Board   board.Board
 	Service string
 
@@ -36,8 +32,6 @@ type State struct {
 	StartedAt    string
 }
 
-// RunningFor is how long the current echod process has been up, from the uptime it recorded at
-// start against the device's uptime now.
 func (s State) RunningFor() (time.Duration, bool) {
 	started, err := strconv.ParseFloat(s.StartedAt, 64)
 	if err != nil || started <= 0 || s.Uptime < started {
@@ -46,7 +40,6 @@ func (s State) RunningFor() (time.Duration, bool) {
 	return time.Duration((s.Uptime - started) * float64(time.Second)), true
 }
 
-// ReadState reads installation and runtime state without changing anything.
 func ReadState(d *device.Device) (State, error) {
 	s := State{Serial: d.Serial()}
 
@@ -55,14 +48,12 @@ func ReadState(d *device.Device) (State, error) {
 	s.SDK, _ = d.Getprop("ro.build.version.sdk")
 	s.Uptime, _ = d.Uptime()
 
-	// The device already said what it is, so the board comes from that rather than another getprop.
 	s.Board = board.Biscuit
 	if b, ok := board.For(s.Product); ok {
 		s.Board = b
 	}
 	s.Service = s.Board.Service
 
-	// A board whose service names our binary has nothing to link: init runs it directly.
 	if s.Service == layout.Binary {
 		there, err := d.Exists(layout.Binary)
 		if err != nil {
@@ -85,7 +76,6 @@ func ReadState(d *device.Device) (State, error) {
 	}
 
 	if s.Installed {
-		// A binary that will not execute is what a file listing hides.
 		if out, err := d.Shell(layout.Binary + " --version"); err == nil {
 			s.Version = strings.TrimSpace(out)
 		} else {

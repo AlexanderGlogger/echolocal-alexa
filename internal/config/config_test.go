@@ -19,8 +19,6 @@ func load(t *testing.T) *Store {
 	return st
 }
 
-// A file that was never written reads as untouched, so every default is already in what Get hands
-// back and no caller has to supply one.
 func TestDefaultsWhenUnset(t *testing.T) {
 	got := load(t).Get()
 
@@ -44,7 +42,6 @@ func TestDefaultsWhenUnset(t *testing.T) {
 	}
 }
 
-// A device nobody has lit comes up dark, and one that was lit comes back the way it was left.
 func TestRingLight(t *testing.T) {
 	st := load(t)
 
@@ -61,7 +58,6 @@ func TestRingLight(t *testing.T) {
 	}
 }
 
-// Delivery and follow-up are per slot, so one assistant can stream while the other fetches.
 func TestSlotSettingsAreIndependent(t *testing.T) {
 	st := load(t)
 
@@ -106,8 +102,6 @@ func TestSlotSettingsAreIndependent(t *testing.T) {
 	}
 }
 
-// A zero value has to survive, or turning something off would read as never having been set and the
-// default would turn it back on.
 func TestZeroValueSticks(t *testing.T) {
 	st := load(t)
 
@@ -126,8 +120,6 @@ func TestZeroValueSticks(t *testing.T) {
 	}
 }
 
-// Slot 2 can be set before slot 1 ever is, so the list has to grow to reach it without disturbing
-// what it skipped.
 func TestSettingALaterSlotFirst(t *testing.T) {
 	st := load(t)
 
@@ -147,7 +139,6 @@ func TestSettingALaterSlotFirst(t *testing.T) {
 	}
 }
 
-// A file that mentions one setting leaves every other one at its default rather than at a zero.
 func TestAPartialFileKeepsTheDefaults(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 	if err := os.WriteFile(path, []byte(`{"speaker":{"volume":3}}`), 0o644); err != nil {
@@ -177,8 +168,6 @@ func TestAPartialFileKeepsTheDefaults(t *testing.T) {
 	}
 }
 
-// A snapshot is a copy: the wake words are a slice, and a caller holding one must not be holding the
-// store's own.
 func TestGetHandsBackACopy(t *testing.T) {
 	st := load(t)
 	if err := st.Set().Wake(0).ID("glados"); err != nil {
@@ -193,7 +182,6 @@ func TestGetHandsBackACopy(t *testing.T) {
 	}
 }
 
-// Start-up options are read the same way as everything else, and are not written to the file.
 func TestStartupOptionsAreNotPersisted(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 
@@ -222,7 +210,6 @@ func TestStartupOptionsAreNotPersisted(t *testing.T) {
 	}
 }
 
-// Settings survive the round trip, or nothing would persist across a restart.
 func TestReload(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 
@@ -261,7 +248,6 @@ func TestReload(t *testing.T) {
 	}
 }
 
-// Labels are what Home Assistant sends back, so the mapping has to round trip.
 func TestByLabelRoundTrips(t *testing.T) {
 	values := []Mixing{MixCenter, MixDelaySum}
 
@@ -279,13 +265,9 @@ func TestByLabelRoundTrips(t *testing.T) {
 	}
 }
 
-// A file that could not be read must not be written over. Everything here is one document, so a store
-// that fell back to defaults would replace settings it merely failed to parse with settings that have
-// nothing in them — and the reboot that truncated the file would take the contents with it for good.
 func TestAnUnreadableFileIsNotOverwritten(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 
-	// Truncated, which is what losing power part way through a write leaves behind.
 	if err := os.WriteFile(path, []byte(`{"speaker": {"volu`), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -307,8 +289,6 @@ func TestAnUnreadableFileIsNotOverwritten(t *testing.T) {
 	}
 }
 
-// A missing file is a different thing from an unreadable one: there is nothing to lose, and the first
-// change is what creates it.
 func TestAMissingFileIsWritten(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 

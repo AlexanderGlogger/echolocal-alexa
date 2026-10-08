@@ -15,11 +15,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/host/sysimg"
 )
 
-// rcEdit rewrites one rc file and names what it changed.
 type rcEdit func(string) (string, []string)
 
-// patchInitRC applies the edits to every init rc file, reading each once and writing it back only if
-// one of them changed it.
 func (r *run) patchInitRC(at string, edits ...rcEdit) (int, error) {
 	found, err := r.initRC(at)
 	if err != nil {
@@ -50,7 +47,6 @@ func (r *run) patchInitRC(at string, edits ...rcEdit) (int, error) {
 	return count, nil
 }
 
-// initRC lists every rc file init reads.
 func (r *run) initRC(at string) ([]string, error) {
 	link, code, err := r.d.ShellCode("readlink " + at + "/vendor")
 	if err != nil {
@@ -95,24 +91,16 @@ func vendorUnder(at, link string) string {
 	return at + "/" + link
 }
 
-// A user build's init forces SELinux enforcing whatever the kernel command line asks for: the check is
-// compiled out, so there is nothing to set. What is left is to let init undo it, which is these two
-// changes together. Neither works alone.
+// A user build's init forces SELinux enforcing whatever the kernel command line asks.
 const (
-	// enforceOff is an init command rather than a service, so it runs in init's own domain, in the
-	// first trigger of the boot, before anything init would otherwise have to start under enforcement.
 	enforceOff = "write /sys/fs/selinux/enforce 0"
 
-	// initDomain is refused that write by the policy Amazon ships. Marked permissive it is logged and
-	// allowed, which costs one bit and adds no rule.
+	// Amazon's shipped policy refuses init that write.
 	initDomain = "init"
 
 	policyPath = "/sepolicy"
 )
 
-// permissiveAtBoot leaves the device permissive from the moment init loads its policy, which is before
-// it starts anything. Both halves belong to the flash stage: root and permissive are then two things
-// one boot image plus one patched system give together, and either missing means the same repair.
 func (r *run) permissiveAtBoot(at string) (string, error) {
 	policy, err := r.d.ReadFile(at + policyPath)
 	if err != nil {
@@ -136,9 +124,6 @@ func (r *run) permissiveAtBoot(at string) (string, error) {
 	return "sepolicy, " + rc, nil
 }
 
-// enforceOff adds the command that takes the device permissive, and says where it ended up. It looks
-// through every rc file rather than only the one it writes, so a device that has it somewhere else does
-// not collect a second copy.
 func (r *run) enforceOff(at string) (string, error) {
 	found, err := r.initRC(at)
 	if err != nil {
@@ -168,16 +153,9 @@ func (r *run) enforceOff(at string) (string, error) {
 	return "/init.rc", nil
 }
 
-// The boot image is only half of it. This is a system-as-root device, so the root filesystem — and
-// with it default.prop and the fstab — lives on the system partition, and echod needs both changed.
-// Mounting that read-write means dm-verity has to go first, in the metadata and in the fstab both.
+// This is a system-as-root device: default.prop and the fstab live on the system partition.
 
-// disableVerity overwrites the verity metadata's magic, which is what a kernel checks before it will
-// mount the partition it describes.
-//
-// It refuses anything that is not one of the two magics it knows. The offset is a property of the
-// image this was measured on, so a different one would have us writing four bytes into the middle of
-// somebody's filesystem.
+// The kernel checks the verity metadata's magic before it mounts the partition.
 func disableVerity(r *run) (string, bool, error) {
 	if detail, skip := r.done(); skip {
 		return detail, true, nil
@@ -218,8 +196,6 @@ func disableVerity(r *run) (string, bool, error) {
 	return "disabled", false, nil
 }
 
-// patchSystem writes what echod needs onto the system partition, and puts it back read-only however
-// it ends.
 func patchSystem(r *run) (string, bool, error) {
 	if detail, skip := r.done(); skip {
 		return detail, true, nil
@@ -276,8 +252,7 @@ func patchSystem(r *run) (string, bool, error) {
 		written = append(written, did)
 	}
 
-	// init reads a service block once, at boot. The install has to start echod in the run that writes
-	// it, so this one edit cannot wait for the reboot the rest of the rc changes do.
+	// init reads a service block once, at boot.
 	name := r.board().ServiceName
 	if _, err := r.patchInitRC(at,
 		func(s string) (string, []string) { return services.AsRoot(s, name) },
@@ -299,14 +274,6 @@ func patchSystem(r *run) (string, bool, error) {
 	return strings.Join(append(written, "adbd "+adbd), ", "), false, nil
 }
 
-// serviceAsRoot makes the service echod is installed as run as root, which the one it replaces need
-// not have done: surfaceflinger is user system, and echod needs root for the audio devices, the GPIO
-// lines and the remount an update does.
-//
-// Its own step because a board whose root filesystem is in the boot image never reaches patchSystem,
-// where the flash stage does this against a mount in recovery. Here it runs against the live system,
-// which the install has already remounted. Idempotent: AsRoot reports nothing changed once the block
-// carries a seclabel and no user or group, so a re-run writes nothing.
 func serviceAsRoot(r *run) (string, bool, error) {
 	if r.ownService() {
 		return "echod's own service runs as root", true, nil
@@ -323,18 +290,10 @@ func serviceAsRoot(r *run) (string, bool, error) {
 		return "already root", true, nil
 	}
 
-	// init reads the block at start-up, so this is only true of the process running now if the
-	// install started it afterwards.
 	r.reboot = true
 	return fmt.Sprintf("%d lines changed", changed), false, nil
 }
 
-// deAmazon stops Amazon's services and keeps them from starting again. It is an install step rather
-// than a flash one: root says nothing about whether it has been done, so a device that already has
-// root would otherwise never get it.
-//
-// The rc files live on the system partition, which the install has already remounted, and paths here
-// are absolute because this runs against a booted Android rather than a mount in recovery.
 func deAmazon(r *run) (string, bool, error) {
 	p := r.cfg.Profile
 	disable, enable := services.Set(p.Disable), services.Set(p.Enable)
@@ -360,17 +319,11 @@ func deAmazon(r *run) (string, bool, error) {
 		return fmt.Sprintf("%d already disabled and none running", len(p.Disable)), true, nil
 	}
 
-	// The rc edits are what the next boot reads. Stopping frees the hardware now, but init started
-	// these once already and a boot without them is the state this is after.
 	r.reboot = true
 	return fmt.Sprintf("%d rc entries changed, %d stopped", changed, len(stopped)), false, nil
 }
 
-// writeInPlace replaces a file's contents without unlinking it, which keeps its inode, mode, owner and
-// label, and leaves the original untouched when the write is refused.
-//
-// adb push cannot be used for this. It unlinks the destination before creating it, so a push to
-// somewhere it may not create destroys the file it was replacing.
+// adb push unlinks the destination before creating it.
 func (r *run) writeInPlace(path string, data []byte) error {
 	const staged = "/data/local/tmp/echolocal-staged"
 
@@ -383,10 +336,7 @@ func (r *run) writeInPlace(path string, data []byte) error {
 	return err
 }
 
-// stopServices stops the ones running now, which is what frees the audio devices before echod is
-// asked to take them. Disabling only decides what the next boot starts.
 func (r *run) stopServices() ([]string, error) {
-	// One read of every service init knows about, rather than a getprop per name.
 	props, err := r.d.Shell("getprop")
 	if err != nil {
 		return nil, err
@@ -406,7 +356,7 @@ func (r *run) stopServices() ([]string, error) {
 	return stopped, nil
 }
 
-// runningServices reads `getprop` output, whose lines look like [init.svc.mixer]: [running].
+// getprop lines look like [init.svc.mixer]: [running].
 func runningServices(props string) map[string]bool {
 	out := map[string]bool{}
 	for line := range strings.SplitSeq(props, "\n") {
@@ -421,8 +371,6 @@ func runningServices(props string) map[string]bool {
 	return out
 }
 
-// patchAdbd flips the four bytes that stop the stock adbd dropping privileges. A build these offsets
-// were not taken from is refused rather than overwritten.
 func (r *run) patchAdbd(dir string) (string, error) {
 	adbd := r.system().Adbd
 	path := dir + "/" + adbd.Path
@@ -446,7 +394,6 @@ func (r *run) patchAdbd(dir string) (string, error) {
 	return "patched", nil
 }
 
-// peek reads n bytes at a byte offset, of a file or a block device.
 func (r *run) peek(path string, at int64, n int) ([]byte, error) {
 	raw, err := r.d.Shell(
 		fmt.Sprintf(
@@ -470,8 +417,7 @@ func (r *run) peek(path string, at int64, n int) ([]byte, error) {
 	return got, nil
 }
 
-// poke writes bytes at a byte offset, leaving the rest of the file alone. The dd on PATH in recovery is
-// built without conv, and without notrunc this would cut a file off at the write.
+// The dd on PATH in recovery is built without conv.
 func (r *run) poke(path string, at int64, b []byte) error {
 	var escaped strings.Builder
 	for _, c := range b {
@@ -485,12 +431,10 @@ func (r *run) poke(path string, at int64, b []byte) error {
 	return err
 }
 
-// systemMount is recovery's own mountpoint for the running slot's system partition. Its fstab names
-// the device and the filesystem and mounts it read-write, so none of that is repeated here.
+// Recovery's fstab mounts the running slot's system partition here read-write.
 const systemMount = "/system_root"
 
-// mountSystem gets the system partition mounted and says where. Mounting it twice is refused as busy,
-// so it is unmounted first and the state is the same whether or not anything had it.
+// Mounting the system partition twice is refused as busy.
 func (r *run) mountSystem() (string, error) {
 	_, _ = r.d.Shell("umount " + systemMount + " 2>/dev/null")
 
@@ -500,8 +444,7 @@ func (r *run) mountSystem() (string, error) {
 	return systemMount, nil
 }
 
-// neuterOTA stops Fire OS updating over this install. An update writes the other slot and switches to
-// it, which replaces the system these files were written to and leaves a device we cannot reach.
+// A Fire OS OTA writes the other slot and switches to it.
 func (r *run) neuterOTA(at string) error {
 	path := at + "/system/build.prop"
 
@@ -516,7 +459,6 @@ func (r *run) neuterOTA(at string) error {
 	return r.writeInPlace(path, setProp(current, layout.OTAKey, layout.OTAValue))
 }
 
-// setProp replaces a property in a build.prop, or appends it where there is none.
 func setProp(file []byte, key, value string) []byte {
 	line := key + "=" + value
 
@@ -530,7 +472,6 @@ func setProp(file []byte, key, value string) []byte {
 	return []byte(strings.TrimRight(string(file), "\n") + "\n" + line + "\n")
 }
 
-// systemNode is the system partition for the slot the device is running.
 func (r *run) systemNode() (string, error) {
 	if r.board().Slotted && r.state.slot == "" {
 		return "", errUnknownSlot
@@ -538,7 +479,6 @@ func (r *run) systemNode() (string, error) {
 	return sysimg.Node(r.state.slot), nil
 }
 
-// setProps writes the layout's properties into the file that holds them, leaving the rest as it is.
 func (r *run) setProps(at string, layout sysimg.Layout) (string, error) {
 	if len(layout.Props) == 0 {
 		return "", nil
@@ -560,8 +500,6 @@ func (r *run) setProps(at string, layout sysimg.Layout) (string, error) {
 	return layout.PropsPath, nil
 }
 
-// takeService replaces the rc file of the service echod is installed as, so init starts echod where
-// it would have started whatever the OS put there.
 func (r *run) takeService(at string, layout sysimg.Layout) (string, error) {
 	if layout.ServiceRC == "" {
 		return "", nil

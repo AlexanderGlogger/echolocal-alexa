@@ -1,8 +1,3 @@
-// Package metrics reads what the machine says about itself: how hot it is, how many cores are
-// running, how much memory is left, and where on the network it can be found.
-//
-// The readings are files in sysfs or proc, so one costs nothing and a missing one is not an error — a
-// board that does not have a sensor simply has no value for it.
 package metrics
 
 import (
@@ -11,13 +6,10 @@ import (
 	"strings"
 )
 
-// Paths are relative to a root so a test can point them at a directory of fixtures rather than at the
-// machine running the test.
 type Reader struct {
 	Root string
 }
 
-// Reading is one number the board reported, and whether it reported one at all.
 type Reading struct {
 	Value float64
 	Known bool
@@ -25,10 +17,7 @@ type Reading struct {
 
 func known(v float64) Reading { return Reading{Value: v, Known: true} }
 
-// Temperatures are the thermal zones by the name the kernel gives them, in degrees. On a biscuit that
-// is mtktscpu for the CPU and mtktswmt for the wifi and Bluetooth combo chip, plus board sensors.
-//
-// The kernel reports millidegrees.
+// The kernel reports millidegrees; mtktscpu is the CPU, mtktswmt the wifi and Bluetooth combo chip.
 func (r Reader) Temperatures() map[string]float64 {
 	out := map[string]float64{}
 	for i := range 16 {
@@ -47,14 +36,10 @@ func (r Reader) Temperatures() map[string]float64 {
 	return out
 }
 
-// Cores is how many the kernel could use and how many are online. They differ: this kernel hotplugs
-// cores, so a device with four can be running two, and any figure about CPU usage means something
-// different depending on which it is.
 func (r Reader) Cores() (present, online Reading) {
 	return r.count("sys/devices/system/cpu/present"), r.count("sys/devices/system/cpu/online")
 }
 
-// Load is the one and five minute load averages.
 func (r Reader) Load() (one, five Reading) {
 	line, err := text(r.path("proc/loadavg"))
 	if err != nil {
@@ -100,9 +85,7 @@ func (r Reader) CPU() (busy, total Reading) {
 	return Reading{}, Reading{}
 }
 
-// Memory is what the kernel says is available and what the board has, in kilobytes. Available rather
-// than free: free counts only untouched pages and reads alarmingly low on a machine that is working
-// properly.
+// MemFree counts only untouched pages; MemAvailable is what can actually be used.
 func (r Reader) Memory() (available, total Reading) {
 	body, err := os.ReadFile(r.path("proc/meminfo"))
 	if err != nil {
@@ -125,9 +108,7 @@ func (r Reader) Memory() (available, total Reading) {
 	return available, total
 }
 
-// Wifi is what the radio reports: the signal in dBm, and the bytes carried since boot.
-//
-// The kernel keeps the signal as an unsigned byte, so anything above 127 is a negative dBm.
+// The kernel keeps the signal as an unsigned byte; anything above 127 is a negative dBm.
 func (r Reader) Wifi() (signal, rx, tx Reading) {
 	if body, err := os.ReadFile(r.path("proc/net/wireless")); err == nil {
 		for line := range strings.SplitSeq(string(body), "\n") {
@@ -163,10 +144,8 @@ func (r Reader) Wifi() (signal, rx, tx Reading) {
 	return signal, rx, tx
 }
 
-// wifiInterface is the only one on this board.
 const wifiInterface = "wlan0"
 
-// count reads a cpu list like "0-3" or "0-1,3" and reports how many it names.
 func (r Reader) count(path string) Reading {
 	list, err := text(r.path(path))
 	if err != nil {

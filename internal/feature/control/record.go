@@ -2,8 +2,9 @@ package control
 
 import (
 	"fmt"
-	capture "github.com/ygelfand/libcountertop/pkg/audio/capture"
 	"time"
+
+	capture "github.com/ygelfand/libcountertop/pkg/audio/capture"
 
 	"github.com/spf13/cobra"
 
@@ -112,8 +113,6 @@ func hearing() []*cobra.Command {
 
 func seconds(arg string) (time.Duration, error) { return capture.Duration(arg, shortest, longest) }
 func levels(samples []int16) string             { return capture.Measure(samples).String() }
-
-var dbfs = capture.DBFS
 
 func write(path string, channels int, samples []int16) error {
 	return capture.Write(path, samples, mic.Rate, channels)

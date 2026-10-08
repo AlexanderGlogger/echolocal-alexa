@@ -110,8 +110,6 @@ func newPlayCmd() *cobra.Command {
 	return c
 }
 
-// fill writes one period of interleaved stereo, continuing the tone from frame offset so
-// periods join without a click.
 func fill(buf []byte, offset int, freq, level float64, silence bool, channel string) {
 	for i := range len(buf) / (playChannels * playBits / 8) {
 		var s int16

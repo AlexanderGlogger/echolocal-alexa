@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ygelfand/libcountertop/pkg/hook"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/setting"
-	"github.com/ygelfand/libcountertop/pkg/hook"
 )
 
 const StreamGroup setting.Group = "Streams"

@@ -2,7 +2,6 @@ package mic
 
 import "github.com/ygelfand/echolocal/internal/component"
 
-// Startup reports actual acquisition without opening the audio device again.
 func (s *Source) Startup() component.Progress {
 	s.devMu.Lock()
 	open := s.pcm != nil

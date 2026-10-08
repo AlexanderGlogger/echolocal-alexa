@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// breathe pulses the whole ring.
 func breathe(p Palette) Frame {
 	const period = 1200 * time.Millisecond
 

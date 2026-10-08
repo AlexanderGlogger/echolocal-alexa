@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-// A release cut before Boards existed has nothing to offer a device that reads Boards. The shared
-// fields are still there and still valid — they are how the devices in the field update — but taking
-// one here would mean installing whatever build happened to be shared.
 func TestForRefusesAReleaseThatNamesNoBoards(t *testing.T) {
 	m := Manifest{
 		Version: "0.0.6",
@@ -24,8 +21,6 @@ func TestForRefusesAReleaseThatNamesNoBoards(t *testing.T) {
 	}
 }
 
-// A build meant for one board is never handed to another, which is the whole reason a board takes
-// only what names it.
 func TestForNeverOffersAnotherBoardsBuild(t *testing.T) {
 	m := Manifest{
 		Version: "0.1.0",
@@ -61,14 +56,11 @@ func TestForNeverOffersAnotherBoardsBuild(t *testing.T) {
 		t.Errorf("biscuit was offered %s", b.URL)
 	}
 
-	// crown is not in this release. The shared arm build exists and must not be what it gets.
 	if _, err := m.For("crown", "arm"); err == nil {
 		t.Error("a board the release does not carry was offered the shared build")
 	}
 }
 
-// Every device takes the build for what it is running, and a release carrying both must not hand
-// either one the other's.
 func TestForTakesTheArchitectureTheDeviceRuns(t *testing.T) {
 	m := Manifest{
 		Version: "0.0.7",

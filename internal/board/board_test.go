@@ -3,8 +3,6 @@ package board
 import "testing"
 
 func TestBiscuitColor(t *testing.T) {
-	// Real serial format, fabricated tails: black units read G090LF…, white G090L9…, and the tail is
-	// the part that identifies a unit, so it is zeroed rather than real.
 	const (
 		blackSerial = "G090LF0000000000"
 		whiteSerial = "G090L90000000000"
@@ -77,7 +75,6 @@ func TestOnlyBoardsWithADeviceCanMatch(t *testing.T) {
 }
 
 func TestFor(t *testing.T) {
-	// biscuit reports biscuit_puffin after the Fire OS 6 OTA.
 	if b, ok := For("biscuit_puffin"); !ok || b.Codename != "biscuit" {
 		t.Errorf(`For("biscuit_puffin") = %v, %v; want biscuit`, b, ok)
 	}

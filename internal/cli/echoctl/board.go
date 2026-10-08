@@ -33,8 +33,6 @@ func newBoardCmd() *cobra.Command {
 				return err
 			}
 
-			// Strictly, unlike installer.BoardOf: what reads this goes on to remount /system and
-			// write to it, so an unrecognised device has to stop rather than be assumed a biscuit.
 			b, known := board.For(device)
 			if !known {
 				return fmt.Errorf(
