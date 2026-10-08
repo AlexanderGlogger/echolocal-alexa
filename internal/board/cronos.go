@@ -12,6 +12,7 @@ var Cronos = Board{
 	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera,
 	PanelRotation: 270,
 	UISize:        "mini",
+	TesseraBoard:  "sunton8048s070",
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",

@@ -17,7 +17,7 @@ import (
 )
 
 var get = sync.OnceValue(func() *sharedhome.Engine {
-	return sharedhome.New(
+	e := sharedhome.New(
 		sharedhome.Dependencies{
 			Settings: config.HomeSection,
 			Client:   homeassistant.Get(),
@@ -25,6 +25,8 @@ var get = sync.OnceValue(func() *sharedhome.Engine {
 			Shell:    shell.Get(),
 		},
 	)
+	component.Settings.Add(e.Controls())
+	return e
 })
 
 func Get() *sharedhome.Engine { return get() }

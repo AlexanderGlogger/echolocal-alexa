@@ -82,14 +82,6 @@ func (w MicrophoneWriter) Mixing(v Mixing) error {
 	return w.st.Update(func(c *Config) { c.Microphone.Mixing = v })
 }
 
-func (w MicrophoneWriter) Cancel(v bool) error {
-	return w.st.Update(func(c *Config) { c.Microphone.Cancel = v })
-}
-
-func (w MicrophoneWriter) Sensitivity(db int) error {
-	return w.st.Update(func(c *Config) { c.Microphone.Sensitivity = db })
-}
-
 type Mixing string
 
 const (

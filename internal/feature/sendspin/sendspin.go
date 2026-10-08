@@ -17,10 +17,10 @@ import (
 
 type componentPlayer struct{ *sharedplayer.Player }
 
-func (p *componentPlayer) Restore(c config.Config) { p.Player.Restore(c.Sendspin.Enabled) }
+func (p *componentPlayer) Restore(c config.Config) { p.Player.Restore(c.Sendspin) }
 
 var get = sync.OnceValue(func() *sharedplayer.Player {
-	return sharedplayer.New(sharedplayer.Dependencies{
+	p := sharedplayer.New(sharedplayer.Dependencies{
 		Output:      newOutput(),
 		Arbitration: speaker.Sound().Backgrounds(),
 		Device:      identity{},
@@ -34,6 +34,8 @@ var get = sync.OnceValue(func() *sharedplayer.Player {
 			}
 		},
 	})
+	component.Settings.Add(p.Settings())
+	return p
 })
 
 func Get() *sharedplayer.Player { return get() }

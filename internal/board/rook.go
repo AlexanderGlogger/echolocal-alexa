@@ -8,6 +8,7 @@ var Rook = Board{
 	Model:        "Echo Spot (rook)",
 	DefaultName:  "Echo Spot",
 	Caps:         Panel | Wifi,
+	TesseraBoard: "guition",
 
 	Service:     "/system/app/echod/echod",
 	ServiceName: "zygote",

@@ -7,6 +7,8 @@ import (
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/say"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -17,12 +19,18 @@ func init() {
 	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(5))
 }
 
+const (
+	GainMost         = 59
+	SensitivityLeast = 4
+	SensitivityMost  = 20
+)
+
+const Group setting.Group = "Microphone"
+
+type Setting = setting.Setting[config.Microphone]
+
 type Microphone struct {
-	mixing      *esphome.Select
-	gain        *esphome.Number
-	leveling    *esphome.Switch
-	cancel      *esphome.Switch
-	sensitivity *esphome.Number
+	knobs *setting.Controls[config.Microphone]
 }
 
 var (
@@ -31,124 +39,104 @@ var (
 )
 
 func Get() *Microphone {
-	once.Do(func() { shared = build() })
+	once.Do(func() {
+		shared = &Microphone{knobs: &setting.Controls[config.Microphone]{
+			Table:  Table(mic.Mixings()),
+			Device: component.DeviceMicrophone,
+			Read:   func() config.Microphone { return config.Get().Microphone },
+			Save:   store,
+		}}
+		component.Settings.Add(shared.knobs)
+	})
 	return shared
 }
 
-func build() *Microphone {
-	m := &Microphone{
-		mixing: &esphome.Select{
-			Base: esphome.Base{
-				ObjectID: "microphone_mixing",
-				Name:     "Microphone mixing",
-				Icon:     "mdi:microphone-settings",
-				Category: esphome.CategoryConfig,
+func Table(mixings []config.Mixing) *setting.Table[config.Microphone] {
+	return setting.NewTable("microphone", []setting.Group{Group}, []Setting{
+		setting.Pick(
+			Setting{Name: "mixing", Group: Group, Icon: "mdi:microphone-settings"},
+			mixings,
+			func(m *config.Microphone) *config.Mixing { return &m.Mixing },
+		),
+		setting.Count(
+			Setting{
+				Name:  "gain",
+				Group: Group,
+				Icon:  "mdi:volume-plus",
+				Max:   GainMost,
+				Unit:  "dB",
 			},
-		},
-		leveling: &esphome.Switch{
-			Base: esphome.Base{
-				ObjectID: "microphone_leveling",
-				Name:     "Microphone leveling",
-				Icon:     "mdi:signal-variant",
-				Category: esphome.CategoryConfig,
+			func(m *config.Microphone) *int { return &m.Gain },
+		),
+		setting.Flag(
+			Setting{Name: "leveling", Group: Group, Icon: "mdi:signal-variant"},
+			func(m *config.Microphone) *bool { return &m.Leveling },
+		),
+		setting.Flag(
+			Setting{
+				Name:  "cancel",
+				Group: Group,
+				ID:    "microphone_cancel_echo",
+				Icon:  "mdi:waveform",
 			},
-		},
-		cancel: &esphome.Switch{
-			Base: esphome.Base{
-				ObjectID: "microphone_cancel_echo",
-				Name:     "Microphone echo cancellation",
-				Icon:     "mdi:waveform",
-				Category: esphome.CategoryConfig,
+			func(m *config.Microphone) *bool { return &m.Cancel },
+		),
+		setting.Count(
+			Setting{
+				Name:  "sensitivity",
+				Group: Group,
+				Icon:  "mdi:motion-sensor",
+				Min:   SensitivityLeast,
+				Max:   SensitivityMost,
+				Unit:  "dB",
 			},
-		},
-		sensitivity: &esphome.Number{
-			Base: esphome.Base{
-				ObjectID: "microphone_sensitivity",
-				Name:     "Room sensitivity",
-				Icon:     "mdi:motion-sensor",
-				Category: esphome.CategoryConfig,
-			},
-			Min: 4, Max: 20, Step: 1, Unit: "dB",
-			Mode: esphome.NumberBox,
-		},
-		gain: &esphome.Number{
-			Base: esphome.Base{
-				ObjectID: "microphone_gain",
-				Name:     "Microphone gain",
-				Icon:     "mdi:volume-plus",
-				Category: esphome.CategoryConfig,
-			},
-			Min: 0, Max: 59, Step: 1, Unit: "dB",
-			Mode: esphome.NumberBox,
-		},
-	}
+			func(m *config.Microphone) *int { return &m.Sensitivity },
+		),
+	}, setting.Messages{Text: say.T, Missing: say.Missing})
+}
 
-	for _, b := range []*esphome.Base{
-		&m.mixing.Base, &m.gain.Base, &m.leveling.Base, &m.cancel.Base,
-		&m.sensitivity.Base,
-	} {
-		b.DeviceID = component.DeviceMicrophone
-	}
+var applies = map[string]func(*config.Microphone) error{
+	"mixing": func(m *config.Microphone) error {
+		m.Mixing = mic.Get().SetMixing(m.Mixing)
+		return nil
+	},
+	"gain": func(m *config.Microphone) error { return mic.SetGain(m.Gain) },
+	"leveling": func(m *config.Microphone) error {
+		mic.Get().SetLeveling(m.Leveling)
+		return nil
+	},
+	"cancel": func(m *config.Microphone) error {
+		mic.Get().SetCancelling(m.Cancel)
+		return nil
+	},
+	"sensitivity": func(m *config.Microphone) error {
+		mic.Get().SetSensitivity(m.Sensitivity)
+		return nil
+	},
+}
 
-	source := mic.Get()
-	component.Bind(m.mixing, mic.Mixings(), source.SetMixing, config.Set().Microphone().Mixing)
-
-	m.leveling.OnCommand = func(on bool) {
-		m.leveling.Set(on)
-		source.SetLeveling(on)
-		if err := config.Set().Microphone().Leveling(on); err != nil {
-			slog.Error("saving the microphone leveling failed", "err", err)
-		}
+func store(s Setting, v string) error {
+	at := config.Get().Microphone
+	if err := s.Write(&at, v); err != nil {
+		return err
 	}
-
-	m.cancel.OnCommand = func(on bool) {
-		m.cancel.Set(on)
-		source.SetCancelling(on)
-		if err := config.Set().Microphone().Cancel(on); err != nil {
-			slog.Error("saving the echo cancellation setting failed", "err", err)
-		}
+	if err := applies[s.Name](&at); err != nil {
+		return err
 	}
-
-	m.sensitivity.OnCommand = func(v float32) {
-		m.sensitivity.Set(v)
-		source.SetSensitivity(int(v))
-		if err := config.Set().Microphone().Sensitivity(int(v)); err != nil {
-			slog.Error("saving the room sensitivity failed", "err", err)
-		}
-	}
-
-	m.gain.OnCommand = func(v float32) {
-		m.gain.Set(v)
-		if err := mic.SetGain(int(v)); err != nil {
-			slog.Error("saving the microphone gain failed", "err", err)
-		}
-	}
-	return m
+	return setting.Store(config.MicrophoneSection, s, s.Read(&at))
 }
 
 func (m *Microphone) Name() string { return "microphone settings" }
 
-func (m *Microphone) Entities() []esphome.Entity {
-	return []esphome.Entity{m.mixing, m.gain, m.leveling, m.cancel, m.sensitivity}
-}
+func (m *Microphone) Entities() []esphome.Entity { return m.knobs.Entities() }
 
 func (m *Microphone) Restore(c config.Config) {
 	source := mic.Get()
-
-	component.Restore(m.mixing, c.Microphone.Mixing, source.SetMixing)
-
-	m.leveling.Set(c.Microphone.Leveling)
-	source.SetLeveling(c.Microphone.Leveling)
-	slog.Info("restored", "what", m.leveling.ObjectID, "using", c.Microphone.Leveling)
-
-	m.cancel.Set(c.Microphone.Cancel)
-	source.SetCancelling(c.Microphone.Cancel)
-	slog.Info("restored", "what", m.cancel.ObjectID, "using", c.Microphone.Cancel)
-
-	m.sensitivity.Set(float32(c.Microphone.Sensitivity))
-	source.SetSensitivity(c.Microphone.Sensitivity)
-	slog.Info("restored", "what", m.sensitivity.ObjectID, "using", c.Microphone.Sensitivity)
-
-	m.gain.Set(float32(c.Microphone.Gain))
-	slog.Info("restored", "what", m.gain.ObjectID, "using", c.Microphone.Gain)
+	at := c.Microphone
+	at.Mixing = source.SetMixing(at.Mixing)
+	source.SetLeveling(at.Leveling)
+	source.SetCancelling(at.Cancel)
+	source.SetSensitivity(at.Sensitivity)
+	m.knobs.PublishFrom(at)
+	slog.Info("restored", "what", "microphone", "using", at, "asked", c.Microphone.Mixing)
 }

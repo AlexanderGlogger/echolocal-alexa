@@ -39,7 +39,7 @@ var get = sync.OnceValue(build)
 func Get() *castreceiver.Receiver { return get() }
 
 func build() *castreceiver.Receiver {
-	return castreceiver.NewReceiver(castreceiver.ReceiverOptions{
+	r := castreceiver.NewReceiver(castreceiver.ReceiverOptions{
 		Settings: config.CastSection,
 		DeviceID: component.DevicePlayback,
 		Network:  func(ctx context.Context) bool { return dhcp.Get().Wait(ctx) },
@@ -74,6 +74,8 @@ func build() *castreceiver.Receiver {
 			Preferences: castreceiver.Preferences("echolocal", config.CastSection),
 		},
 	})
+	component.Settings.Add(r.Settings())
+	return r
 }
 
 type mediaVolume struct{}

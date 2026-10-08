@@ -36,14 +36,14 @@ jobs:
           make build-echod DOT_ARCH=arm NDK=/nonexistent
           make build-echod DOT_ARCH=arm64 NDK=/nonexistent
 
-      - name: ensure biscuit excludes display dependencies
+      - name: ensure biscuit links no screen or camera code
         env:
           GOOS: linux
           GOARCH: arm
           CGO_ENABLED: 0
         run: |
           go list -deps ./cmd/echod > "$RUNNER_TEMP/biscuit-deps"
-          if grep -Eq 'libcountertop/pkg/display/|echolocal/internal/(feature/(gui|livecam)|hardware/display)$' "$RUNNER_TEMP/biscuit-deps"; then
+          if grep -E 'libcountertop/pkg/(display/|camera/|input/touch|media/(castreceiver|castoutput|videostream))|echolocal/internal/(feature/(gui|livecam|chromecast)|hardware/display)$' "$RUNNER_TEMP/biscuit-deps" | grep -Ev 'pkg/display/(clockkind|theme)$'; then
             cat "$RUNNER_TEMP/biscuit-deps"
             exit 1
           fi
@@ -51,13 +51,16 @@ jobs:
       - name: build without the assembly
         run: make build-echod TAGS=noasm
 
-      - name: gofmt
-        run: |
-          unformatted=$(gofmt -l .)
-          if [ -n "$unformatted" ]; then
-            echo "$unformatted"
-            exit 1
-          fi
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2
+          install-only: true
+
+      - name: format check
+        run: golangci-lint fmt --diff
+
+      - name: lint
+        run: golangci-lint run
 
   show:
     runs-on: ubuntu-latest
@@ -76,5 +79,11 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
       - name: build Show with its native payload
         run: make build-echod BOARD=${{ matrix.board }}
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2
+          install-only: true
+      - name: lint with the board tag
+        run: golangci-lint run --build-tags board_${{ matrix.board }}
       - name: native wire checks
         run: make test-surface

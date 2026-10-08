@@ -8,6 +8,7 @@ import (
 	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 	"github.com/ygelfand/libcountertop/pkg/display/theme"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -45,7 +46,9 @@ func Get() *Dashboard {
 			DeviceID: component.DeviceScreen,
 		})}
 
+		component.Settings.Add(shared.Settings())
 		screen.Get().Themed.Listen(func(theme.Theme) { shared.Redraw() })
+		screen.Get().Restyled.Listen(func(schema.Screen) { shared.Redraw() })
 		poster.Get().Changed.Listen(func(int) { shared.Redraw() })
 		timesync.Get().Synced.Listen(func(s timesync.Sync) {
 			if s.Stepped() {
@@ -64,7 +67,7 @@ func Get() *Dashboard {
 func (d *Dashboard) Name() string { return "dashboard" }
 
 func (d *Dashboard) Restore(cfg config.Config) {
-	d.Controls.Restore(sharedlib.StateOf(cfg.Screen, cfg.Clock))
+	d.Controls.Restore(cfg.Screen, cfg.Clock)
 }
 
 // The device boots with its clock at 1970.

@@ -32,18 +32,20 @@ func init() {
 }
 
 var get = sync.OnceValue(func() *Visuals {
-	return &Visuals{visualinput.New(visualinput.Options{
+	v := &Visuals{visualinput.New(visualinput.Options{
 		Settings:        config.VisualSection,
 		MicRate:         16000,
 		MicChannels:     1,
 		SpeakerRate:     speaker.Rate,
 		SpeakerChannels: speaker.Channels,
-		Lift:            config.Get().Microphone.VisualizerLift,
+		Lift:            config.LiftSection,
 		DeviceID:        component.DeviceScreen,
 		Listen:          func() (<-chan []int16, func()) { return mic.Get().ListenUnleveled("visuals") },
 		Muted:           func() bool { m, _ := mute.Get().Muted(); return m },
 		Tap:             func(t visualinput.Tap) { speaker.Get().SetTap(t) },
 	})}
+	component.Settings.Add(v.Settings())
+	return v
 })
 
 func Get() *Visuals { return get() }

@@ -63,6 +63,8 @@ type Board struct {
 
 	UISize string
 
+	TesseraBoard string
+
 	SecureDecoders map[string]string
 
 	MaxFPS int

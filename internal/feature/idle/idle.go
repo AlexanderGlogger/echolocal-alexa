@@ -56,6 +56,7 @@ func Get() *Idle {
 					web.Get().Offering() == ""
 			},
 		})}
+		component.Settings.Add(shared.Settings())
 		drawer.Get().Add(shared.Rail())
 	})
 	return shared

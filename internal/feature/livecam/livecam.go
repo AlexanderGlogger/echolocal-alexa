@@ -54,7 +54,7 @@ var vendor = live.Vendor{
 
 var Get = sync.OnceValue(func() Camera {
 	b := component.Board()
-	return Camera{live.New(live.Options{
+	c := Camera{live.New(live.Options{
 		Vendor: vendor,
 		Streams: live.Streams{
 			Main:        []string{"1280x720", "864x480", "640x480"},
@@ -68,6 +68,8 @@ var Get = sync.OnceValue(func() Camera {
 		Writer:          func() schema.CameraWriter { return config.Set().Camera() },
 		Device:          component.DeviceCamera,
 	})}
+	component.Settings.Add(c.Controls())
+	return c
 })
 
 func muted() bool {

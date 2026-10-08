@@ -60,7 +60,6 @@ func (v *Volume) Name() string { return "volume" }
 func (v *Volume) Entities() []esphome.Entity { return v.entities.Entities() }
 
 func (v *Volume) Restore(c config.Config) {
-	v.entities.RestoreDuck()
 	for _, s := range config.Streams() {
 		if s == config.StreamMain {
 			continue
@@ -138,7 +137,7 @@ func (v *Volume) build() {
 		streams,
 		func(s config.Stream) bool { return s == config.StreamMain },
 	)
-	v.entities = sharedvolume.NewEntities(v, streams, nil, component.DevicePlayback)
+	v.entities = sharedvolume.NewEntities(v, streams, component.DevicePlayback)
 	v.numbers = v.entities.Numbers
 }
 

@@ -41,7 +41,7 @@ type Player struct {
 	jack *esphome.BinarySensor
 
 	resampling *esphome.Select
-	duck       *esphome.Number
+	duck       *sharedvolume.Ducking
 
 	asp *esphome.Switch
 
@@ -84,7 +84,7 @@ func build() *Player {
 				Category: esphome.CategoryConfig,
 			},
 		},
-		duck: sharedvolume.NewDuck(config.MediaSection, component.DevicePlayback),
+		duck: sharedvolume.NewDucking(config.MediaSection, component.DevicePlayback),
 		asp: &esphome.Switch{
 			Base: esphome.Base{
 				ObjectID: "speaker_eq",
@@ -95,10 +95,10 @@ func build() *Player {
 		},
 	}
 	p.layers = noiseLayers()
+	component.Settings.Add(p.duck)
 
 	bases := []*esphome.Base{
 		&p.resampling.Base,
-		&p.duck.Base,
 		&p.jack.Base,
 		&p.asp.Base,
 	}
@@ -169,7 +169,9 @@ func (p *Player) Name() string { return "media player" }
 func (p *Player) WatchVolume(changed func(int)) func() { return p.Volume.Listen(changed) }
 
 func (p *Player) Entities() []esphome.Entity {
-	out := []esphome.Entity{p.Entity(), p.jack, p.resampling, p.duck, p.asp}
+	out := []esphome.Entity{p.Entity(), p.jack, p.resampling}
+	out = append(out, p.duck.Entities()...)
+	out = append(out, p.asp)
 	for _, sel := range p.layers {
 		out = append(out, sel)
 	}
@@ -182,8 +184,7 @@ func (p *Player) Restore(c config.Config) {
 
 	component.Restore(p.resampling, c.Speaker.Resampling, speaker.Get().SetResampling)
 
-	p.duck.Set(float32(c.Media.DuckDB))
-	slog.Info("restored", "what", p.duck.ObjectID, "using", c.Media.DuckDB)
+	p.duck.PublishFrom(c.Media)
 
 	settled := speaker.Get().SetASP(c.Speaker.ASP)
 	p.asp.Set(settled)

@@ -12,6 +12,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/call"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
+	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 )
 
@@ -24,9 +25,7 @@ func init() {
 			Voice: sharedvolume.For(volume.Get(), config.StreamVoice),
 			Video: component.Board().CameraWidth > 0,
 		})
-		o.Boards = map[string]screens.Board{
-			discovery.TabKind: {Glyph: callview.Glyph, Draw: calls.Board},
-		}
+		drawer.Get().Add(calls.Rail())
 		o.Views = append(o.Views, calls.Screen)
 	})
 }

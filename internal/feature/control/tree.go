@@ -17,6 +17,7 @@ func (c *Control) tree() *cobra.Command {
 	t.Add(harness.InputTask, c.inputEngine().Commands()...)
 	t.Add(harness.AudioTask, hearing()...)
 	t.Add(harness.AudioTask, cancelling()...)
+	t.Top(setCommand())
 	showing(t)
 	for _, more := range boardCommands {
 		more(t)

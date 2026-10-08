@@ -9,11 +9,14 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/mute"
+	"github.com/ygelfand/echolocal/internal/feature/screen"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 )
 
@@ -30,7 +33,6 @@ type Privacy struct {
 	Changed hook.Hook[Marks]
 
 	camera *esphome.BinarySensor
-	sw     *esphome.Switch
 
 	mu    sync.Mutex
 	marks Marks
@@ -51,19 +53,10 @@ func Get() *Privacy {
 					Icon:     "mdi:camera-off",
 				},
 			},
-			sw: &esphome.Switch{
-				Base: esphome.Base{
-					ObjectID: "privacy_marks",
-					Name:     "Privacy marks",
-					Icon:     "mdi:shield-account-outline",
-					Category: esphome.CategoryConfig,
-				},
-			},
 		}
-		shared.sw.OnCommand = shared.SetMarks
-
 		buttons.Get().Shutter.Listen(shared.covered)
 		mute.Get().Changed.Listen(shared.muted)
+		screen.Get().Restyled.Listen(func(schema.Screen) { shared.show() })
 	})
 	return shared
 }
@@ -72,24 +65,17 @@ func (p *Privacy) Name() string { return "privacy" }
 
 func (p *Privacy) Entities() []esphome.Entity {
 	if !component.Board().Has(board.Shutter) {
-		return []esphome.Entity{p.sw}
+		return nil
 	}
-	return []esphome.Entity{p.camera, p.sw}
+	return []esphome.Entity{p.camera}
 }
 
-func (p *Privacy) Restore(c config.Config) {
-	p.sw.Set(c.Screen.Marks)
-	p.show()
-	slog.Info("restored", "what", p.sw.ObjectID, "on", c.Screen.Marks)
-}
+func (p *Privacy) Restore(config.Config) { p.show() }
 
 func (p *Privacy) SetMarks(on bool) {
-	if err := config.Set().Screen().Marks(on); err != nil {
+	if err := screen.Get().Set("marks", setting.OnOff(on)); err != nil {
 		slog.Error("saving the privacy marks setting failed", "err", err)
-		return
 	}
-	p.sw.Set(on)
-	p.show()
 }
 
 func (p *Privacy) Start(context.Context) error {

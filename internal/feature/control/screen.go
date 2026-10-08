@@ -29,5 +29,4 @@ func showing(t *harness.Tree) {
 	open, stack, ready := panelCommands()
 	t.Add(harness.DisplayTask, shot, thumbsCommand(), open, stack)
 	t.Add(harness.DeviceTask, ready)
-	t.Top(setCommand())
 }

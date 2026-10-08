@@ -30,7 +30,7 @@ type Weather struct{ *weather.Weather }
 func (w Weather) Restore(cfg config.Config) { w.Publish(cfg.Weather) }
 
 var get = sync.OnceValue(func() *Weather {
-	return &Weather{weather.New(weather.Options{
+	w := &Weather{weather.New(weather.Options{
 		Controller: homeassistant.Get(),
 		States:     states.Get(),
 		Settings:   config.WeatherSection,
@@ -38,6 +38,8 @@ var get = sync.OnceValue(func() *Weather {
 		Redraw:     func() { shell.Get().Redraw() },
 		DeviceID:   component.DeviceScreen,
 	})}
+	component.Settings.Add(w.Settings())
+	return w
 })
 
 func Get() *Weather { return get() }
