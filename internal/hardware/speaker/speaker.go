@@ -5,23 +5,25 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"math"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
+	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
+	"github.com/ygelfand/libcountertop/pkg/audio/mix"
+	"github.com/ygelfand/libcountertop/pkg/audio/tone"
+	"github.com/ygelfand/libcountertop/pkg/audio/upsample"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/lib/alsa"
 	"github.com/ygelfand/echolocal/internal/lib/asp"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 // The playback codec accepts one format only: 48 kHz, S16_LE, stereo.
@@ -39,10 +41,7 @@ const (
 	codecSettle = 1100 * time.Millisecond
 )
 
-const (
-	VoiceRate     = 16000
-	VoiceUpsample = Rate / VoiceRate
-)
+const VoiceRate = upsample.VoiceRate
 
 const (
 	Card           = 0
@@ -52,7 +51,7 @@ const (
 )
 
 type Player struct {
-	startup atomic.Pointer[component.Progress]
+	startup atomic.Pointer[sharedcomponent.Progress]
 	devMu   sync.Mutex
 	pb      *alsa.Playback
 	mixer   *alsa.Mixer
@@ -69,8 +68,8 @@ type Player struct {
 	seq    sequences
 
 	voiceMu    sync.Mutex
-	voice      Resampler
-	resampling config.Resampling
+	voice      upsample.Resampler
+	resampling upsample.Kind
 	splices    atomic.Uint64
 
 	tuning *asp.Tuning
@@ -88,21 +87,16 @@ type Player struct {
 
 	deaf atomic.Uint64
 
-	mu      sync.Mutex
-	pending []int16
+	pending mix.Queue
 
 	written atomic.Uint64
 
 	srcMu  sync.Mutex
-	src    Source
+	src    mix.Source
 	srcBuf []int16
 }
 
-type Source interface {
-	Render(at uint64, out []int16)
-}
-
-func (p *Player) Attach(s Source) {
+func (p *Player) Attach(s mix.Source) {
 	p.srcMu.Lock()
 	defer p.srcMu.Unlock()
 	p.src = s
@@ -112,7 +106,7 @@ func (p *Player) Written() uint64 { return p.written.Load() }
 
 func New() *Player {
 	p := &Player{out: DetectOutput()}
-	p.voice, p.resampling = NewResampler(config.ResampleSinc)
+	p.voice, p.resampling = upsample.New(upsample.Sinc, Rate)
 	p.SetVolume(VolumeSteps)
 	p.on.Store(config.DefaultASP)
 
@@ -140,8 +134,8 @@ var (
 
 func init() {
 	// The amplifier hisses when nothing drives the DAC, and toggling it pops.
-	component.Register(component.Hardware, Get, component.Order(6),
-		component.Supervise(service.Restart(time.Second, 30*time.Second)))
+	component.Register(sharedcomponent.Hardware, Get, sharedcomponent.Order(6),
+		sharedcomponent.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
 func Get() *Player {
@@ -161,7 +155,7 @@ func (p *Player) open() error {
 	pb, err := alsa.OpenPlayback(Card, PlaybackDevice, alsa.Config{
 		Channels:   Channels,
 		Rate:       Rate,
-		Format:     alsa.FormatS16_LE,
+		Format:     alsa.FormatS16LE,
 		Bits:       Bits,
 		PeriodSize: period,
 		Periods:    periods,
@@ -315,7 +309,7 @@ func (p *Player) Run(ctx context.Context) error {
 		}
 
 		p.fill(buf)
-		if err := p.send(ctx, pb, buf); err != nil {
+		if err := mix.Send(ctx, pb, buf, &p.underruns); err != nil {
 			if ctx.Err() != nil {
 				return nil
 			}
@@ -325,29 +319,9 @@ func (p *Player) Run(ctx context.Context) error {
 	}
 }
 
-func (p *Player) send(ctx context.Context, to io.Writer, buf []byte) error {
-	for {
-		_, err := to.Write(buf)
-		if err == nil {
-			return nil
-		}
-		if err != alsa.ErrUnderrun {
-			return err
-		}
-		if n := p.underruns.Add(1); n == 1 || n%100 == 0 {
-			slog.Warn("playback underrun", "times", n)
-		}
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-	}
-}
+type tapTo struct{ mix.Tap }
 
-type Tap interface{ Offer(mix []int16) }
-
-type tapTo struct{ Tap }
-
-func (p *Player) SetTap(t Tap) {
+func (p *Player) SetTap(t mix.Tap) {
 	if t == nil {
 		p.tap.Store(nil)
 		return
@@ -356,14 +330,8 @@ func (p *Player) SetTap(t Tap) {
 }
 
 func (p *Player) fill(buf []byte) {
-	p.mu.Lock()
-	take := min(len(p.pending), period*Channels)
-	chunk := p.pending[:take]
-	p.pending = p.pending[take:]
-	if len(p.pending) == 0 {
-		p.pending = nil
-	}
-	p.mu.Unlock()
+	chunk := p.pending.Next(period * Channels)
+	take := len(chunk)
 
 	if take > 0 && take < period*Channels {
 		p.splices.Add(1)
@@ -407,9 +375,9 @@ func (p *Player) fill(buf []byte) {
 			r += int32(rendered[i+1])
 		}
 		if tap != nil {
-			p.tapBuf[i], p.tapBuf[i+1] = clamp(
+			p.tapBuf[i], p.tapBuf[i+1] = mix.Clamp(
 				int32(float32(l)*gain),
-			), clamp(
+			), mix.Clamp(
 				int32(float32(r)*gain),
 			)
 		}
@@ -418,11 +386,11 @@ func (p *Player) fill(buf []byte) {
 			r = l
 		}
 		if tuned {
-			p.mono[j] = float32(clamp(l)) / full * makeup
+			p.mono[j] = float32(mix.Clamp(l)) / full * makeup
 			continue
 		}
-		binary.LittleEndian.PutUint16(buf[i*2:], uint16(int16(float32(clamp(l))*gain)))
-		binary.LittleEndian.PutUint16(buf[(i+1)*2:], uint16(int16(float32(clamp(r))*gain)))
+		binary.LittleEndian.PutUint16(buf[i*2:], uint16(int16(float32(mix.Clamp(l))*gain)))
+		binary.LittleEndian.PutUint16(buf[(i+1)*2:], uint16(int16(float32(mix.Clamp(r))*gain)))
 	}
 	if tap != nil {
 		tap.Offer(p.tapBuf[:period*Channels])
@@ -477,38 +445,23 @@ func (p *Player) queue(samples []int16) {
 		return
 	}
 
-	p.mu.Lock()
-	p.pending = append(p.pending, samples...)
-	p.mu.Unlock()
+	p.pending.Push(samples)
 }
 
-func (p *Player) Take() []int16 {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+func (p *Player) Take() []int16 { return p.pending.Take() }
 
-	pending := p.pending
-	p.pending = nil
-	return pending
-}
-
-func (p *Player) Adjust(rewrite func([]int16)) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	rewrite(p.pending)
-}
+func (p *Player) Adjust(rewrite func([]int16)) { p.pending.Adjust(rewrite) }
 
 func (p *Player) PlayVoice(mono []int16) {
 	p.voiceMu.Lock()
-	out := p.voice.Run(mono, make([]int16, 0, len(mono)*VoiceUpsample*Channels))
+	out := p.voice.Run(mono, make([]int16, 0, len(mono)*Rate/VoiceRate*Channels))
 	p.voiceMu.Unlock()
 
 	p.PlayStream(config.StreamVoice, out)
 }
 
 func (p *Player) Drain() {
-	p.mu.Lock()
-	p.pending = nil
-	p.mu.Unlock()
+	p.pending.Clear()
 
 	p.voiceMu.Lock()
 	p.voice.Reset()
@@ -519,8 +472,8 @@ func (p *Player) SetResampling(r config.Resampling) config.Resampling {
 	p.voiceMu.Lock()
 	defer p.voiceMu.Unlock()
 
-	p.voice, p.resampling = NewResampler(r)
-	return p.resampling
+	p.voice, p.resampling = upsample.New(upsample.Kind(r), Rate)
+	return config.Resampling(p.resampling)
 }
 
 func (p *Player) SetASP(on bool) bool {
@@ -537,7 +490,7 @@ func (p *Player) ASP() bool { return p.on.Load() }
 func (p *Player) Resampling() config.Resampling {
 	p.voiceMu.Lock()
 	defer p.voiceMu.Unlock()
-	return p.resampling
+	return config.Resampling(p.resampling)
 }
 
 func (p *Player) Splices() uint64 { return p.splices.Load() }
@@ -550,28 +503,18 @@ func (p *Player) Clipped() uint64 {
 	return p.voice.Clipped()
 }
 
-func (p *Player) Queued() int {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	return len(p.pending) / Channels
-}
-
-type Note = sharedtone.Note
+func (p *Player) Queued() int { return p.pending.Len() / Channels }
 
 func (p *Player) Beep(freq float64, ms int, level float64) {
-	p.Chime(level, Note{Freq: freq, Ms: ms})
+	p.Chime(level, tone.Note{Freq: freq, Ms: ms})
 }
 
-func (p *Player) Chime(level float64, notes ...Note) {
+func (p *Player) Chime(level float64, notes ...tone.Note) {
 	p.ChimeStream(config.StreamFeedback, level, notes...)
 }
 
-func (p *Player) ChimeStream(s config.Stream, level float64, notes ...Note) {
-	var out []int16
-	for _, n := range notes {
-		out = append(out, tone(n, level)...)
-	}
-	p.Overlay(quieter(out, p.Level(s)))
+func (p *Player) ChimeStream(s config.Stream, level float64, notes ...tone.Note) {
+	p.Overlay(quieter(mix.Chime(Rate, Channels, level, notes...), p.Level(s)))
 }
 
 func (p *Player) Overlay(samples []int16) {
@@ -580,45 +523,7 @@ func (p *Player) Overlay(samples []int16) {
 		return
 	}
 
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.pending = mix(p.pending, samples)
-}
-
-func mix(into, add []int16) []int16 {
-	for i, s := range add {
-		if i >= len(into) {
-			return append(into, add[i:]...)
-		}
-		into[i] = clamp(int32(into[i]) + int32(s))
-	}
-	return into
-}
-
-func clamp(v int32) int16 {
-	switch {
-	case v > math.MaxInt16:
-		return math.MaxInt16
-	case v < math.MinInt16:
-		return math.MinInt16
-	}
-	return int16(v)
-}
-
-func tone(n Note, level float64) []int16 {
-	frames := Rate * n.Ms / 1000
-	out := make([]int16, frames*Channels)
-
-	for i := range frames {
-		if n.Freq == 0 {
-			continue
-		}
-		env := math.Min(1, math.Min(float64(i), float64(frames-i))/float64(Rate/200))
-		s := int16(level * env * math.MaxInt16 * math.Sin(2*math.Pi*n.Freq*float64(i)/Rate))
-		out[i*Channels] = s
-		out[i*Channels+1] = s
-	}
-	return out
+	p.pending.Overlay(samples)
 }
 
 func (p *Player) SetVolume(step int) {

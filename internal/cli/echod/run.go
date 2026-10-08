@@ -9,9 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ygelfand/echolocal/internal/android/logd"
 	"github.com/ygelfand/echolocal/internal/boot"
-	"github.com/ygelfand/echolocal/internal/layout"
+	"github.com/ygelfand/echolocal/internal/logging"
 )
 
 func newRunCmd() *cobra.Command {
@@ -23,7 +22,7 @@ func newRunCmd() *cobra.Command {
 			"restarts it if it exits, and nothing else drives the ring.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			h := logd.NewHandler(layout.LogTag, cmd.ErrOrStderr())
+			h := logging.Log.Open(cmd.ErrOrStderr())
 			defer h.Close()
 			slog.SetDefault(slog.New(h))
 

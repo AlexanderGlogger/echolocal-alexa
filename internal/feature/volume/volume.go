@@ -6,9 +6,10 @@ import (
 	"sync"
 
 	esphome "github.com/ygelfand/go-esphome-device"
+
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
-	"github.com/ygelfand/libcountertop/pkg/hook"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -19,17 +20,19 @@ import (
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(38), component.Needs(board.Panel))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(38),
+		component.Needs(board.Panel),
+	)
 }
 
-type Change struct {
-	Stream config.Stream
-	Level  int
-}
+type Change = sharedvolume.Change
 
 type Volume struct {
 	entities *sharedvolume.Entities
-	Changed  hook.Hook[Change]
+	Changed  sharedvolume.Changes
 
 	card    *sharedview.Card
 	numbers map[config.Stream]*esphome.Number
@@ -75,7 +78,7 @@ func (v *Volume) Level(s config.Stream) int {
 }
 
 func (v *Volume) Set(s config.Stream, level int) {
-	level = clamp(level)
+	level = sharedvolume.Clamp(level)
 	if v.Level(s) == level {
 		return
 	}
@@ -92,8 +95,6 @@ func (v *Volume) Set(s config.Stream, level int) {
 	v.changed(s)
 }
 
-const Step = 5
-
 func (v *Volume) turn(delta int) bool {
 	s, ok := v.card.Selected()
 	if !ok {
@@ -103,7 +104,7 @@ func (v *Volume) turn(delta int) bool {
 		return false
 	}
 
-	v.Set(s, v.Level(s)+delta*Step)
+	v.Set(s, v.Level(s)+delta*sharedvolume.Step)
 	return true
 }
 
@@ -118,8 +119,8 @@ func wanted() (config.Stream, bool) {
 }
 
 func (v *Volume) hold(s config.Stream, level int) {
-	speaker.Get().SetLevel(s, clamp(level))
-	v.numbers[s].Set(float32(clamp(level)))
+	speaker.Get().SetLevel(s, sharedvolume.Clamp(level))
+	v.numbers[s].Set(float32(sharedvolume.Clamp(level)))
 }
 
 func (v *Volume) changed(s config.Stream) {
@@ -141,20 +142,6 @@ func (v *Volume) build() {
 	v.numbers = v.entities.Numbers
 }
 
-func clamp(level int) int {
-	switch {
-	case level < 0:
-		return 0
-	case level > 100:
-		return 100
-	}
-	return level
-}
-
 func (v *Volume) Watch(stream config.Stream, changed func(int)) func() {
-	return v.Changed.Listen(func(c Change) {
-		if c.Stream == stream {
-			changed(c.Level)
-		}
-	})
+	return v.Changed.Watch(stream, changed)
 }

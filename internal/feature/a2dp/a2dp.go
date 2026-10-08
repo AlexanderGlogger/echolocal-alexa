@@ -8,6 +8,8 @@ import (
 
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	sharedspeaker "github.com/ygelfand/libcountertop/pkg/bluetooth/a2dp"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -17,7 +19,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/ble"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 var once sync.Once
@@ -39,6 +40,11 @@ func build() *sharedspeaker.Sink {
 }
 func Get() *sharedspeaker.Sink { once.Do(func() { shared = build() }); return shared }
 func init() {
-	component.Register(component.Device, Get, component.Order(70), component.Needs(board.Panel),
-		component.Supervise(service.Restart(5*time.Second, time.Minute)))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(70),
+		component.Needs(board.Panel),
+		sharedcomponent.Supervise(service.Restart(5*time.Second, time.Minute)),
+	)
 }

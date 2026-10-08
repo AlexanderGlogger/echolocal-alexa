@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/colorprofile"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
 
 	"github.com/ygelfand/echolocal/internal/layout"
 )
@@ -63,7 +64,7 @@ func initConfig() {
 
 func Execute() {
 	root := newRoot()
-	if !isTerminal() {
+	if !prompt.IsTerminal() {
 		root.SetOut(colorprofile.NewWriter(os.Stdout, os.Environ()))
 		root.SetErr(colorprofile.NewWriter(os.Stderr, os.Environ()))
 	}

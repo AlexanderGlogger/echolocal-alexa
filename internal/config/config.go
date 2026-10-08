@@ -1,70 +1,71 @@
 package config
 
 import (
-	"fmt"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+	"github.com/ygelfand/libcountertop/pkg/settings/storage"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/defaults"
 )
 
 type Config struct {
-	Feedback   Feedback   `json:"feedback"`
-	Time       Time       `json:"time"`
-	Device     Device     `json:"-"`
-	Speaker    Speaker    `json:"speaker"`
-	Volume     Volume     `json:"volume"`
-	Microphone Microphone `json:"microphone"`
-	Wake       Wake       `json:"wake"`
-	Ring       Ring       `json:"ring"`
-	Update     Update     `json:"update"`
-	Bluetooth  Bluetooth  `json:"bluetooth"`
-	Diag       Diag       `json:"diag"`
-	Media      Media      `json:"media"`
-	Sendspin   Sendspin   `json:"sendspin"`
-	Screen     Screen     `json:"screen"`
-	Clock      Clock      `json:"clock"`
-	Visual     Visual     `json:"visual"`
-	Idle       Idle       `json:"idle"`
-	Cast       Cast       `json:"cast"`
-	Camera     Camera     `json:"camera"`
-	RTSP       RTSP       `json:"rtsp"`
-	Poster     Poster     `json:"poster"`
-	Network    Network    `json:"network"`
-	API        API        `json:"api"`
-	Home       Home       `json:"home"`
-	Weather    Weather    `json:"weather"`
-	Call       Call       `json:"call"`
+	Feedback   schema.Feedback  `json:"feedback"`
+	Time       schema.Time      `json:"time"`
+	Device     Device           `json:"-"`
+	Speaker    Speaker          `json:"speaker"`
+	Volume     Volume           `json:"volume"`
+	Microphone Microphone       `json:"microphone"`
+	Wake       schema.Wake      `json:"wake"`
+	Ring       Ring             `json:"ring"`
+	Update     schema.Update    `json:"update"`
+	Bluetooth  schema.Bluetooth `json:"bluetooth"`
+	Diag       Diag             `json:"diag"`
+	Media      schema.Media     `json:"media"`
+	Sendspin   schema.Sendspin  `json:"sendspin"`
+	Screen     schema.Screen    `json:"screen"`
+	Clock      schema.Clock     `json:"clock"`
+	Visual     schema.Visual    `json:"visual"`
+	Idle       schema.Idle      `json:"idle"`
+	Cast       schema.Cast      `json:"cast"`
+	Camera     schema.Camera    `json:"camera"`
+	RTSP       schema.RTSP      `json:"rtsp"`
+	Poster     schema.Poster    `json:"poster"`
+	Network    schema.Network   `json:"network"`
+	API        schema.API       `json:"api"`
+	Home       schema.Home      `json:"home"`
+	Weather    schema.Weather   `json:"weather"`
+	Call       schema.Call      `json:"call"`
 }
 
 func Defaults() Config {
 	d := defaults.Current()
 
 	return Config{
-		Feedback:   defaultFeedback(),
-		Network:    defaultNetwork(),
+		Feedback:   schema.DefaultFeedback(),
+		Network:    schema.DefaultNetwork(),
 		Speaker:    defaultSpeaker(),
 		Volume:     defaultVolume(),
 		Microphone: defaultMicrophone(d),
 		Ring:       defaultRing(d),
-		Update:     defaultUpdate(),
-		Bluetooth:  defaultBluetooth(),
+		Update:     schema.DefaultUpdate(),
+		Bluetooth:  schema.DefaultBluetooth(),
 		Diag:       defaultDiag(d),
-		Media:      defaultMedia(),
-		Sendspin:   defaultSendspin(),
-		Screen:     defaultScreen(),
-		Clock:      defaultClock(),
-		Visual:     defaultVisual(),
-		Idle:       defaultIdle(),
-		Cast:       defaultCast(),
-		Camera:     defaultCamera(),
-		RTSP:       defaultRTSP(),
-		Poster:     defaultPoster(),
-		Home:       defaultHome(),
-		API:        defaultAPI(),
-		Weather:    defaultWeather(),
-		Call:       defaultCall(),
+		Media:      schema.DefaultMedia(),
+		Sendspin:   schema.DefaultSendspin(),
+		Screen:     schema.DefaultScreen(),
+		Clock:      schema.DefaultClock(),
+		Visual:     schema.DefaultVisualSettings(),
+		Idle:       schema.DefaultIdle(),
+		Cast:       schema.DefaultCast(),
+		Camera:     schema.DefaultCamera(),
+		RTSP:       schema.DefaultRTSP(),
+		Poster:     schema.DefaultPoster(),
+		Home:       schema.DefaultHome(),
+		API:        schema.DefaultAPI(),
+		Weather:    schema.DefaultWeather(),
+		Call:       schema.DefaultCall(),
 
-		Wake: Wake{Stop: defaultStop()},
+		Wake: schema.Wake{Stop: schema.DefaultStop()},
 	}
 }
 
@@ -77,35 +78,91 @@ type Device struct {
 
 type Writer struct{ st *Store }
 
-func (w Writer) Time() TimeWriter             { return TimeWriter(w) }
 func (w Writer) Speaker() SpeakerWriter       { return SpeakerWriter(w) }
 func (w Writer) Volume() VolumeWriter         { return VolumeWriter(w) }
 func (w Writer) Microphone() MicrophoneWriter { return MicrophoneWriter(w) }
 func (w Writer) Ring() RingWriter             { return RingWriter(w) }
-func (w Writer) Update() UpdateWriter         { return UpdateWriter(w) }
-func (w Writer) Bluetooth() BluetoothWriter   { return BluetoothWriter(w) }
 func (w Writer) Diag() DiagWriter             { return DiagWriter(w) }
-func (w Writer) Media() MediaWriter           { return MediaWriter(w) }
-func (w Writer) Sendspin() SendspinWriter     { return SendspinWriter(w) }
-func (w Writer) Screen() ScreenWriter         { return ScreenWriter(w) }
-func (w Writer) Clock() ClockWriter           { return ClockWriter(w) }
-func (w Writer) Visual() VisualWriter         { return VisualWriter(w) }
-func (w Writer) Idle() IdleWriter             { return IdleWriter(w) }
-func (w Writer) Cast() CastWriter             { return CastWriter(w) }
-func (w Writer) Camera() CameraWriter         { return CameraWriter(w) }
-func (w Writer) RTSP() RTSPWriter             { return RTSPWriter(w) }
-func (w Writer) Poster() PosterWriter         { return PosterWriter(w) }
-func (w Writer) Network() NetworkWriter       { return NetworkWriter(w) }
-func (w Writer) API() APIWriter               { return APIWriter(w) }
-func (w Writer) Home() HomeWriter             { return HomeWriter(w) }
-func (w Writer) Weather() WeatherWriter       { return WeatherWriter(w) }
-func (w Writer) Call() CallWriter             { return CallWriter(w) }
 
-func (w Writer) Wake(slot int) WakeWriter { return WakeWriter{st: w.st, slot: slot} }
+func (w Writer) Update() schema.UpdateWriter {
+	return schema.NewUpdateWriter(storage.Field(w.st.Store, updateOf))
+}
 
-func (w Writer) Stop() StopWriter { return StopWriter(w) }
+func (w Writer) Bluetooth() schema.BluetoothWriter {
+	return schema.NewBluetoothWriter(storage.Field(w.st.Store, bluetoothOf))
+}
 
-func errSlot(n int) error { return fmt.Errorf("config: wake slot %d", n) }
+func (w Writer) Media() schema.MediaWriter {
+	return schema.NewMediaWriter(storage.Field(w.st.Store, mediaOf))
+}
+
+func (w Writer) Sendspin() schema.SendspinWriter {
+	return schema.NewSendspinWriter(storage.Field(w.st.Store, sendspinOf))
+}
+
+func (w Writer) Screen() schema.ScreenWriter {
+	return schema.NewScreenWriter(storage.Field(w.st.Store, screenOf))
+}
+
+func (w Writer) Clock() schema.ClockWriter {
+	return schema.NewClockWriter(storage.Field(w.st.Store, clockOf))
+}
+
+func (w Writer) Visual() schema.VisualWriter {
+	return schema.NewVisualWriter(storage.Field(w.st.Store, visualOf))
+}
+
+func (w Writer) Idle() schema.IdleWriter {
+	return schema.NewIdleWriter(storage.Field(w.st.Store, idleOf))
+}
+
+func (w Writer) Cast() schema.CastWriter {
+	return schema.NewCastWriter(storage.Field(w.st.Store, castOf))
+}
+
+func (w Writer) Camera() schema.CameraWriter {
+	return schema.NewCameraWriter(storage.Field(w.st.Store, cameraOf))
+}
+
+func (w Writer) RTSP() schema.RTSPWriter {
+	return schema.NewRTSPWriter(storage.Field(w.st.Store, rtspOf))
+}
+
+func (w Writer) Poster() schema.PosterWriter {
+	return schema.NewPosterWriter(storage.Field(w.st.Store, posterOf))
+}
+
+func (w Writer) Network() schema.NetworkWriter {
+	return schema.NewNetworkWriter(storage.Field(w.st.Store, networkOf))
+}
+
+func (w Writer) API() schema.APIWriter {
+	return schema.NewAPIWriter(storage.Field(w.st.Store, apiOf))
+}
+
+func (w Writer) Home() schema.HomeWriter {
+	return schema.NewHomeWriter(storage.Field(w.st.Store, homeOf))
+}
+
+func (w Writer) Weather() schema.WeatherWriter {
+	return schema.NewWeatherWriter(storage.Field(w.st.Store, weatherOf))
+}
+
+func (w Writer) Call() schema.CallWriter {
+	return schema.NewCallWriter(storage.Field(w.st.Store, callOf))
+}
+
+func (w Writer) Time() schema.TimeWriter {
+	return schema.NewTimeWriter(storage.Field(w.st.Store, timeOf))
+}
+
+func (w Writer) Wake(slot int) schema.WakeWriter {
+	return schema.NewWakeWriter(storage.Field(w.st.Store, wakeOf), slot)
+}
+
+func (w Writer) Stop() schema.StopWriter {
+	return schema.NewStopWriter(storage.Field(w.st.Store, wakeOf))
+}
 
 type Labelled interface{ Label() string }
 

@@ -6,13 +6,15 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(5))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(5))
 }
 
 type Microphone struct {

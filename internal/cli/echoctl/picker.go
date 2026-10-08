@@ -7,23 +7,37 @@ import (
 	"io"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
 )
 
-var ErrCancelled = errors.New("cancelled")
+var errNotRoot = errors.New(
+	"device: adbd is not running as root; write the boot image first (echoctl install --flash-only)",
+)
 
-func connect(ctx context.Context, out io.Writer, serial string) (*device.Device, error) {
-	target, err := resolveSerial(ctx, out, serial, device.List, "")
+func connect(ctx context.Context, out io.Writer, serial string) (*adb.Device, error) {
+	target, err := prompt.Serial(ctx, out, serial, adb.List, "")
 	if err != nil {
 		return nil, err
 	}
-	return device.Connect(target)
+	d, err := adb.Attach(target)
+	if err != nil {
+		return nil, err
+	}
+	root, err := d.IsRoot()
+	if err != nil {
+		return nil, err
+	}
+	if !root {
+		return nil, errNotRoot
+	}
+	return d, nil
 }
 
-func attach(ctx context.Context, out io.Writer, serial string) (*device.Device, error) {
+func attach(ctx context.Context, out io.Writer, serial string) (*adb.Device, error) {
 	for {
 		d, err := attachOnce(ctx, out, serial)
-		if !errors.Is(err, device.ErrUnreachable) || !isTerminal() {
+		if !errors.Is(err, adb.ErrUnreachable) || !prompt.IsTerminal() {
 			return d, err
 		}
 		if err := offerRecovery(ctx, out); err != nil {
@@ -34,14 +48,13 @@ func attach(ctx context.Context, out io.Writer, serial string) (*device.Device, 
 
 const noneOfThese = "None of these"
 
-func attachOnce(ctx context.Context, out io.Writer, serial string) (*device.Device, error) {
-	target, err := resolveSerial(ctx, out, serial, device.ListAny, noneOfThese)
+func attachOnce(ctx context.Context, out io.Writer, serial string) (*adb.Device, error) {
+	target, err := prompt.Serial(ctx, out, serial, adb.ListAny, noneOfThese)
 	if err != nil {
 		return nil, err
 	}
-	return device.AttachAny(target)
+	return adb.AttachAny(target)
 }
-
 func offerRecovery(ctx context.Context, out io.Writer) error {
 	fmt.Fprintf(out, "\n%s\n", styleTitle.Render("Cannot reach the device"))
 	fmt.Fprintf(out, "%s\n", styleDetail.Render(
@@ -67,57 +80,16 @@ func offerRecovery(ctx context.Context, out io.Writer) error {
 		}
 		select {
 		case <-ctx.Done():
-			return ErrCancelled
+			return prompt.ErrCanceled
 		case <-tick.C:
 		}
 	}
 }
 
-func listAny() []device.Info {
-	devices, err := device.ListAny()
+func listAny() []adb.Info {
+	devices, err := adb.ListAny()
 	if err != nil {
 		return nil
 	}
 	return devices
-}
-
-func resolveSerial(
-	ctx context.Context,
-	out io.Writer,
-	serial string,
-	list func() ([]device.Info, error),
-	other string,
-) (string, error) {
-	if serial != "" {
-		return serial, nil
-	}
-	if !isTerminal() {
-		return "", nil
-	}
-
-	devices, err := list()
-	if err != nil {
-		return "", err
-	}
-	if len(devices) == 0 {
-		return "", device.ErrUnreachable
-	}
-	return pickDevice(ctx, out, devices, other)
-}
-
-func pickDevice(
-	ctx context.Context,
-	out io.Writer,
-	devices []device.Info,
-	other string,
-) (string, error) {
-	chosen, err := choose(ctx, out, "Select a device", devices,
-		func(d device.Info) string { return fmt.Sprintf("%s  %s", d, d.Serial) }, other)
-	if err != nil {
-		return "", err
-	}
-	if chosen.Serial == "" {
-		return "", device.ErrUnreachable
-	}
-	return chosen.Serial, nil
 }

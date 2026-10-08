@@ -10,6 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ygelfand/libcountertop/pkg/display/panel"
+	"github.com/ygelfand/libcountertop/pkg/runtime/control/screencmd"
+
 	pages "github.com/ygelfand/echolocal/internal/feature/settings"
 	screens "github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/splash"
@@ -43,27 +46,7 @@ func panelCommands() (open, stack, ready *cobra.Command) {
 		Short: "The screens up, top first, and which are held",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			views := screens.Get().Stack()
-			if len(views) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "empty")
-				return nil
-			}
-			for i := len(views) - 1; i >= 0; i-- {
-				v := views[i]
-				title := ""
-				if p, ok := v.View.(*screens.Page); ok {
-					title = fmt.Sprintf(" %q", p.Title)
-				}
-				fmt.Fprintf(
-					cmd.OutOrStdout(),
-					"%d %T%s held=%v covers=%v\n",
-					i,
-					v.View,
-					title,
-					v.Held,
-					v.View.Covers(),
-				)
-			}
+			fmt.Fprintln(cmd.OutOrStdout(), strings.TrimRight(screencmd.Stack(screens.Get()), "\n"))
 			return nil
 		},
 	}
@@ -86,7 +69,7 @@ func panelCommands() (open, stack, ready *cobra.Command) {
 					fmt.Fprintln(cmd.OutOrStdout(), "screen")
 					return nil
 				}
-				if at, showing := display.Get().Showing(); showing && at < display.PriorityBoot {
+				if at, showing := display.Get().Showing(); showing && at < panel.PriorityBoot {
 					fmt.Fprintln(cmd.OutOrStdout(), shown(at))
 					return nil
 				}
@@ -100,17 +83,17 @@ func panelCommands() (open, stack, ready *cobra.Command) {
 	return open, stack, ready
 }
 
-func shown(at display.Priority) string {
+func shown(at panel.Priority) string {
 	switch at {
-	case display.PriorityDashboard:
+	case panel.PriorityDashboard:
 		return "dashboard"
-	case display.PrioritySetup:
+	case panel.PrioritySetup:
 		return "setup"
-	case display.PriorityUI:
+	case panel.PriorityUI:
 		return "screen"
-	case display.PriorityNotice:
+	case panel.PriorityNotice:
 		return "notice"
-	case display.PriorityAlert:
+	case panel.PriorityAlert:
 		return "alert"
 	}
 	return "boot"

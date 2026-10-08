@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
+	"github.com/ygelfand/echolocal/internal/logging"
 )
 
 func (c *Control) tree() *cobra.Command {
@@ -32,7 +35,7 @@ func telling() []*cobra.Command {
 		Args:      cobra.MaximumNArgs(1),
 		ValidArgs: []string{"debug", "info", "warn", "error"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			level, err := logLevel(args)
+			level, err := harness.LogLevel(&logging.Log.Level, args)
 			if err != nil {
 				return err
 			}

@@ -9,9 +9,12 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/go-esphome-device/api"
-	"github.com/ygelfand/libcountertop/pkg/hook"
-	zonepolicy "github.com/ygelfand/libcountertop/pkg/settings/timezone"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/ygelfand/libcountertop/pkg/hook"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+	zonepolicy "github.com/ygelfand/libcountertop/pkg/settings/timezone"
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -21,7 +24,7 @@ import (
 // The protocol has the device ask for the time and the client answer.
 
 func init() {
-	component.Register(component.Device, Get, component.Order(1))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(1))
 }
 
 const step = time.Second
@@ -123,7 +126,7 @@ func (t *Time) policy() *zonepolicy.Policy {
 	t.zoneOnce.Do(func() {
 		t.zonePolicy = zonepolicy.NewPolicy(
 			zonepolicy.PolicyOptions{
-				Read:   func() config.Time { return config.Get().Time },
+				Read:   func() schema.Time { return config.Get().Time },
 				Home:   func(s string) error { return config.Set().Time().Home(s) },
 				Chosen: func(s string) error { return config.Set().Time().Chosen(s) },
 			},

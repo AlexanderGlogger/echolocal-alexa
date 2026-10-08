@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -48,7 +49,7 @@ func installFirewallHook(r *run) (string, bool, error) {
 	return fmt.Sprintf("tcp/%d open via %s", layout.Port, layout.FirewallHook), false, nil
 }
 
-func applyFirewallRule(d *device.Device) error {
+func applyFirewallRule(d *adb.Device) error {
 	rule := fmt.Sprintf("INPUT -i wlan0 -p tcp --dport %d -j ACCEPT", layout.Port)
 	if _, code, err := d.ShellCode("iptables -C " + rule); err != nil {
 		return err

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ygelfand/echolocal/internal/android/logd"
+	"github.com/ygelfand/libcountertop/pkg/android/logd"
 )
 
 const socket = "/dev/socket/logdr"

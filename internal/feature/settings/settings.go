@@ -6,9 +6,12 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ygelfand/libcountertop/pkg/say"
-
 	gogui "github.com/go-gui-org/go-gui/gui"
+
+	shareddrawer "github.com/ygelfand/libcountertop/pkg/display/drawer"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -18,7 +21,12 @@ import (
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(36), component.Needs(board.Panel))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(36),
+		component.Needs(board.Panel),
+	)
 }
 
 type Settings struct{}
@@ -34,9 +42,9 @@ func Get() *Settings {
 
 		say.Use(config.Get().Screen.Language)
 
-		drawer.Get().Add(drawer.Entry{
+		drawer.Get().Add(shareddrawer.Entry{
 			Name:  func() string { return say.T("settings.title") },
-			Order: drawer.OrderSettings,
+			Order: shareddrawer.OrderSettings,
 			Glyph: func() string { return gogui.IconGear },
 			Open:  Open,
 		})
@@ -48,7 +56,7 @@ func (s *Settings) Name() string { return "settings" }
 
 func Open() { shell.Get().Push(root()) }
 
-var pages = map[string]func() *shell.Page{"settings": root}
+var pages = map[string]func() *sharedshell.Page{"settings": root}
 
 func OpenPage(name string) bool {
 	page, ok := pages[name]

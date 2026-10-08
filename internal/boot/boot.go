@@ -7,6 +7,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
+	"github.com/ygelfand/libcountertop/pkg/system/metrics"
+
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -16,10 +19,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/feature/voice"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/parts"
-	"github.com/ygelfand/echolocal/internal/service"
 	"github.com/ygelfand/echolocal/internal/update"
 )
 
@@ -29,7 +30,7 @@ func Run(ctx context.Context) error {
 	slog.Info("echod starting", "version", layout.Version, "board", b,
 		"pid", os.Getpid(), "uid", os.Getuid(), "context", selinuxContext())
 
-	_ = prop.Set(layout.StartedProp, fmt.Sprintf("%.2f", metrics.Uptime()))
+	_ = prop.Set(layout.StartedProp, fmt.Sprintf("%.2f", metrics.Reader{}.Uptime().Value))
 	_ = prop.Set(layout.StateProp, "starting")
 
 	component.Default().Use(b)

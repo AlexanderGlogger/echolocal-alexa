@@ -39,7 +39,7 @@ func newTestPlayer() *Player {
 
 func TestNothingAttachedPlaysTheQueueAlone(t *testing.T) {
 	p := newTestPlayer()
-	p.pending = []int16{100, 200, 300}
+	p.pending.Push([]int16{100, 200, 300})
 
 	got := played(t, p)
 
@@ -53,7 +53,7 @@ func TestNothingAttachedPlaysTheQueueAlone(t *testing.T) {
 
 func TestASourceIsSummedWithTheQueue(t *testing.T) {
 	p := newTestPlayer()
-	p.pending = []int16{100, 200}
+	p.pending.Push([]int16{100, 200})
 	p.Attach(&recorder{fill: 10})
 
 	got := played(t, p)
@@ -68,7 +68,7 @@ func TestASourceIsSummedWithTheQueue(t *testing.T) {
 
 func TestSummingTwoLoudThingsClampsInsteadOfWrapping(t *testing.T) {
 	p := newTestPlayer()
-	p.pending = []int16{math.MaxInt16 - 10}
+	p.pending.Push([]int16{math.MaxInt16 - 10})
 	p.Attach(&recorder{fill: 1000})
 
 	if got := played(t, p)[0]; got != math.MaxInt16 {

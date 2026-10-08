@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
 	"github.com/ygelfand/echolocal/internal/android/dns"
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/android/prop"
@@ -125,7 +127,11 @@ func Apply() { apply("boot setup", Actions) }
 type Setup struct{}
 
 func init() {
-	component.Register(component.Hardware, func() Setup { return Setup{} }, component.Order(1))
+	component.Register(
+		sharedcomponent.Hardware,
+		func() Setup { return Setup{} },
+		sharedcomponent.Order(1),
+	)
 }
 
 func (Setup) Name() string { return "platform setup" }

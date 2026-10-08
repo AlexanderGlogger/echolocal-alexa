@@ -3,10 +3,11 @@ package voice
 import (
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/libcountertop/pkg/inference/wake"
+	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
-	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
 func TestWakeWordsPreselectsTheDefault(t *testing.T) {
@@ -25,7 +26,7 @@ func TestWakeWordsPreselectsTheDefault(t *testing.T) {
 			models = append(models, wake.Model{ID: id, Phrase: id})
 		}
 
-		active := chosen(wanted(models, wakeword.Slots))
+		active := wakeslots.Advertised(wanted(models, wakeword.Slots))
 
 		switch {
 		case tc.want == "":

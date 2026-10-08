@@ -3,14 +3,11 @@
 package control
 
 import (
-	"fmt"
-	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/ygelfand/libcountertop/pkg/display/style"
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+	"github.com/ygelfand/libcountertop/pkg/runtime/control/screencmd"
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
@@ -19,342 +16,52 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/network"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
-	pages "github.com/ygelfand/echolocal/internal/feature/settings"
+	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
 	"github.com/ygelfand/echolocal/internal/feature/weather"
-	"github.com/ygelfand/echolocal/internal/ui/theme"
-	"github.com/ygelfand/echolocal/internal/ui/visual"
 )
 
-type setting struct {
-	name string
-	says func(config.Config) string
-	use  func(string) error
-}
+var boardSettings []func() []harness.Setting[config.Config]
 
-var boardSettings []func() []setting
-
-func settings() []setting {
-	out := screenSettings()
+func settings() []harness.Setting[config.Config] {
+	rows := harness.Map(screencmd.Rows(screencmd.Dependencies{
+		Clock:     dashboard.Get().Controls,
+		Idle:      idle.Get().Idle,
+		Visuals:   visuals.Get().Visuals,
+		Weather:   weather.Get().Weather,
+		Screen:    screen.Get().Screen,
+		Settings:  config.ScreenSection,
+		Shell:     shell.Get(),
+		MediaIdle: media.Get().SetIdle,
+		Marks:     privacy.Get().SetMarks,
+		Verify:    network.Get().SetVerify,
+	}), func(c config.Config) screencmd.State {
+		return screencmd.State{
+			Network: c.Network,
+			Clock:   c.Clock,
+			Idle:    c.Idle,
+			Screen:  c.Screen,
+			Visual:  c.Visual,
+			Weather: c.Weather,
+		}
+	})
+	rows = append(rows, harness.Setting[config.Config]{
+		Name:  "screen.visual.lift",
+		Field: "Microphone.VisualizerLift",
+		Read:  func(c config.Config) string { return strconv.Itoa(c.Microphone.VisualizerLift) },
+		Write: harness.Number(0, visuals.LiftMax, visuals.Get().SetLift),
+	})
 	for _, more := range boardSettings {
-		out = append(out, more()...)
+		rows = append(rows, more()...)
 	}
-	return out
-}
-
-func screenSettings() []setting {
-	c, i, v := dashboard.Get(), idle.Get(), visuals.Get()
-
-	return []setting{
-		{
-			"network.verify",
-			func(c config.Config) string { return onOff(c.Network.Verify) },
-			toggle(network.Get().SetVerify),
-		},
-		{
-			"clock.face",
-			func(c config.Config) string { return string(c.Clock.Face) },
-			choose(config.Faces(), c.SetFace),
-		},
-		{
-			"clock.position",
-			func(c config.Config) string { return string(c.Clock.Position) },
-			choose(config.Positions(), c.SetPosition),
-		},
-		{
-			"clock.size",
-			func(c config.Config) string { return string(c.Clock.Size) },
-			choose(config.Sizes(), c.SetSize),
-		},
-		{
-			"clock.color",
-			func(c config.Config) string { return string(c.Clock.Ink) },
-			choose(config.Inks(), c.SetInk),
-		},
-		{
-			"clock.date",
-			func(c config.Config) string { return onOff(c.Clock.Date) },
-			toggle(c.SetDate),
-		},
-		{
-			"clock.hours",
-			func(c config.Config) string { return string(c.Screen.Hours) },
-			choose(config.HourFormats(), c.SetHours),
-		},
-
-		{
-			"idle.after",
-			func(c config.Config) string { return string(c.Idle.After) },
-			choose(config.Delays(), i.SetAfter),
-		},
-		{
-			"idle.media",
-			func(c config.Config) string { return string(c.Idle.Media) },
-			choose(config.MediaDelays(), media.Get().SetIdle),
-		},
-		{
-			"idle.face",
-			func(c config.Config) string { return string(c.Idle.Face) },
-			choose(config.IdleFaces(), i.SetFace),
-		},
-		{
-			"idle.position",
-			func(c config.Config) string { return string(c.Idle.Position) },
-			choose(config.Positions(), i.SetPosition),
-		},
-		{
-			"idle.align",
-			func(c config.Config) string { return string(c.Idle.Align) },
-			choose(config.Aligns(), i.SetAlign),
-		},
-		{
-			"idle.size",
-			func(c config.Config) string { return string(c.Idle.Size) },
-			choose(config.Sizes(), i.SetSize),
-		},
-		{
-			"idle.visual1",
-			func(c config.Config) string { return orNone(c.Idle.First.Kind) },
-			idleKind(0),
-		},
-		{"idle.visual1.source", func(c config.Config) string { return string(c.Idle.First.Source) },
-			choose(config.Sources(), func(s config.Source) { i.SetSource(0, s) })},
-		{
-			"idle.visual2",
-			func(c config.Config) string { return orNone(c.Idle.Second.Kind) },
-			idleKind(1),
-		},
-		{
-			"idle.visual2.source",
-			func(c config.Config) string { return string(c.Idle.Second.Source) },
-			choose(config.Sources(), func(s config.Source) { i.SetSource(1, s) }),
-		},
-
-		{"screen.keyboard", func(c config.Config) string { return string(c.Screen.Keyboard) },
-			choose(config.KeyboardSizes(), pages.SetKeyboard)},
-		{"screen.theme", func(c config.Config) string { return c.Screen.Theme }, paint},
-		{
-			"screen.style",
-			func(c config.Config) string { return screen.Table().Row("style").Read(&c.Screen) },
-			func(v string) error { return screen.Get().Set("style", v) },
-		},
-		{
-			"screen.size",
-			func(c config.Config) string { return screen.Table().Row("size").Read(&c.Screen) },
-			func(v string) error { return screen.Get().Set("size", v) },
-		},
-		{
-			"screen.marks",
-			func(c config.Config) string { return onOff(c.Screen.Marks) },
-			toggle(privacy.Get().SetMarks),
-		},
-		{
-			"screen.visual",
-			func(c config.Config) string { return c.Visual.Kind },
-			choose(visual.Built(), v.SetKind),
-		},
-		{
-			"screen.visual.fps",
-			func(c config.Config) string { return strconv.Itoa(c.Visual.MaxFPS) },
-			fpsStep,
-		},
-		{
-			"screen.visual.seed",
-			func(c config.Config) string { return strconv.Itoa(c.Visual.Seed) },
-			number(0, visual.SeedMost, v.SetSeed),
-		},
-		{
-			"screen.visual.label",
-			func(c config.Config) string { return orNone(c.Visual.Label) },
-			words(v.SetLabel),
-		},
-		{
-			"screen.visual.lift",
-			func(c config.Config) string { return strconv.Itoa(c.Microphone.VisualizerLift) },
-			number(0, visuals.LiftMax, v.SetLift),
-		},
-
-		{
-			"weather.entity",
-			func(c config.Config) string { return orNone(c.Weather.Entity) },
-			words(weather.Get().SetEntity),
-		},
-		{
-			"weather.look",
-			func(c config.Config) string { return string(c.Weather.Look) },
-			choose(config.WeatherLooks(), weather.Get().SetLook),
-		},
-		{
-			"weather.dashboard",
-			func(c config.Config) string { return onOff(c.Weather.Dashboard) },
-			toggle(weather.Get().SetDashboard),
-		},
-		{
-			"weather.idle",
-			func(c config.Config) string { return onOff(c.Weather.Idle) },
-			toggle(weather.Get().SetIdle),
-		},
-		{
-			"weather.animate",
-			func(c config.Config) string { return onOff(c.Weather.Animate) },
-			toggle(weather.Get().SetAnimate),
-		},
-		{
-			"weather.themed",
-			func(c config.Config) string { return onOff(c.Weather.Themed) },
-			toggle(weather.Get().SetThemed),
-		},
-		{
-			"weather.position",
-			func(c config.Config) string { return string(c.Weather.Position) },
-			choose(config.Positions(), weather.Get().SetPosition),
-		},
-		{
-			"weather.align",
-			func(c config.Config) string { return string(c.Weather.Align) },
-			choose(config.Aligns(), weather.Get().SetAlign),
-		},
-		{
-			"weather.size",
-			func(c config.Config) string { return string(c.Weather.Size) },
-			choose(config.Sizes(), weather.Get().SetSize),
-		},
-	}
+	return rows
 }
 
 func setCommand() *cobra.Command {
-	return &cobra.Command{
+	return harness.Says(&cobra.Command{
 		Use:   "settings [name] [value...]",
 		Short: "List the screen's settings, read one, or change one",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			said, err := set(args)
-			if err != nil {
-				return err
-			}
-			fmt.Fprintln(cmd.OutOrStdout(), said)
-			return nil
-		},
-	}
+	}, set)
 }
 
-func set(args []string) (string, error) {
-	all := settings()
-	rows := make([]harness.Setting[config.Config], 0, len(all))
-	for _, s := range all {
-		rows = append(
-			rows,
-			harness.Setting[config.Config]{Name: s.name, Read: s.says, Write: s.use},
-		)
-	}
-	return harness.Settings(config.Get, rows, args)
-}
-
-func idleKind(slot int) func(string) error {
-	return func(s string) error {
-		if strings.EqualFold(s, "none") || s == "" {
-			idle.Get().SetKind(slot, "")
-			return nil
-		}
-		for _, k := range visual.Built() {
-			if strings.EqualFold(string(k), s) || strings.EqualFold(k.Label(), s) {
-				idle.Get().SetKind(slot, string(k))
-				return nil
-			}
-		}
-		return fmt.Errorf(
-			"want none or one of %s",
-			strings.Join(config.Labels(visual.Built()), ", "),
-		)
-	}
-}
-
-func choose[T config.Labelled](values []T, use func(T)) func(string) error {
-	return func(s string) error {
-		for _, v := range values {
-			if strings.EqualFold(v.Label(), s) || strings.EqualFold(fmt.Sprint(v), s) {
-				use(v)
-				return nil
-			}
-		}
-		return fmt.Errorf("want one of %s", strings.Join(config.Labels(values), ", "))
-	}
-}
-
-func words(use func(string)) func(string) error {
-	return func(s string) error {
-		use(s)
-		return nil
-	}
-}
-
-func orNone(s string) string {
-	if s == "" {
-		return "(none)"
-	}
-	return s
-}
-
-func onOff(on bool) string {
-	if on {
-		return "on"
-	}
-	return "off"
-}
-
-func toggle(use func(bool)) func(string) error {
-	return func(s string) error {
-		switch strings.ToLower(s) {
-		case "on", "true", "yes", "1":
-			use(true)
-		case "off", "false", "no", "0":
-			use(false)
-		default:
-			return fmt.Errorf("want on or off")
-		}
-		return nil
-	}
-}
-
-func number(lo, hi int, use func(int)) func(string) error {
-	return func(s string) error {
-		v, err := strconv.Atoi(s)
-		if err != nil || v < lo || v > hi {
-			return fmt.Errorf("want a number from %d to %d", lo, hi)
-		}
-		use(v)
-		return nil
-	}
-}
-
-func fpsStep(s string) error {
-	v, err := strconv.Atoi(s)
-	if err != nil || !slices.Contains(config.MaxFPSSteps, v) {
-		return fmt.Errorf("want one of %v", config.MaxFPSSteps)
-	}
-	visuals.Get().SetMaxFPS(v)
-	return nil
-}
-
-func paint(s string) error {
-	if strings.EqualFold(s, style.ThemeDefault) {
-		if err := config.Set().Screen().Theme(style.ThemeDefault); err != nil {
-			return err
-		}
-		screen.Get().Use(style.ThemeDefault)
-		return nil
-	}
-	for _, t := range theme.All {
-		if strings.EqualFold(t.Name, s) {
-			if err := config.Set().Screen().Theme(t.Name); err != nil {
-				return err
-			}
-			screen.Get().Use(t.Name)
-			return nil
-		}
-	}
-	var names []string
-	for _, t := range theme.All {
-		names = append(names, t.Name)
-	}
-	return fmt.Errorf("want one of %s", strings.Join(names, ", "))
-}
+func set(args []string) (string, error) { return harness.Settings(config.Get, settings(), args) }

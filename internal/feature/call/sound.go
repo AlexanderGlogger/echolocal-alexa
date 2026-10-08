@@ -5,6 +5,8 @@ package call
 import (
 	"context"
 
+	"github.com/ygelfand/libcountertop/pkg/audio/tone"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
@@ -26,6 +28,6 @@ func (device) Claim(name string, run func(context.Context) error) {
 }
 func (device) Sounding()    {}
 func (device) Duck(on bool) { speaker.Sound().Backgrounds().Duck(on) }
-func (device) Chime(level float64, notes ...speaker.Note) {
+func (device) Chime(level float64, notes ...tone.Note) {
 	speaker.Sound().Interject(func(p *speaker.Player) { p.Chime(level, notes...) })
 }

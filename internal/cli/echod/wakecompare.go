@@ -8,8 +8,9 @@ import (
 
 	"github.com/zserge/microwakeword"
 
+	"github.com/ygelfand/libcountertop/pkg/inference/wake"
+
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
-	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
 type variant struct {

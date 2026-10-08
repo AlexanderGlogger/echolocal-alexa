@@ -5,6 +5,8 @@ package settings
 import (
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
+	sharedvisual "github.com/ygelfand/libcountertop/pkg/display/visual"
 	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/component"
@@ -21,7 +23,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/ui/visual"
 )
 
-func root() *shell.Page {
+func root() *sharedshell.Page {
 	return sharedsettings.RootPage(sharedsettings.RootDependencies{
 		Network:      wifi.Get(),
 		Screen:       config.ScreenSection,
@@ -31,10 +33,10 @@ func root() *shell.Page {
 		Shell:        shell.Get(),
 		Version:      layout.Version,
 		Volume:       sharedvolume.Steps(media.Get(), media.VolumeSteps),
-		NetworkPage:  func() shell.View { return networkPage() },
-		FeaturesPage: func() shell.View { return featuresPage() },
-		VolumePage:   func() shell.View { return volume.Page() },
-		AboutPage:    func() shell.View { return aboutPage() },
+		NetworkPage:  func() sharedshell.View { return networkPage() },
+		FeaturesPage: func() sharedshell.View { return featuresPage() },
+		VolumePage:   func() sharedshell.View { return volume.Page() },
+		AboutPage:    func() sharedshell.View { return aboutPage() },
 		Sections: func() []sharedsettings.Section {
 			out := make([]sharedsettings.Section, 0, len(sections))
 			for _, s := range sections {
@@ -43,7 +45,7 @@ func root() *shell.Page {
 					sharedsettings.Section{
 						Label: s.label,
 						Glyph: s.glyph,
-						Page:  func() shell.View { return s.page() },
+						Page:  func() sharedshell.View { return s.page() },
 					},
 				)
 			}
@@ -55,23 +57,13 @@ func root() *shell.Page {
 type section struct {
 	label string
 	glyph string
-	page  func() *shell.Page
+	page  func() *sharedshell.Page
 }
 
 var sections []section
 
-var fpsIndex = sharedsettings.FpsIndex
-
-var fpsLevel = sharedsettings.FpsLevel
-
-var fpsSnap = sharedsettings.FpsSnap
-
-var seedOf = sharedsettings.SeedOf
-
-var seedLevel = sharedsettings.SeedLevel
-
-func visualPage() *shell.Page {
-	return visualPicker(say.T("debug.visuals"), "", nil, nil, func(k visual.Kind) {
+func visualPage() *sharedshell.Page {
+	return visualPicker(say.T("debug.visuals"), "", nil, nil, func(k sharedvisual.Kind) {
 		visuals.Get().SetKind(k)
 		shell.Get().Push(visuals.Get().View())
 	})
@@ -81,9 +73,9 @@ func visualPicker(
 	title, empty string,
 	none func(),
 	chosen func() string,
-	pick func(visual.Kind),
-) *shell.Page {
-	return sharedsettings.VisualPicker(title, empty, none, chosen, pick, visual.ThumbnailFit)
+	pick func(sharedvisual.Kind),
+) *sharedshell.Page {
+	return sharedsettings.VisualPicker(title, empty, none, chosen, pick, visual.Thumbs().Fit)
 }
 
 func uiSize() string {
@@ -93,7 +85,7 @@ func uiSize() string {
 	return component.Board().UISize
 }
 
-func networkPage() *shell.Page {
+func networkPage() *sharedshell.Page {
 	return sharedsettings.NetworkPage(func() sharedsettings.NetworkState {
 		c := sharedsettings.NetworkState{
 			SSID:    wifi.Get().Network(),
@@ -109,7 +101,7 @@ func networkPage() *shell.Page {
 	}, network.Get().SetVerify)
 }
 
-func aboutPage() *shell.Page {
+func aboutPage() *sharedshell.Page {
 	return sharedsettings.AboutPage(func() sharedsettings.About {
 		return sharedsettings.About{
 			Name:    config.Get().Device.Name,
@@ -127,13 +119,3 @@ func address() string {
 	}
 	return l.Address.IP.String()
 }
-
-// Below 0.5 a model fires on anything; at 1 nothing reaches it.
-const (
-	leastSure = 50
-	mostSure  = 99
-)
-
-var sensitivity = sharedsettings.Sensitivity
-
-func setThreshold(slot int) func(int) { return assistantPages().Threshold(slot) }

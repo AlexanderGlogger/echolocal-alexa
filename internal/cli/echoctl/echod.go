@@ -7,7 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/host/profile"
 	"github.com/ygelfand/echolocal/internal/update"
 )
@@ -15,7 +16,7 @@ import (
 func resolveEchod(
 	ctx context.Context,
 	out io.Writer,
-	d *device.Device,
+	d *adb.Device,
 	p profile.Profile,
 	manifest, path string,
 ) ([]byte, string, error) {
@@ -51,7 +52,7 @@ func resolveEchod(
 	return fetchImage(ctx, out, title, b.Resolve)
 }
 
-func deviceArch(d *device.Device) (string, error) {
+func deviceArch(d *adb.Device) (string, error) {
 	abi, err := d.Getprop("ro.product.cpu.abi")
 	if err != nil {
 		return "", err

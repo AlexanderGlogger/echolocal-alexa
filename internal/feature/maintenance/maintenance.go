@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/feature/recording"
 )
@@ -12,7 +14,7 @@ import (
 const Period = 5 * time.Minute
 
 func init() {
-	component.Register(component.Device, Get, component.Order(80))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(80))
 }
 
 var (

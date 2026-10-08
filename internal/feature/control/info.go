@@ -5,9 +5,10 @@ import (
 
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
+	"github.com/ygelfand/libcountertop/pkg/system/metrics"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -21,6 +22,6 @@ func deviceInfo() harness.DeviceInfo {
 		Name:    d.Name,
 		Address: d.Addr,
 		Model:   d.Board.Model,
-		Uptime:  time.Duration(metrics.Uptime() * float64(time.Second)),
+		Uptime:  time.Duration(metrics.Reader{}.Uptime().Value * float64(time.Second)),
 	}
 }

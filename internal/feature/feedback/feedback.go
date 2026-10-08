@@ -5,7 +5,9 @@ import (
 	"time"
 
 	esphome "github.com/ygelfand/go-esphome-device"
+
 	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -16,7 +18,7 @@ import (
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(15))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(15))
 }
 
 const failureFlash = 1500 * time.Millisecond

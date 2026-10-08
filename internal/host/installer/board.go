@@ -1,12 +1,13 @@
 package installer
 
 import (
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/board"
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/host/sysimg"
 )
 
-func BoardOf(d *device.Device) board.Board {
+func BoardOf(d *adb.Device) board.Board {
 	device, err := d.Getprop("ro.product.device")
 	if err != nil {
 		return board.Biscuit

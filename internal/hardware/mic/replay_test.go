@@ -8,6 +8,7 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/audio/aec"
 
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
 )
 
@@ -33,33 +34,23 @@ func TestReplayPipeline(t *testing.T) {
 		ref[i] = int16(binary.LittleEndian.Uint16(pcm[6*i+2:]))
 	}
 
-	taps := func(n int) func() *aec.MDF {
-		return func() *aec.MDF {
-			f, err := aec.NewMDF(speexFrame, n, Rate)
-			if err != nil {
-				t.Fatal(err)
-			}
-			return f
-		}
-	}
-
 	variants := []struct {
 		name                          string
 		cancel, denoise, frozen, cold bool
-		filter                        func() *aec.MDF
+		taps                          int
 		raw                           bool
 	}{
-		{"device", true, true, false, false, nil, false},
-		{"no-denoise", true, false, false, false, nil, false},
-		{"frozen", true, true, true, false, nil, false},
-		{"frozen-no-denoise", true, false, true, false, nil, false},
-		{"no-cancel", false, true, false, false, nil, false},
-		{"cold", true, true, false, true, nil, false},
-		{"cold-no-denoise", true, false, false, true, nil, false},
-		{"raw-cold", true, false, false, true, nil, true},
-		{"4096", true, true, false, false, taps(4096), false},
-		{"4096-cold", true, true, false, true, taps(4096), false},
-		{"4096-raw-cold", true, false, false, true, taps(4096), true},
+		{"device", true, true, false, false, 0, false},
+		{"no-denoise", true, false, false, false, 0, false},
+		{"frozen", true, true, true, false, 0, false},
+		{"frozen-no-denoise", true, false, true, false, 0, false},
+		{"no-cancel", false, true, false, false, 0, false},
+		{"cold", true, true, false, true, 0, false},
+		{"cold-no-denoise", true, false, false, true, 0, false},
+		{"raw-cold", true, false, false, true, 0, true},
+		{"4096", true, true, false, false, 4096, false},
+		{"4096-cold", true, true, false, true, 4096, false},
+		{"4096-raw-cold", true, false, false, true, 4096, true},
 	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -69,9 +60,9 @@ func TestReplayPipeline(t *testing.T) {
 		s := New()
 		s.mixer = Center{}
 		s.cancelling = v.cancel
-		s.leveling.Store(!v.raw)
-		if v.filter != nil {
-			s.cancel = &canceller{filter: v.filter()}
+		s.SetLeveling(!v.raw)
+		if v.taps != 0 {
+			s.cancel = newCanceller(v.taps)
 		}
 		suppressor := func() *aec.Preprocessor {
 			if !v.denoise {
@@ -88,7 +79,8 @@ func TestReplayPipeline(t *testing.T) {
 				break
 			}
 			if pass == 1 {
-				s.leveler = newLeveler()
+				s.Leveler = newLeveler(config.Get().Microphone)
+				s.SetLeveling(!v.raw)
 				s.suppress = suppressor()
 				s.Freeze(v.frozen)
 			}

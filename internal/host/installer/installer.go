@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/board"
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/host/profile"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
@@ -82,7 +83,7 @@ var restartSteps = []step{
 }
 
 type run struct {
-	d   *device.Device
+	d   *adb.Device
 	cfg Config
 
 	ctx context.Context
@@ -94,17 +95,17 @@ type run struct {
 	reboot bool
 }
 
-func Install(ctx context.Context, d *device.Device, cfg Config, report Reporter) (bool, error) {
+func Install(ctx context.Context, d *adb.Device, cfg Config, report Reporter) (bool, error) {
 	r := &run{d: d, cfg: cfg, ctx: ctx}
 	err := execute(ctx, steps, r, report)
 	return r.reboot, err
 }
 
-func FlashBoot(ctx context.Context, d *device.Device, cfg Config, report Reporter) error {
+func FlashBoot(ctx context.Context, d *adb.Device, cfg Config, report Reporter) error {
 	return execute(ctx, flashSteps, &run{d: d, cfg: cfg, ctx: ctx}, report)
 }
 
-func Restart(ctx context.Context, d *device.Device, report Reporter) error {
+func Restart(ctx context.Context, d *adb.Device, report Reporter) error {
 	return execute(ctx, restartSteps, &run{d: d}, report)
 }
 

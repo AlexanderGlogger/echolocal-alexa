@@ -4,6 +4,7 @@ package settings
 
 import (
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/call"
@@ -17,7 +18,7 @@ func init() {
 	})
 }
 
-func callsPage() *shell.Page { return callPages().Calls() }
+func callsPage() *sharedshell.Page { return callPages().Calls() }
 
 func callPages() *sharedsettings.CallPages {
 	return sharedsettings.NewCallPages(

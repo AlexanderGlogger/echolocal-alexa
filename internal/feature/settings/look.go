@@ -14,7 +14,7 @@ func lookPages() *sharedsettings.LookPages {
 		sharedsettings.LookDependencies{
 			Preferences: preferences(),
 			Shell:       shell.Get(),
-			Thumbnail:   visual.ThumbnailFit,
+			Thumbnail:   visual.Thumbs().Fit,
 		},
 	)
 }

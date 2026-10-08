@@ -1,12 +1,16 @@
 package config
 
-import "github.com/ygelfand/echolocal/internal/defaults"
+import (
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+
+	"github.com/ygelfand/echolocal/internal/defaults"
+)
 
 type Microphone struct {
 	Muted     bool `json:"muted"`
 	LEDBright bool `json:"led_bright"`
 
-	MuteSound Tone `json:"mute_sound"`
+	MuteSound schema.Chime `json:"mute_sound"`
 
 	Gain int `json:"gain"`
 
@@ -24,7 +28,7 @@ type Microphone struct {
 const (
 	DefaultMuted     = false
 	DefaultLEDBright = true
-	DefaultMuteSound = ToneMuteSwitch
+	DefaultMuteSound = schema.ChimeMuteSwitch
 
 	DefaultMixing = MixCenter
 
@@ -62,7 +66,7 @@ func (w MicrophoneWriter) LEDBright(v bool) error {
 	return w.st.Update(func(c *Config) { c.Microphone.LEDBright = v })
 }
 
-func (w MicrophoneWriter) MuteSound(v Tone) error {
+func (w MicrophoneWriter) MuteSound(v schema.Chime) error {
 	return w.st.Update(func(c *Config) { c.Microphone.MuteSound = v })
 }
 

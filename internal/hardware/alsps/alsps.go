@@ -10,21 +10,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
+	"github.com/ygelfand/libcountertop/pkg/system/metrics"
+
 	"github.com/ygelfand/echolocal/internal/lib/input"
 )
 
 var current atomic.Pointer[Sensor]
 
-func init() {
-	metrics.Ambient = func() metrics.Reading {
-		s := current.Load()
-		if s == nil {
-			return metrics.Reading{}
-		}
-		lux, ok := s.Lux()
-		return metrics.Reading{Value: lux, Known: ok}
+func Ambient() metrics.Reading {
+	s := current.Load()
+	if s == nil {
+		return metrics.Reading{}
 	}
+	lux, ok := s.Lux()
+	return metrics.Reading{Value: lux, Known: ok}
 }
 
 const (

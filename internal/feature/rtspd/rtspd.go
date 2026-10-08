@@ -2,35 +2,43 @@ package rtspd
 
 import (
 	"log/slog"
-	"net"
-	"strconv"
 	"sync"
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	"github.com/ygelfand/libcountertop/pkg/camera/live"
+	"github.com/ygelfand/libcountertop/pkg/camera/onvif"
+	camerartspd "github.com/ygelfand/libcountertop/pkg/camera/rtspd"
+	"github.com/ygelfand/libcountertop/pkg/media/rtsp"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
+	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
+	"github.com/ygelfand/echolocal/internal/feature/vision"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
-	"github.com/ygelfand/echolocal/internal/lib/rtsp"
+	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-const Port = 8554
-
-var paths = [...]string{"main", "sub"}
+const (
+	Port      = 8554
+	ONVIFPort = 8000
+)
 
 func init() {
-	component.Register(component.Device, Get, component.Order(70), component.Needs(board.Camera))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(70),
+		component.Needs(board.Camera),
+	)
 }
 
 type Server struct {
-	sw *esphome.Switch
-
-	mu    sync.Mutex
-	srv   *rtsp.Server
-	pumps [len(paths)]*pump
-	desc  *describer
+	sw  *esphome.Switch
+	srv *camerartspd.Server
 }
 
 var (
@@ -40,11 +48,42 @@ var (
 
 func Get() *Server {
 	once.Do(func() {
-		shared = &Server{}
+		shared = &Server{srv: camerartspd.New(camerartspd.Options{
+			Port:     Port,
+			Identity: rtsp.Identity{Name: "EchoLocal", CNAMEPrefix: "echolocal-"},
+			Source:   livecam.Get().Sessions(),
+			Helper:   "echolocal-camera",
+			Served:   livecam.Get().Served,
+			FPS:      live.FPS,
+			Bitrate:  livecam.Get().Bitrate,
+			Allowed:  func() bool { return !buttons.Get().Covered() },
+			ONVIF:    describe,
+		})}
 		shared.build()
-		livecam.StreamsChanged.Listen(func([]int) { shared.reload() })
+		livecam.Get().StreamsChanged.Listen(func([]int) { shared.reload() })
 	})
 	return shared
+}
+
+func describe() onvif.Config {
+	dev := config.Get().Device
+	serial, _ := prop.Get("ro.serialno")
+	if serial == "" {
+		serial = dev.Name
+	}
+	return onvif.Config{
+		Port: ONVIFPort,
+		Device: onvif.Device{
+			Manufacturer: layout.Manufacturer,
+			Model:        dev.Board.Model,
+			Firmware:     layout.Version,
+			Serial:       serial,
+			Hardware:     dev.Board.Model,
+			Name:         dev.Name,
+		},
+		Hardware: "EchoLocal",
+		Snapshot: vision.Get().Still,
+	}
 }
 
 func (s *Server) Name() string { return "rtsp" }
@@ -54,7 +93,7 @@ func (s *Server) Entities() []esphome.Entity { return []esphome.Entity{s.sw} }
 func (s *Server) Restore(cfg config.Config) {
 	s.sw.Set(cfg.RTSP.Enabled)
 	if cfg.RTSP.Enabled {
-		s.start()
+		s.srv.Start()
 	}
 }
 
@@ -72,9 +111,9 @@ func (s *Server) SetEnabled(on bool) {
 		slog.Error("saving a setting failed", "setting", s.sw.ObjectID, "err", err)
 	}
 	if on {
-		s.start()
+		s.srv.Start()
 	} else {
-		s.stop()
+		s.srv.Stop()
 	}
 }
 
@@ -82,60 +121,6 @@ func (s *Server) reload() {
 	if !config.Get().RTSP.Enabled {
 		return
 	}
-	s.stop()
-	s.start()
-}
-
-func (s *Server) start() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.srv != nil {
-		return
-	}
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(Port))
-	if err != nil {
-		slog.Error("the rtsp server could not listen", "port", Port, "err", err)
-		return
-	}
-	srv := rtsp.NewServer()
-	for _, i := range served() {
-		path := paths[i]
-		st := rtsp.NewStream()
-		p := &pump{
-			at:      i,
-			stream:  st,
-			allowed: func() bool { return !buttons.Get().Covered() },
-		}
-		st.OnDemand = p.demand
-		s.pumps[i] = p
-		srv.Handle(path, st)
-	}
-	s.srv = srv
-	s.desc = describe()
-	go func() {
-		if err := srv.Serve(ln); err != nil {
-			slog.Warn("the rtsp server stopped", "err", err)
-		}
-	}()
-	for _, i := range served() {
-		slog.Info("rtsp serving", "url", "rtsp://<device>:"+strconv.Itoa(Port)+"/"+paths[i])
-	}
-}
-
-func (s *Server) stop() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.srv == nil {
-		return
-	}
-	_ = s.srv.Close()
-	s.srv = nil
-	s.desc.close()
-	s.desc = nil
-	for i, p := range s.pumps {
-		if p != nil {
-			p.halt()
-		}
-		s.pumps[i] = nil
-	}
+	s.srv.Stop()
+	s.srv.Start()
 }

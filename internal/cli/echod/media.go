@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ygelfand/libcountertop/pkg/audio/sound"
+
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
@@ -51,8 +53,7 @@ func newMediaCmd() *cobra.Command {
 			time.Sleep(1500 * time.Millisecond)
 
 			out := cmd.OutOrStdout()
-			sound := speaker.NewDriver(p)
-			player := media.NewStream(sound, p, func() {})
+			player := media.NewStream(sound.NewDriver(p), p, func() {})
 
 			player.Play(args[0])
 
@@ -82,7 +83,7 @@ func newMediaCmd() *cobra.Command {
 				fmt.Fprintf(out, "queued %5d frames, %d seams\n", p.Queued(), p.Splices())
 			}
 
-			time.Sleep(speaker.HardwareTail)
+			time.Sleep(sound.HardwareTail)
 			fmt.Fprintf(out, "finished, %d seams\n", p.Splices())
 			return nil
 		},

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ygelfand/echolocal/internal/lib/alsa"
+	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
 )
 
 // The playback codec accepts one format only.
@@ -44,7 +44,7 @@ func newPlayCmd() *cobra.Command {
 			p, err := alsa.OpenPlayback(card, device, alsa.Config{
 				Channels:   playChannels,
 				Rate:       playRate,
-				Format:     alsa.FormatS16_LE,
+				Format:     alsa.FormatS16LE,
 				Bits:       playBits,
 				PeriodSize: playPeriod,
 				Periods:    playPeriods,

@@ -6,12 +6,14 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 )
 
 func init() {
-	component.Register(component.Device, Get)
+	component.Register(sharedcomponent.Device, Get)
 }
 
 const (

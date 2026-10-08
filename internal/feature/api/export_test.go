@@ -1,3 +1,3 @@
 package api
 
-var SubDevices = subDevices
+var Devices = devices

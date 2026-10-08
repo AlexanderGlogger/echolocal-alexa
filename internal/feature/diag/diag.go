@@ -8,8 +8,13 @@ import (
 	"time"
 
 	esphome "github.com/ygelfand/go-esphome-device"
+
+	"github.com/ygelfand/libcountertop/pkg/audio/upsample"
+	sharedwake "github.com/ygelfand/libcountertop/pkg/inference/wake"
 	netaddress "github.com/ygelfand/libcountertop/pkg/network/address"
 	"github.com/ygelfand/libcountertop/pkg/runtime/collector"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/system/metrics"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/android/setup"
@@ -17,7 +22,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/bluetooth"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
-	"github.com/ygelfand/echolocal/internal/hardware/metrics"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -25,9 +29,12 @@ import (
 )
 
 func init() {
-	component.Register(component.Network, Get, component.Order(90))
+	component.Register(sharedcomponent.Network, Get, sharedcomponent.Order(90))
 }
 
+var Ambient func() metrics.Reading
+
+// mtktscpu is the CPU, mtktswmt the wifi and Bluetooth combo chip.
 const (
 	cpuZone   = "mtktscpu"
 	radioZone = "mtktswmt"
@@ -39,9 +46,8 @@ const adbPort = 5555
 type Diag struct {
 	testPlayback *esphome.Button
 
-	cached *esphome.Sensor
-	free   *esphome.Sensor
-	purge  *esphome.Button
+	cache *sharedwake.CacheEntities
+	free  *esphome.Sensor
 
 	temperature *esphome.Sensor
 	radioTemp   *esphome.Sensor
@@ -103,13 +109,13 @@ func Get() *Diag {
 func (d *Diag) Name() string { return "diagnostics" }
 
 func (d *Diag) Entities() []esphome.Entity {
-	return []esphome.Entity{
-		d.cached, d.free, d.purge,
+	return append(d.cache.Entities(), []esphome.Entity{
+		d.free,
 		d.temperature, d.radioTemp, d.cores, d.coresOnline, d.load, d.memory, d.lux,
 		d.roomLevel, d.roomFloor,
 		d.adb, d.ip, d.color, d.boardName, d.signal, d.rxRate, d.txRate, d.ads,
 		d.testPlayback, d.interval, d.minCores,
-	}
+	}...)
 }
 
 func (d *Diag) collector() {
@@ -186,7 +192,7 @@ func (d *Diag) playback() {
 		},
 		OnPress: func() {
 			slog.Info("test playback", "resampling", spk.Resampling(), "step", spk.Step())
-			spk.PlayVoice(speaker.VoiceSweep())
+			spk.PlayVoice(upsample.Sweep())
 		},
 	}
 }
@@ -281,17 +287,7 @@ func (d *Diag) identity() {
 
 // The protocol carries a state as a float32, exact in bytes only to 16 MB.
 func (d *Diag) storage() {
-	d.cached = &esphome.Sensor{
-		Base: esphome.Base{
-			ObjectID: "cached_data",
-			Name:     "Cached data",
-			Icon:     "mdi:cached",
-			Category: esphome.CategoryDiagnostic,
-		},
-		Unit:        "kB",
-		DeviceClass: "data_size",
-		StateClass:  esphome.StateClassMeasurement,
-	}
+	d.cache = wake.Lib().CacheEntities(inUse)
 	d.free = &esphome.Sensor{
 		Base: esphome.Base{
 			ObjectID: "free_space",
@@ -302,20 +298,6 @@ func (d *Diag) storage() {
 		Unit:        "kB",
 		DeviceClass: "data_size",
 		StateClass:  esphome.StateClassMeasurement,
-	}
-
-	d.purge = &esphome.Button{
-		Base: esphome.Base{
-			ObjectID: "purge_cache",
-			Name:     "Purge cache",
-			Icon:     "mdi:delete-sweep",
-			Category: esphome.CategoryDiagnostic,
-		},
-		OnPress: func() {
-			gone, freed := wake.Lib().Purge(inUse())
-			slog.Info("cache purged", "models", gone, "bytes", freed)
-			d.Measure()
-		},
 	}
 }
 
@@ -420,7 +402,7 @@ func (d *Diag) hardware() {
 	switch {
 	case d.luxPath != "":
 		slog.Info("light sensor", "at", d.luxPath)
-	case metrics.Ambient != nil:
+	case Ambient != nil:
 		slog.Info("light sensor", "at", "alsps")
 	default:
 		slog.Warn("no light sensor found")
@@ -437,8 +419,7 @@ func (d *Diag) hardware() {
 }
 
 func (d *Diag) Measure() {
-	_, cached := wake.Cached(wake.Lib().Dir(), inUse())
-	d.cached.Set(float32(cached / 1024))
+	d.cache.Measure()
 
 	free, err := metrics.Free(layout.StateDir)
 	if err != nil {
@@ -525,7 +506,12 @@ func (d *Diag) board() {
 	available, _ := r.Memory()
 	set(d.memory, available)
 
-	set(d.lux, r.Lux(d.luxPath))
+	switch {
+	case d.luxPath != "":
+		set(d.lux, r.Lux(d.luxPath))
+	case Ambient != nil:
+		set(d.lux, Ambient())
+	}
 }
 
 func reading(temps map[string]float64, zone string) metrics.Reading {
@@ -539,14 +525,4 @@ func set(s *esphome.Sensor, r metrics.Reading) {
 	}
 }
 
-func inUse() []string {
-	saved := config.Get().Wake
-
-	var ids []string
-	for slot := range wakeword.Slots {
-		if id := saved.Slot(slot).ID; id != "" {
-			ids = append(ids, id)
-		}
-	}
-	return ids
-}
+func inUse() []string { return config.Get().Wake.IDs(wakeword.Slots) }

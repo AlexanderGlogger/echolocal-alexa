@@ -11,10 +11,11 @@ func TestRescalingWhatIsQueuedNeverPlaysSilence(t *testing.T) {
 
 	p := &Player{}
 	p.volume.Store(math.Float32bits(1))
-	p.pending = make([]int16, period*Channels*periods)
-	for i := range p.pending {
-		p.pending[i] = 1000
+	queued := make([]int16, period*Channels*periods)
+	for i := range queued {
+		queued[i] = 1000
 	}
+	p.pending.Push(queued)
 
 	ducked := make(chan struct{})
 	go func() {

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
+
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/lib/alsa"
 )
 
 const (
@@ -64,6 +65,6 @@ func SetGain(db int) error {
 	}
 	applyGain(db)
 
-	Get().leveler.atGain(db)
+	Get().SetInputGain(db)
 	return nil
 }

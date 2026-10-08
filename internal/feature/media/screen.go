@@ -5,9 +5,9 @@ package media
 import (
 	"sync"
 
-	gogui "github.com/go-gui-org/go-gui/gui"
 	sharedcard "github.com/ygelfand/libcountertop/pkg/display/mediacard"
-	"github.com/ygelfand/libcountertop/pkg/say"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -27,24 +27,15 @@ func card() *sharedcard.Card {
 	})
 	return theCard
 }
-func Page() shell.View { return card().Page() }
-func Showing() bool    { return shell.Get().Top() == Page() }
-func onRail() {
-	drawer.Get().
-		Add(drawer.Entry{Name: func() string { return say.T("rail.media") }, Order: drawer.OrderPlayer, Glyph: func() string { return gogui.IconMusic }, Open: func() {
-			if now := Get().Now(); now.Playing || now.Paused {
-				card().Open()
-				return
-			}
-			shell.Get().Push(Page())
-		}})
-}
+func Page() sharedshell.View { return card().Page() }
+func Showing() bool          { return shell.Get().Top() == Page() }
+func onRail()                { drawer.Get().Add(card().Rail()) }
 
 func init() {
 	component.Register(
-		component.Device,
+		sharedcomponent.Device,
 		func() *sharedcard.Card { c := card(); onRail(); Get().Begun.Listen(c.Began); return c },
-		component.Order(39),
+		sharedcomponent.Order(39),
 		component.Needs(board.Panel),
 	)
 }

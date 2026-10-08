@@ -2,35 +2,39 @@ package splash
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	bootview "github.com/ygelfand/libcountertop/pkg/display/boot"
+	"github.com/ygelfand/libcountertop/pkg/display/panel"
 	"github.com/ygelfand/libcountertop/pkg/display/style"
+	"github.com/ygelfand/libcountertop/pkg/display/theme"
+	"github.com/ygelfand/libcountertop/pkg/display/ui"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
-	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	"github.com/ygelfand/echolocal/internal/ui"
+	hwtouch "github.com/ygelfand/echolocal/internal/hardware/touch"
+	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/ui/reveal"
-	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
 func init() {
-	component.Register(component.Hardware, Get, component.Order(5), component.Needs(board.Panel))
+	component.Register(
+		sharedcomponent.Hardware,
+		Get,
+		sharedcomponent.Order(5),
+		component.Needs(board.Panel),
+	)
 }
 
-const frame = startup.Frame
-
 type Splash struct {
-	hold     *display.Claim
+	hold     *panel.Claim
 	finished atomic.Bool
 }
 
@@ -47,8 +51,8 @@ func (s *Splash) Name() string { return "splash" }
 
 func (s *Splash) Start(context.Context) error {
 	s.finished.Store(false)
-	s.hold = display.Get().Claim(display.PriorityBoot)
-	s.hold.Show(func(p *display.Panel) error {
+	s.hold = display.Get().Claim(panel.PriorityBoot)
+	s.hold.Show(func(p *panel.Panel) error {
 		surface := ui.Of(p)
 		w, h := surface.Size()
 		ui.Clear(surface, ui.Rect{W: w, H: h})
@@ -64,112 +68,31 @@ func (s *Splash) Run(ctx context.Context) error {
 	}
 
 	defer s.hold.Release()
-	palette := chosen()
-	w, h := viewed(ctx)
-	rv := reveal.New(palette)
-	layer, err := gpu.Get().Open(w, h)
-	if err != nil {
-		slog.Error(
-			"the boot animation could not start",
-			"err",
-			err,
-			"size",
-			fmt.Sprintf("%dx%d", w, h),
-		)
-	} else {
-		defer layer.Close()
-		if err := layer.Place(ui.Rect{W: w, H: h}); err != nil {
-			slog.Error("placing the boot animation", "err", err)
-		}
-	}
+	w, h := bootview.Viewed(ctx, display.Get())
 
-	var skipped, offering atomic.Bool
-	skip := bootview.Skip(w, h)
-	stopSkip := touch.Contacts.Listen(func(c touch.Contact) {
-		if c.Phase == touch.Down && offering.Load() && skip.Contains(c.X, c.Y) {
-			slog.Info("boot screen skipped")
-			skipped.Store(true)
-		}
-	})
-	defer stopSkip()
-
-	scene := openBootScene(w, h)
-	if scene != nil {
-		defer func() {
-			if scene != nil {
-				scene.Close()
-			}
-		}()
-	}
-	fresh := true
-	completed := startup.Run(ctx, startup.Hooks{
+	completed := bootview.Splash{
+		Claim:    s.hold,
+		Display:  display.Get(),
+		Layers:   gpu.Get(),
+		Contacts: &hwtouch.Get().Contacts,
+		Reveal:   reveal.New(chosen()),
+		Theme:    chosen,
+		Version:  layout.Version,
 		Progress: func() []startup.Progress { return component.Default().Progress() },
-		Ready:    handOver, Skipped: skipped.Load, OfferSkip: offering.Store,
-		Draw: func(progress []startup.Progress) {
-			if scene != nil {
-				if err := scene.Draw(progress, true); err == nil {
-					return
-				} else {
-					slog.Error("drawing boot progress", "err", err)
-					scene.Close()
-					scene = nil
-				}
-			}
-			s.hold.Show(
-				func(p *display.Panel) error { drawBoot(p, chosen(), progress); return nil },
-			)
+		Ready:    handOver,
+		Raster: func(p *panel.Panel, progress []startup.Progress) error {
+			bootview.Raster(ui.Of(p), chosen(), progress, layout.Version, say.T("boot.skip"))
+			return nil
 		},
-		Changed: func(text string) { slog.Info("coming up", "waiting", text) },
-		Animate: func(m startup.Moment) bool {
-			if layer == nil {
-				return false
-			}
-			if err := rv.Shade(
-				layer,
-				fresh,
-				w,
-				h,
-				reveal.Moment(m),
-			); err != nil {
-				slog.Error("the boot animation stopped", "err", err)
-				_ = layer.Close()
-				layer = nil
-				return false
-			}
-			fresh = false
-			return true
+		Blank: func(p *panel.Panel) error {
+			ui.Fill(ui.Of(p), chosen().Background)
+			return nil
 		},
-	})
-	if !completed {
-		return nil
-	}
-	s.finished.Store(true)
-
-	s.hold.Show(func(p *display.Panel) error {
-		ui.Fill(ui.Of(p), chosen().Background)
-		return nil
-	})
-	time.Sleep(2 * frame)
-
-	slog.Info("ready")
-	if scene != nil {
-		scene.Close()
-		scene = nil
+	}.Play(ctx, w, h)
+	if completed {
+		s.finished.Store(true)
 	}
 	return nil
-}
-
-func viewed(ctx context.Context) (int, int) {
-	for range 40 {
-		fw, fh := display.Get().Native()
-		if w, h := display.Get().Orientation().Size(fw, fh); w > 0 && h > 0 {
-			return w, h
-		}
-		if !wait(ctx, 50*time.Millisecond) {
-			break
-		}
-	}
-	return 0, 0
 }
 
 func handOver() bool { return component.Default().Ready() }
@@ -181,16 +104,4 @@ func chosen() theme.Theme {
 		return theme.Default()
 	}
 	return t
-}
-
-func wait(ctx context.Context, d time.Duration) bool {
-	t := time.NewTimer(d)
-	defer t.Stop()
-
-	select {
-	case <-ctx.Done():
-		return false
-	case <-t.C:
-		return true
-	}
 }

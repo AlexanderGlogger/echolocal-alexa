@@ -9,7 +9,7 @@ import (
 )
 
 var screenOnly = []string{
-	"github.com/ygelfand/echolocal/internal/lib/surface",
+	"github.com/ygelfand/libcountertop/pkg/display/panel",
 	"github.com/ygelfand/echolocal/internal/hardware/display",
 	"github.com/ygelfand/echolocal/internal/hardware/gpu",
 	"github.com/ygelfand/libcountertop/pkg/display/gpu",
@@ -34,7 +34,8 @@ var screenOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/drm",
 	"github.com/ygelfand/echolocal/internal/feature/weather",
 	"github.com/ygelfand/libcountertop/pkg/bluetooth",
-	"github.com/ygelfand/echolocal/internal/feature/videoplayer",
+	"github.com/ygelfand/libcountertop/pkg/display/videopage",
+	"github.com/ygelfand/libcountertop/pkg/display/screens",
 	"github.com/ygelfand/libcountertop/pkg/display/gogui",
 	"github.com/go-gui-org/go-gui/gui",
 }
@@ -46,7 +47,7 @@ var castOnly = []string{
 	"github.com/ygelfand/libcountertop/pkg/media/rtc",
 	"github.com/ygelfand/libcountertop/pkg/media/call",
 	"github.com/pion/webrtc/v4",
-	"github.com/ygelfand/echolocal/internal/hardware/video",
+	"github.com/ygelfand/libcountertop/pkg/display/video",
 	"github.com/ygelfand/libcountertop/pkg/media/webm",
 	"github.com/ygelfand/libcountertop/pkg/media/hls",
 	"github.com/ygelfand/libcountertop/pkg/media/cenc",
@@ -60,8 +61,9 @@ var cameraOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/rtspd",
 	"github.com/ygelfand/echolocal/internal/feature/vision",
 	"github.com/ygelfand/echolocal/internal/hardware/mtkcamera",
-	"github.com/ygelfand/echolocal/internal/lib/rtsp",
-	"github.com/ygelfand/echolocal/internal/lib/onvif",
+	"github.com/ygelfand/libcountertop/pkg/camera/rtspd",
+	"github.com/ygelfand/libcountertop/pkg/media/rtsp",
+	"github.com/ygelfand/libcountertop/pkg/camera/onvif",
 }
 
 func goList(t *testing.T, tags, pkg string, flags ...string) []string {

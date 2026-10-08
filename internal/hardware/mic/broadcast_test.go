@@ -28,7 +28,7 @@ func (m *reusedBuffer) Mix(mics [][]int16) []int16 {
 func quietSource() *Source {
 	s := New()
 	s.cancelling = false
-	s.leveling.Store(false)
+	s.SetLeveling(false)
 	s.suppress = nil
 	s.lowCut = nil
 	return s

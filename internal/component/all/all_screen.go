@@ -17,7 +17,6 @@ import (
 	_ "github.com/ygelfand/echolocal/internal/feature/privacy"
 	_ "github.com/ygelfand/echolocal/internal/feature/screen"
 	_ "github.com/ygelfand/echolocal/internal/feature/settings"
-	_ "github.com/ygelfand/echolocal/internal/feature/shell"
 	_ "github.com/ygelfand/echolocal/internal/feature/splash"
 	_ "github.com/ygelfand/echolocal/internal/feature/states"
 	_ "github.com/ygelfand/echolocal/internal/feature/visuals"

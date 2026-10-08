@@ -3,8 +3,9 @@ package voice
 import (
 	"context"
 
-	esphome "github.com/ygelfand/go-esphome-device"
 	"github.com/ygelfand/libcountertop/pkg/assistant/turn"
+	"github.com/ygelfand/libcountertop/pkg/audio/sound"
+	sharedwake "github.com/ygelfand/libcountertop/pkg/inference/wake"
 	"github.com/ygelfand/libcountertop/pkg/inference/wakeslots"
 
 	"github.com/ygelfand/echolocal/internal/config"
@@ -18,15 +19,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
-type conversation = turn.Conversation
-
-const (
-	phaseIdle      = turn.Idle
-	phaseListening = turn.Listening
-	phaseThinking  = turn.Thinking
-	phaseReplying  = turn.Replying
-)
-
 type voiceSound struct{ *speaker.Driver }
 
 func (s voiceSound) Claim(name string, fn func(context.Context, turn.Speaker) error) turn.Claim {
@@ -36,16 +28,17 @@ func (s voiceSound) Claim(name string, fn func(context.Context, turn.Speaker) er
 	)
 }
 func (s voiceSound) Duck(on bool) { s.Backgrounds().Duck(on) }
-func newConversation(vs *esphome.VoiceSatellite) *conversation {
-	return turn.NewConversation(vs, turn.Dependencies{
+
+func dependencies() turn.Dependencies {
+	return turn.Dependencies{
 		Source:       mic.Get(),
 		Speaker:      speaker.Get(),
 		Sound:        voiceSound{speaker.Sound()},
 		Player:       media.Get(),
 		Log:          activity.Get(),
 		Recorder:     recording.Get(),
-		Models:       func() []wake.Model { return wake.Lib().Ours() },
-		HardwareTail: speaker.HardwareTail,
+		Models:       func() []sharedwake.Model { return wake.Lib().Ours() },
+		HardwareTail: sound.HardwareTail,
 		Failure:      feedback.Failure,
 		Cancelled:    feedback.Cancelled,
 		Words:        turn.Words{Settings: config.WakeSection, Speaker: speaker.Sound()},
@@ -55,10 +48,10 @@ func newConversation(vs *esphome.VoiceSatellite) *conversation {
 			Shown:    &Shown,
 			Effects:  &turnEffects{},
 		},
-	})
+	}
 }
 
-func wanted(models []wake.Model, count int) []string {
+func wanted(models []sharedwake.Model, count int) []string {
 	saved := config.Get().Wake.Words
 	var ids []string
 	if saved != nil {
@@ -71,5 +64,5 @@ func wanted(models []wake.Model, count int) []string {
 	for i, m := range models {
 		installed[i] = m.ID
 	}
-	return wakeslots.Initial(ids, installed, wake.DefaultModel, count)
+	return wakeslots.Initial(ids, installed, sharedwake.DefaultModel, count)
 }

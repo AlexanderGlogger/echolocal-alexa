@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	esphome "github.com/ygelfand/go-esphome-device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -35,7 +35,7 @@ func installKey(r *run) (string, bool, error) {
 	return "generated", false, nil
 }
 
-func ReadKey(d *device.Device) (string, error) {
+func ReadKey(d *adb.Device) (string, error) {
 	have, err := d.Exists(layout.KeyPath)
 	if err != nil || !have {
 		return "", err
@@ -47,7 +47,7 @@ func ReadKey(d *device.Device) (string, error) {
 	return strings.TrimSpace(string(b)), nil
 }
 
-func RotateKey(d *device.Device) (string, error) {
+func RotateKey(d *adb.Device) (string, error) {
 	k, err := esphome.GeneratePSK()
 	if err != nil {
 		return "", err
@@ -61,14 +61,14 @@ func RotateKey(d *device.Device) (string, error) {
 	return k.String(), nil
 }
 
-func writeKey(d *device.Device, key string) error {
+func writeKey(d *adb.Device, key string) error {
 	if _, err := d.Shell("mkdir -p " + layout.StateDir); err != nil {
 		return err
 	}
 	return d.WriteFile(layout.KeyPath, []byte(key+"\n"), 0o600)
 }
 
-func KeyOrError(d *device.Device) (string, error) {
+func KeyOrError(d *adb.Device) (string, error) {
 	k, err := ReadKey(d)
 	if err != nil {
 		return "", err

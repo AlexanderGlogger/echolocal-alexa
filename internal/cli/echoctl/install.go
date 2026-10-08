@@ -5,15 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
+	"github.com/ygelfand/libcountertop/pkg/host/wifisetup"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/echolocal/internal/android/wifi"
 	"github.com/ygelfand/echolocal/internal/host/installer"
 )
 
@@ -137,8 +139,13 @@ func newInstallCmd() *cobra.Command {
 				return err
 			}
 
-			if err := ensureWifi(cmd.Context(), out, d, ssid, password, wps); err != nil {
-				if !errors.Is(err, ErrCancelled) {
+			if err := wifisetup.Ensure(
+				cmd.Context(),
+				out,
+				wifi.On(d),
+				wifisetup.Request{SSID: ssid, Password: password, WPS: wps},
+			); err != nil {
+				if !errors.Is(err, prompt.ErrCanceled) {
 					return err
 				}
 				fmt.Fprintf(
@@ -185,7 +192,7 @@ func newInstallCmd() *cobra.Command {
 	return c
 }
 
-func printPairing(out io.Writer, d *device.Device, name string) error {
+func printPairing(out io.Writer, d *adb.Device, name string) error {
 	key, err := installer.ReadKey(d)
 	if err != nil {
 		return err
@@ -212,7 +219,7 @@ func render(
 	title, success string,
 	run func(installer.Reporter) error,
 ) error {
-	if !isTerminal() {
+	if !prompt.IsTerminal() {
 		return run(func(e installer.Event) {
 			if e.Status == installer.Running {
 				return
@@ -278,7 +285,7 @@ func (m *installModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
-			m.err, m.finished = ErrCancelled, true
+			m.err, m.finished = prompt.ErrCanceled, true
 			return m, tea.Quit
 		}
 		return m, nil
@@ -345,12 +352,4 @@ func detailOf(e installer.Event) string {
 		return ""
 	}
 	return styleDetail.Render(e.Detail)
-}
-
-func isTerminal() bool {
-	fi, err := os.Stdout.Stat()
-	if err != nil {
-		return false
-	}
-	return fi.Mode()&os.ModeCharDevice != 0
 }

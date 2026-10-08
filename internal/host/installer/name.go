@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -38,7 +39,7 @@ func installName(r *run) (string, bool, error) {
 	return r.cfg.Name, false, nil
 }
 
-func ReadName(d *device.Device) (string, error) {
+func ReadName(d *adb.Device) (string, error) {
 	have, err := d.Exists(layout.NamePath)
 	if err != nil || !have {
 		return "", err
@@ -50,7 +51,7 @@ func ReadName(d *device.Device) (string, error) {
 	return strings.TrimSpace(string(b)), nil
 }
 
-func SuggestName(d *device.Device) string {
+func SuggestName(d *adb.Device) string {
 	on := BoardOf(d)
 
 	out, err := d.Shell("cat " + layout.MACPath)

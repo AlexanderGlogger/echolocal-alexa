@@ -1,21 +1,20 @@
 package dhcp
 
 import (
-	shared "github.com/ygelfand/libcountertop/pkg/network/dhcp"
-
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-type Lease = shared.Lease
-
-var Probe = shared.Probe
+const fallback = "echolocal"
 
 func hostname() string {
 	if slug := layout.Slug(config.Get().Device.Name); slug != "" {
 		return slug
 	}
-	return Fallback
+	return fallback
 }
 
-const Fallback = "echolocal"
+type saved struct{}
+
+func (saved) Address() string              { return config.Get().Network.Address }
+func (saved) SetAddress(said string) error { return config.Set().Network().Address(said) }

@@ -5,6 +5,7 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 
 	"github.com/ygelfand/echolocal/internal/component"
@@ -12,7 +13,7 @@ import (
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(90))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(90))
 }
 
 var (

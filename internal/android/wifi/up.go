@@ -5,7 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -16,7 +17,7 @@ const (
 	config = "ctrl_interface=" + layout.WifiSockets + "\nupdate_config=1\n"
 )
 
-func Up(d *device.Device) (string, error) {
+func Up(d *adb.Device) (string, error) {
 	var did []string
 
 	written, err := writeConfig(d)
@@ -41,7 +42,7 @@ func Up(d *device.Device) (string, error) {
 	return strings.Join(did, ", "), nil
 }
 
-func writeConfig(d *device.Device) (bool, error) {
+func writeConfig(d *adb.Device) (bool, error) {
 	has, err := d.Exists(layout.WifiConf)
 	if err != nil || has {
 		return false, err
@@ -64,8 +65,8 @@ func writeConfig(d *device.Device) (bool, error) {
 	return true, nil
 }
 
-func startSupplicant(d *device.Device) (bool, error) {
-	if answering(d) {
+func startSupplicant(d *adb.Device) (bool, error) {
+	if On(d).Answering() {
 		return false, nil
 	}
 
@@ -74,15 +75,10 @@ func startSupplicant(d *device.Device) (bool, error) {
 	}
 
 	for range 20 {
-		if answering(d) {
+		if On(d).Answering() {
 			return true, nil
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
 	return false, fmt.Errorf("wifi: the supplicant did not answer on %s", layout.WifiSockets)
-}
-
-func answering(d *device.Device) bool {
-	out, err := shell{d}.Cmd("ping")
-	return err == nil && strings.Contains(out, "PONG")
 }

@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/host/bootimg"
-	"github.com/ygelfand/echolocal/internal/host/device"
 )
 
 // Amazon's adbd drops privileges however ro.secure is set.
@@ -62,7 +63,7 @@ type BootState struct {
 	Partition string
 }
 
-func Probe(d *device.Device) (BootState, error) {
+func Probe(d *adb.Device) (BootState, error) {
 	s, err := probe(d)
 	return BootState{
 		Ready:     s.ready(),
@@ -71,7 +72,7 @@ func Probe(d *device.Device) (BootState, error) {
 	}, err
 }
 
-func probe(d *device.Device) (state, error) {
+func probe(d *adb.Device) (state, error) {
 	var s state
 	var err error
 
@@ -169,7 +170,7 @@ func (r *run) settle() error {
 	ctx, cancel := context.WithTimeout(r.ctx, recoveryTimeout)
 	defer cancel()
 
-	return r.d.Wait(ctx, device.StateRecovery)
+	return r.d.Wait(ctx, adb.StateRecovery)
 }
 
 const stageTries = 3
@@ -207,7 +208,7 @@ func (r *run) stage() error {
 		strings.Join(tries, "; "), r.cfg.Profile.Boot.Size, r.cfg.Profile.Boot.SHA256)
 }
 
-func sizeOf(d *device.Device, remote string) string {
+func sizeOf(d *adb.Device, remote string) string {
 	out, err := d.Shell("wc -c < " + remote)
 	if err != nil {
 		return "?"
@@ -242,13 +243,13 @@ func bootRecovery(r *run) (string, bool, error) {
 	}
 
 	if !r.state.recovery {
-		if err := r.d.Reboot(device.StateRecovery); err != nil {
+		if err := r.d.Reboot(adb.StateRecovery); err != nil {
 			return "", false, err
 		}
 		ctx, cancel := context.WithTimeout(r.ctx, recoveryTimeout)
 		defer cancel()
 
-		if err := r.d.Wait(ctx, device.StateRecovery); err != nil {
+		if err := r.d.Wait(ctx, adb.StateRecovery); err != nil {
 			return "", false, err
 		}
 	}
@@ -413,7 +414,7 @@ func confirmRoot(r *run) (string, bool, error) {
 }
 
 // Recovery has sha256sum.
-func sha256Of(d *device.Device, cmd string) (string, error) {
+func sha256Of(d *adb.Device, cmd string) (string, error) {
 	out, err := d.Shell(cmd + " | sha256sum")
 	if err != nil {
 		return "", err

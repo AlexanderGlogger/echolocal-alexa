@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ygelfand/echolocal/internal/lib/alsa"
+	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
 )
 
 func newMixerCmd() *cobra.Command {

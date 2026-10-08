@@ -5,12 +5,14 @@ package settings
 import (
 	"testing"
 
+	sharedvisual "github.com/ygelfand/libcountertop/pkg/display/visual"
+
 	"github.com/ygelfand/echolocal/internal/ui/visual"
 )
 
 func TestEveryVisualHasAThumbnail(t *testing.T) {
-	for _, k := range visual.Built() {
-		if visual.Thumbnail(k, false) == nil {
+	for _, k := range sharedvisual.Built() {
+		if visual.Thumbs().Thumbnail(k, false) == nil {
 			t.Errorf("%s has no thumbnail; run make thumbs", k)
 		}
 	}

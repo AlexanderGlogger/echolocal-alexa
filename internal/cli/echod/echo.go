@@ -11,6 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ygelfand/libcountertop/pkg/audio/upsample"
+
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
@@ -63,7 +65,7 @@ func newEchoCmd() *cobra.Command {
 			raw, unlisten := source.ListenRaw()
 			defer unlisten()
 
-			signal, what := speaker.VoiceSweep(), "a sweep"
+			signal, what := upsample.Sweep(), "a sweep"
 			if white {
 				signal, what = noise(int(secs*1000)), "white noise"
 			}

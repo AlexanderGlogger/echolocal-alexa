@@ -4,6 +4,7 @@ package settings
 
 import (
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/diag"
@@ -30,8 +31,8 @@ func basicPages() *sharedsettings.BasicPages {
 			Clocks:      clocks,
 			Idle:        idlePages(),
 			UISize:      uiSize,
-			PowerPage:   func() shell.View { return powerPage() },
-			VisualPage:  func() shell.View { return visualPage() },
+			PowerPage:   func() sharedshell.View { return powerPage() },
+			VisualPage:  func() sharedshell.View { return visualPage() },
 		},
 	)
 }

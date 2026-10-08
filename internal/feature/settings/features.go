@@ -4,6 +4,7 @@ package settings
 
 import (
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/bluetooth"
@@ -16,7 +17,7 @@ type feature struct {
 
 	on   func(config.Config) bool
 	set  func(bool)
-	page func() *shell.Page
+	page func() *sharedshell.Page
 }
 
 var features = []feature{
@@ -32,7 +33,7 @@ var features = []feature{
 	},
 }
 
-func featuresPage() *shell.Page {
+func featuresPage() *sharedshell.Page {
 	return sharedsettings.FeaturesPage(func() []sharedsettings.Feature {
 		c := config.Get()
 		out := make([]sharedsettings.Feature, 0, len(features))
@@ -42,7 +43,7 @@ func featuresPage() *shell.Page {
 				v.On = f.on(c)
 			}
 			if f.page != nil {
-				v.Page = func() shell.View { return f.page() }
+				v.Page = func() sharedshell.View { return f.page() }
 			}
 			out = append(out, v)
 		}

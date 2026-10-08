@@ -1,6 +1,6 @@
 package mic
 
-import "github.com/ygelfand/echolocal/internal/component"
+import "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 func (s *Source) Startup() component.Progress {
 	s.devMu.Lock()

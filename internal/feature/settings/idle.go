@@ -4,6 +4,7 @@ package settings
 
 import (
 	sharedpages "github.com/ygelfand/libcountertop/pkg/display/settings"
+	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 
 	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/media"
@@ -22,9 +23,9 @@ func idlePages() *sharedpages.IdlePages {
 			Media:       media.Get(),
 			Visuals:     visuals.Get(),
 			Weather:     weather.Get(),
-			Thumbnail:   visual.ThumbnailFit,
+			Thumbnail:   visual.Thumbs().Fit,
 		},
 	)
 }
 
-func WeatherPage() *shell.Page { return idlePages().Weather() }
+func WeatherPage() *sharedshell.Page { return idlePages().Weather() }

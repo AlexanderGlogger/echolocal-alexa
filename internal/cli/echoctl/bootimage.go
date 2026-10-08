@@ -8,12 +8,13 @@ import (
 
 	"charm.land/bubbles/v2/progress"
 	tea "charm.land/bubbletea/v2"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/host/profile"
 )
 
-func profileFor(d *device.Device) (profile.Profile, error) {
+func profileFor(d *adb.Device) (profile.Profile, error) {
 	name, err := d.Getprop("ro.product.device")
 	if err != nil {
 		return profile.Profile{}, fmt.Errorf("asking the device what it is: %w", err)
@@ -48,7 +49,7 @@ func resolveBootImage(
 func fetchImage(ctx context.Context, out io.Writer, title string,
 	resolve func(context.Context, func(float64)) ([]byte, string, error),
 ) ([]byte, string, error) {
-	if !isTerminal() {
+	if !prompt.IsTerminal() {
 		fmt.Fprintln(out, title)
 		var last int
 		return resolve(ctx, func(f float64) {
@@ -114,7 +115,7 @@ func (m *fetchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
-			m.err = ErrCancelled
+			m.err = prompt.ErrCanceled
 			return m, tea.Quit
 		}
 	}

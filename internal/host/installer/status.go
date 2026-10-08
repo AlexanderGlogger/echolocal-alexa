@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/board"
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -40,7 +41,7 @@ func (s State) RunningFor() (time.Duration, bool) {
 	return time.Duration((s.Uptime - started) * float64(time.Second)), true
 }
 
-func ReadState(d *device.Device) (State, error) {
+func ReadState(d *adb.Device) (State, error) {
 	s := State{Serial: d.Serial()}
 
 	s.Model, _ = d.Getprop("ro.product.model")

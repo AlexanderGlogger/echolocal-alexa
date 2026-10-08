@@ -1,76 +1,75 @@
 package livecam
 
 import (
-	"errors"
-	"log/slog"
-	"time"
+	"fmt"
+	"sync"
 
-	camerasession "github.com/ygelfand/libcountertop/pkg/camera/session"
+	"github.com/ygelfand/libcountertop/pkg/camera/helper"
+	"github.com/ygelfand/libcountertop/pkg/camera/live"
+	"github.com/ygelfand/libcountertop/pkg/camera/session"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/mtkcamera"
 	"github.com/ygelfand/echolocal/internal/hardware/privacy"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
-const FPS = 30
-const Wait = 2 * time.Second
-const Settle = 2 * time.Second
+func init() {
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(36),
+		component.Needs(board.Camera),
+	)
+}
 
-var ErrNoStill = camerasession.ErrNoStill
-var ErrMuted = camerasession.ErrMuted
-var ErrRestarted = errors.New("livecam: the streams changed")
+type Camera struct{ *live.Camera }
 
-type Picture = camerasession.Picture
-type Session = camerasession.Session
-type Size = camerasession.Size
+func (c Camera) Restore(config.Config) { c.Publish() }
 
-func Sizes() []Size { return hub.Sizes() }
+var vendor = live.Vendor{
+	EVMin:  -3,
+	EVMax:  3,
+	Scenes: []string{"auto", "portrait", "landscape", "night"},
+	Balances: []string{
+		"auto",
+		"incandescent",
+		"fluorescent",
+		"warm-fluorescent",
+		"daylight",
+		"cloudy-daylight",
+		"twilight",
+		"shade",
+	},
+	Effects: []string{"none", "mono", "negative", "sepia", "aqua", "whiteboard", "blackboard"},
+	ISOs:    []string{"auto", "100", "200", "400", "800", "1600"},
+	Levels:  true,
+	Rates:   []int{15, 20, 30},
+}
 
-const noTurn = -1
-
-const Keyframe = 2
-
-func Bitrate(w, h int) int { return bitrateFor(Saved(), w, h) }
-
-var hub = camerasession.New(camerasession.Options{
-	Snapshot:     cameraSnapshot,
-	Open:         func(c mtkcamera.Config) (camerasession.Transport, error) { return mtkcamera.Open(c) },
-	Muted:        muted,
-	Recover:      revive,
-	RestartError: ErrRestarted,
-	Wait:         Wait,
-	Settle:       Settle,
+var Get = sync.OnceValue(func() Camera {
+	b := component.Board()
+	return Camera{live.New(live.Options{
+		Vendor: vendor,
+		Streams: live.Streams{
+			Main:        []string{"1280x720", "864x480", "640x480"},
+			MainDefault: fmt.Sprintf("%dx%d", b.CameraWidth, b.CameraHeight),
+		},
+		StillOnKeyframe: true,
+		Open:            func(c helper.Config) (session.Transport, error) { return mtkcamera.Open(c) },
+		Muted:           muted,
+		Restart:         func() error { return prop.Restart(layout.CameraService) },
+		Saved:           func() schema.Camera { return config.Get().Camera },
+		Writer:          func() schema.CameraWriter { return config.Set().Camera() },
+		Device:          component.DeviceCamera,
+	})}
 })
 
-func cameraSnapshot() camerasession.Snapshot {
-	k := Saved()
-	w, h := parseSize(k.MainSize)
-	cfg := mtkcamera.Config{
-		Width:    w,
-		Height:   h,
-		FPS:      FPS,
-		Bitrate:  bitrateFor(k, w, h),
-		Keyframe: k.Keyframe,
-		Params:   Params(k),
-		Turn:     noTurn,
-	}
-	return camerasession.Snapshot{
-		Config:     cfg,
-		Key:        shapeOf(k),
-		StillExtra: time.Duration(k.Keyframe) * time.Second,
-	}
-}
-func Join(at int) (*Session, <-chan mtkcamera.Frame, error) { return hub.Join(at) }
-func Leave(s *Session, frames <-chan mtkcamera.Frame)       { hub.Leave(s, frames) }
-
-func Sessions() *camerasession.Hub { return hub }
-
-func RequestKey() error                           { return hub.RequestKey() }
-func Still(within time.Duration) (Picture, error) { return hub.Still(within) }
-func Muted() bool                                 { return muted() }
 func muted() bool {
 	if !component.Board().Has(board.MicMutesCamera) {
 		return false
@@ -81,19 +80,4 @@ func muted() bool {
 	}
 	cut, err := m.Get()
 	return err == nil && cut
-}
-
-const reviveEvery = 30 * time.Second
-
-var revived time.Time
-
-func revive(cause error) {
-	if time.Since(revived) < reviveEvery {
-		return
-	}
-	revived = time.Now()
-	slog.Warn("restarting the camera helper", "err", cause)
-	if err := prop.Restart(layout.CameraService); err != nil {
-		slog.Error("restarting the camera helper failed", "err", err)
-	}
 }

@@ -6,7 +6,8 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
-	"github.com/ygelfand/echolocal/internal/android/logd"
+	"github.com/ygelfand/libcountertop/pkg/android/logd"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 

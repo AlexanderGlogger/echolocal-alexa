@@ -3,283 +3,111 @@
 package gui
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
 	"sync"
-	"sync/atomic"
-	"time"
 
-	gogui "github.com/go-gui-org/go-gui/gui"
-	backend "github.com/ygelfand/libcountertop/pkg/display/gogui"
-	navigation "github.com/ygelfand/libcountertop/pkg/display/navigation"
-	sharedplayer "github.com/ygelfand/libcountertop/pkg/display/playerview"
+	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	"github.com/ygelfand/libcountertop/pkg/display/screens"
+	"github.com/ygelfand/libcountertop/pkg/display/shell"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
+	"github.com/ygelfand/echolocal/internal/feature/dashboard"
+	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
+	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
+	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
+	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/message"
+	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
-	"github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/echolocal/internal/feature/settings"
+	featureshell "github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/timer"
+	"github.com/ygelfand/echolocal/internal/feature/volume"
+	"github.com/ygelfand/echolocal/internal/feature/weather"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
-	"github.com/ygelfand/echolocal/internal/hardware/touch"
-	"github.com/ygelfand/echolocal/internal/lib/surface"
+	hwtouch "github.com/ygelfand/echolocal/internal/hardware/touch"
+	echoui "github.com/ygelfand/echolocal/internal/ui"
 	"github.com/ygelfand/echolocal/internal/ui/theme"
 )
 
-const (
-	layerID    = 60
-	layerZ     = 5
-	helperWait = 200 * time.Millisecond
-)
-
-type App struct {
-	mu  sync.Mutex
-	w   *gogui.Window
-	r   *backend.Renderer
-	nav *Nav
-}
-
-var (
-	once   sync.Once
-	shared *App
-)
-
 func init() {
-	component.Register(component.Device, Get, component.Order(36), component.Needs(board.Panel))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(36),
+		component.Needs(board.Panel),
+	)
 }
 
-func Get() *App {
-	once.Do(func() {
-		shared = &App{}
-		shared.nav = &Nav{For: shared.screenFor}
-	})
-	return shared
-}
+var extensions []func(*widgets.UI, *screens.Options)
 
-func (a *App) Name() string { return "gui" }
-
-func sizeSetting() string {
-	if s := config.Get().Screen.Size; s != "" {
-		return s
-	}
-	if s := component.Board().UISize; s != "" {
-		return s
-	}
-	return SizeLarge
-}
-
-func current() gogui.Theme {
-	s := config.Get().Screen
-	return Look(s.Style, s.Theme, sizeSetting())
-}
-
-func (a *App) Restyle() {
-	a.mu.Lock()
-	w := a.w
-	a.mu.Unlock()
-	if w != nil {
-		w.QueueCommand(func(w *gogui.Window) { w.SetTheme(current()) })
-	}
-}
-
-var phases = map[touch.Phase]backend.Phase{
-	touch.Down: backend.Began,
-	touch.Move: backend.Moved,
-	touch.Up:   backend.Ended,
-}
-
-var backSweep = navigation.BackSweep
-
-func afterBoot(ctx context.Context) bool {
-	done := make(chan struct{}, 1)
-	stop := display.Get().Released.Listen(func(p display.Priority) {
-		if p == display.PriorityBoot {
-			select {
-			case done <- struct{}{}:
-			default:
+var Get = sync.OnceValue(func() *screens.App {
+	look := widgets.NewUI(config.ScreenSection)
+	o := screens.Options{
+		Name:       "echolocal",
+		UISize:     component.Board().UISize,
+		DeviceName: func() string { return config.Get().Device.Name },
+		Settings: func() screens.Settings {
+			c := config.Get()
+			return screens.Settings{
+				Screen:  c.Screen,
+				Clock:   c.Clock,
+				Idle:    c.Idle,
+				Weather: c.Weather,
 			}
-		}
-	})
-	defer stop()
-	for display.Get().Held(display.PriorityBoot) {
-		select {
-		case <-ctx.Done():
-			return false
-		case <-done:
-		}
+		},
+		UI:       look,
+		Weather:  config.WeatherSection,
+		Brand:    theme.Brand,
+		Logo:     echoui.Logo().Light,
+		Night:    echoui.Logo().Dark,
+		Offering: web.Get().Offering,
+
+		Display:   display.Get(),
+		Touch:     hwtouch.Get(),
+		Shell:     featureshell.Get(),
+		Screen:    screen.Get().Screen,
+		Messages:  message.Get(),
+		Assistant: assistant.Get(),
+		Stage:     assistant.Stage(),
+		Timers:    timer.Get(),
+		Poster:    poster.Get(),
+		Drawer:    drawer.Get(),
+		Tabs:      dashboard.Tabs(),
+		Home:      homecontrol.Get(),
+		HomeHA:    homeassistant.Get(),
+		Forecast:  weather.Get(),
+
+		WeatherPage: func() shell.View { return settings.WeatherPage() },
+		Player:      media.Get(),
+		PlayerPage:  media.Page,
+		MediaVolume: sharedvolume.For(volume.Get(), config.StreamMedia),
+		Volume:      volume.Get(),
+		Streams:     config.Streams(),
+
+		Upgrade: func() widgets.Upgrade {
+			up := firmware.Get().Upgrade()
+			return widgets.Upgrade{Active: up.Active(), At: up.At, Version: up.Version}
+		},
+		Upgrading: screens.On(&firmware.Get().Upgrading),
+		Marks: func() screens.Marks {
+			m := privacy.Get().Current()
+			return screens.Marks{Mic: m.MicMuted, Camera: m.CameraBlocked}
+		},
+		Redraws: []screens.Watch{
+			screens.On(&privacy.Get().Changed),
+			screens.On(&web.Get().Offered),
+		},
 	}
-	return true
-}
-
-func (a *App) Run(ctx context.Context) error {
-	defer func() {
-		if playerView != nil {
-			playerView.Close()
-		}
-	}()
-	ctx, stop := context.WithCancel(ctx)
-	defer stop()
-	var c *surface.Client
-	for c = display.Get().Helper(); c == nil || c.Err() != nil; c = display.Get().Helper() {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(helperWait):
-		}
+	for _, extend := range extensions {
+		extend(look, &o)
 	}
-	if !afterBoot(ctx) {
-		return nil
-	}
-	nw, nh := display.Get().Native()
-	if err := c.UIOpen(layerID, nw, nh, layerZ); err != nil {
-		return fmt.Errorf("gui: opening the UI layer: %w", err)
-	}
-	defer func() { stop(); _ = c.VideoClose(layerID) }()
-
-	rot := display.Get().Orientation()
-	vw, vh := rot.Size(nw, nh)
-	gogui.SetTheme(current())
-	presentation.Reset()
-	cameraPreview = &widgets.LivePreview{}
-	w := gogui.SimpleWindow("echolocal", vw, vh, a, func(w *gogui.Window) { w.SetView(a.root) })
-	r, err := backend.New(surface.UILayer{C: c, ID: layerID}, w)
-	if err != nil {
-		return err
-	}
-	r.SetRotation(int(rot) / 90)
-
-	a.mu.Lock()
-	a.w, a.r = w, r
-	a.mu.Unlock()
-	defer func() {
-		a.mu.Lock()
-		a.w, a.r = nil, nil
-		a.mu.Unlock()
-	}()
-
-	var width atomic.Int32
-	width.Store(int32(vw))
-	type start struct {
-		at   [2]int
-		open bool
-	}
-	starts := map[int]start{}
-
-	stopTouch := touch.Contacts.Listen(func(t touch.Contact) {
-		shell.Get().Touch()
-		if message.Get().Took(t.ID) || assistant.Get().Took(t.ID) {
-			return
-		}
-		p, ok := phases[t.Phase]
-		if !ok {
-			return
-		}
-		switch t.Phase {
-		case touch.Down:
-			starts[t.ID] = start{at: [2]int{t.X, t.Y}, open: shell.Get().Open()}
-		case touch.Up:
-			from, seen := starts[t.ID]
-			delete(starts, t.ID)
-			if seen && from.open && backSweep(from.at, t.X, t.Y, int(width.Load())) {
-				r.Touch(backend.Cancelled, uint64(t.ID), float32(t.X), float32(t.Y))
-				w.QueueCommand(func(w *gogui.Window) {
-					shell.Get().Pop()
-					w.InvalidateLayout()
-				})
-				return
-			}
-		}
-		r.Touch(p, uint64(t.ID), float32(t.X), float32(t.Y))
-		if t.Phase == touch.Up {
-			w.QueueCommand(func(w *gogui.Window) {
-				presentation.Presses.Lift(w)
-				if !presentation.Editor.Typing(w) {
-					w.ClearFocus()
-				}
-			})
-		}
-	})
-	defer stopTouch()
-
-	var look atomic.Value
-	look.Store(current().Cfg.Name)
-	restyle := func() {
-		if now := current().Cfg.Name; now != look.Load() {
-			look.Store(now)
-			a.Restyle()
-		}
-	}
-	stopStyle := screen.Get().Restyled.Listen(func(config.Screen) { restyle() })
-	defer stopStyle()
-	stopTheme := screen.Get().Themed.Listen(func(theme.Theme) { restyle() })
-	defer stopTheme()
-
-	redraw := func() { w.QueueCommand(func(w *gogui.Window) { w.InvalidateLayout() }) }
-
-	stopShell := shell.Get().Redrawn.Listen(func(struct{}) { redraw() })
-	defer stopShell()
-	stopMoved := shell.Get().Changed.Listen(func(shell.Change) {
-		w.QueueCommand(func(w *gogui.Window) {
-			presentation.Editor.Shift, presentation.Editor.Symbols = false, false
-			w.ClearFocus()
-		})
-	})
-	defer stopMoved()
-	for _, o := range []*Overlay{{Priority: priorityAlert, Build: messageCard}, {Priority: priorityNotice, Build: timerCard}, {Priority: priorityNotice + 1, Build: assistantPanel}, {Priority: sharedplayer.PriorityMini, Build: a.mini}, {Priority: priorityMarks, Build: privacyMarks}, {Priority: priorityUpgrade, Build: upgradeCard}} {
-		a.nav.Show(o)
-		defer a.nav.Hide(o)
-	}
-	stopMessage := message.Get().Changed.Listen(func(bool) { redraw() })
-	defer stopMessage()
-	var spinning atomic.Bool
-	stopUpgrade := firmware.Get().Upgrading.Listen(func(up firmware.Upgrade) {
-		redraw()
-		if !up.Active() || !spinning.CompareAndSwap(false, true) {
-			return
-		}
-		go func() {
-			defer spinning.Store(false)
-			for firmware.Get().Upgrade().Active() {
-				redraw()
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(upgradeFrame):
-				}
-			}
-			redraw()
-		}()
-	})
-	defer stopUpgrade()
-	stopTimer := timer.Get().Changed.Listen(func(timer.Card) { redraw() })
-	defer stopTimer()
-	stopAssistant := assistant.Get().Frame.Listen(func(assistant.Showing) { redraw() })
-	defer stopAssistant()
-	stopMarks := privacy.Get().Changed.Listen(func(privacy.Marks) { redraw() })
-	stopOffer := web.Get().Offered.Listen(func(string) { redraw() })
-	defer stopOffer()
-	defer stopMarks()
-
-	tick := time.NewTicker(time.Second)
-	defer tick.Stop()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-tick.C:
-				redraw()
-			}
-		}
-	}()
-
-	slog.Info("gui: running", "size", fmt.Sprintf("%dx%d", vw, vh), "theme", current().Cfg.Name)
-	return r.Run(ctx, w)
-}
+	return screens.New(o)
+})

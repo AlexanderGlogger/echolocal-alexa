@@ -28,13 +28,13 @@ func sock(t *testing.T) string {
 func connect(t *testing.T) net.Conn {
 	t.Helper()
 
-	c := &Control{addr: sock(t)}
-	if err := c.up(); err != nil {
+	c := build(sock(t))
+	if err := c.Start(); err != nil {
 		t.Fatalf("up: %v", err)
 	}
-	t.Cleanup(c.down)
+	t.Cleanup(c.Close)
 
-	conn, err := net.DialTimeout("unix", c.addr, 2*time.Second)
+	conn, err := net.DialTimeout("unix", c.Address(), 2*time.Second)
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -107,14 +107,14 @@ func TestOneConnectionTakesSeveralCommands(t *testing.T) {
 }
 
 func TestDownReleasesTheAddress(t *testing.T) {
-	c := &Control{addr: sock(t)}
-	if err := c.up(); err != nil {
+	c := build(sock(t))
+	if err := c.Start(); err != nil {
 		t.Fatalf("up: %v", err)
 	}
-	c.down()
+	c.Close()
 
-	if err := c.up(); err != nil {
+	if err := c.Start(); err != nil {
 		t.Fatalf("reopening after down: %v", err)
 	}
-	c.down()
+	c.Close()
 }

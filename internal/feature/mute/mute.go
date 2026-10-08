@@ -6,8 +6,11 @@ import (
 	"time"
 
 	esphome "github.com/ygelfand/go-esphome-device"
+
 	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -20,7 +23,7 @@ import (
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(30))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(30))
 }
 
 // The mute LED has two levels.
@@ -85,7 +88,7 @@ func build() *Mute {
 		},
 	}
 	m.sw.OnCommand = m.Set
-	component.Bind(m.sound, speaker.MuteTones(), func(t config.Tone) config.Tone { return t },
+	component.Bind(m.sound, speaker.MuteTones(), func(t schema.Chime) schema.Chime { return t },
 		config.Set().Microphone().MuteSound)
 	component.BindEffect(m.ring, led.EffectNames(), m.show, config.Set().Ring().Muted)
 
@@ -134,7 +137,11 @@ func (m *Mute) Muted() (bool, error) {
 
 // The mute line does not survive a reboot.
 func (m *Mute) Restore(c config.Config) {
-	component.Restore(m.sound, c.Microphone.MuteSound, func(t config.Tone) config.Tone { return t })
+	component.Restore(
+		m.sound,
+		c.Microphone.MuteSound,
+		func(t schema.Chime) schema.Chime { return t },
+	)
 
 	if m.line == nil {
 		return

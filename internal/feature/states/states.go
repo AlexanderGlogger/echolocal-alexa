@@ -2,6 +2,7 @@ package states
 
 import (
 	sharedstates "github.com/ygelfand/libcountertop/pkg/homeassistant/states"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -14,5 +15,10 @@ var shared = sharedstates.New()
 
 func Get() *States { return shared }
 func init() {
-	component.Register(component.Device, Get, component.Order(5), component.Needs(board.Panel))
+	component.Register(
+		sharedcomponent.Device,
+		Get,
+		sharedcomponent.Order(5),
+		component.Needs(board.Panel),
+	)
 }

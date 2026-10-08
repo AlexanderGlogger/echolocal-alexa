@@ -8,16 +8,17 @@ import (
 	"time"
 
 	"github.com/ygelfand/libcountertop/pkg/hook"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/lib/input"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 func init() {
-	component.Register(component.Hardware, Get, component.Order(10),
-		component.Supervise(service.Restart(time.Second, 30*time.Second)))
+	component.Register(sharedcomponent.Hardware, Get, sharedcomponent.Order(10),
+		sharedcomponent.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
 type Name = board.Key

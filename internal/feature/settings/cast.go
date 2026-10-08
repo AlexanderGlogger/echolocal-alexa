@@ -3,7 +3,7 @@
 package settings
 
 import (
-	"github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/libcountertop/pkg/display/shell"
 )
 
 func init() {

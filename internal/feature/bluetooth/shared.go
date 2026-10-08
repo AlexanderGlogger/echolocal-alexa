@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	sharedproxy "github.com/ygelfand/libcountertop/pkg/bluetooth/proxy"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -13,9 +14,7 @@ import (
 
 type Proxy struct{ *sharedproxy.Proxy }
 
-const Features = sharedproxy.Features
-
-func init() { component.Register(component.Device, Get, component.Order(40)) }
+func init() { component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(40)) }
 
 var get = sync.OnceValue(func() *Proxy {
 	return &Proxy{sharedproxy.New(sharedproxy.Dependencies{

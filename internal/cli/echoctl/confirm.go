@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
+
 	"github.com/ygelfand/echolocal/internal/host/installer"
 )
 
 func approveFlash(
 	ctx context.Context,
 	out io.Writer,
-	d *device.Device,
+	d *adb.Device,
 	state installer.BootState,
 	image string,
 	assumeYes bool,
@@ -21,7 +23,7 @@ func approveFlash(
 	if assumeYes {
 		return true, nil
 	}
-	if !isTerminal() {
+	if !prompt.IsTerminal() {
 		return false, errors.New(
 			"writing the boot partition needs confirmation: run this on a terminal, or pass --yes",
 		)
@@ -38,5 +40,5 @@ func approveFlash(
 		fmt.Fprintf(out, "  image      %s\n", image)
 	}
 
-	return typed(ctx, out, "Type yes to continue", "yes")
+	return prompt.Typed(ctx, out, "Type yes to continue", "yes")
 }

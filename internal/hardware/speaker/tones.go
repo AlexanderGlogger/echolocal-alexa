@@ -1,36 +1,42 @@
 package speaker
 
 import (
-	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
+	"github.com/ygelfand/libcountertop/pkg/audio/tone"
+	"github.com/ygelfand/libcountertop/pkg/audio/upsample"
+
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/config"
 )
 
-const toneLevel = sharedtone.Level
-
-func WakeTones() []config.Tone {
-	return []config.Tone{config.ToneNone, config.ToneChirp, config.ToneDing, config.ToneRise}
+func WakeTones() []schema.Chime {
+	return []schema.Chime{schema.ChimeNone, schema.ChimeChirp, schema.ChimeDing, schema.ChimeRise}
 }
 
-func MuteTones() []config.Tone {
-	return []config.Tone{
-		config.ToneNone, config.ToneMuteSwitch, config.ToneChirp, config.ToneDing, config.ToneRise,
+func MuteTones() []schema.Chime {
+	return []schema.Chime{
+		schema.ChimeNone,
+		schema.ChimeMuteSwitch,
+		schema.ChimeChirp,
+		schema.ChimeDing,
+		schema.ChimeRise,
 	}
 }
 
-func MuteTone(t config.Tone, muted bool) []Note {
-	if t == config.ToneMuteSwitch {
+func MuteTone(t schema.Chime, muted bool) []tone.Note {
+	if t == schema.ChimeMuteSwitch {
 		if muted {
-			return sharedtone.ToneMute
+			return tone.ToneMute
 		}
-		return sharedtone.ToneUnmute
+		return tone.ToneUnmute
 	}
-	return sharedtone.Wake(t)
+	return tone.Wake(t)
 }
 
-func (d *Driver) Chime(notes []Note) {
-	if d == nil || len(notes) == 0 {
-		return
+func Resamplings() []config.Resampling {
+	var out []config.Resampling
+	for _, k := range upsample.Kinds() {
+		out = append(out, config.Resampling(k))
 	}
-	d.Interject(func(p *Player) { p.Chime(toneLevel, notes...) })
+	return out
 }

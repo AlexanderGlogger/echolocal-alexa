@@ -10,13 +10,16 @@ import (
 	"time"
 
 	"github.com/ygelfand/libcountertop/pkg/audio/aec"
+	"github.com/ygelfand/libcountertop/pkg/audio/alsa"
+	"github.com/ygelfand/libcountertop/pkg/audio/capture"
+	"github.com/ygelfand/libcountertop/pkg/audio/level"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/lib/alsa"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 const (
@@ -31,6 +34,8 @@ const (
 
 const Refs = Channels - Mics
 
+const floorReferenceGain = 20
+
 const FrameSamples = Rate / 50
 
 // The init service holding the capture device on a fresh boot.
@@ -42,7 +47,7 @@ const (
 )
 
 type Source struct {
-	startup atomic.Pointer[component.Progress]
+	startup atomic.Pointer[sharedcomponent.Progress]
 	devMu   sync.Mutex
 	pcm     *alsa.Capture
 
@@ -53,13 +58,15 @@ type Source struct {
 
 	dropped atomic.Uint64
 
-	history history
+	*capture.History
+	*level.Leveler
 
 	mixer  Mixer
 	mixing config.Mixing
 
-	cancel     *canceller
+	cancel     *aec.Canceller
 	cancelling bool
+	cancelled  []int16
 
 	adapt, frozen, reset atomic.Bool
 
@@ -67,10 +74,6 @@ type Source struct {
 
 	ref  []int16
 	hold int
-
-	leveler     *leveler
-	wasLeveling bool
-	leveling    atomic.Bool
 
 	lowCut *lowCut
 
@@ -97,25 +100,37 @@ func (s *Source) Mixing() config.Mixing {
 }
 
 func New() *Source {
-	mixer, mixing := NewMixer(config.Get().Microphone.Mixing)
+	cfg := config.Get().Microphone
+	mixer, mixing := NewMixer(cfg.Mixing)
 	s := &Source{
 		listeners:  map[int]*listener{},
 		raw:        map[int]chan []byte{},
 		echoes:     map[int]chan Echo{},
+		History:    capture.NewHistory(Rate, time.Second),
+		Leveler:    newLeveler(cfg),
 		mixer:      mixer,
 		mixing:     mixing,
-		leveler:    newLeveler(),
 		finder:     NewBeamformer(),
-		cancel:     newCanceller(),
-		cancelling: config.Get().Microphone.Cancel,
+		cancel:     newCanceller(aec.Taps),
+		cancelling: cfg.Cancel,
 		lowCut:     newLowCut(lowCutHz),
 	}
 	s.finder.hold = 1
 	s.facing.Store(-1)
 	s.adapt.Store(true)
-	s.leveling.Store(config.Get().Microphone.Leveling)
 	s.suppress = newSuppressor(s.cancel)
 	return s
+}
+
+func newLeveler(cfg config.Microphone) *level.Leveler {
+	return level.New(level.Config{
+		Rate:          Rate,
+		Frame:         FrameSamples,
+		ReferenceGain: floorReferenceGain,
+		Gain:          cfg.Gain,
+		Sensitivity:   cfg.Sensitivity,
+		Leveling:      cfg.Leveling,
+	})
 }
 
 var (
@@ -124,8 +139,8 @@ var (
 )
 
 func init() {
-	component.Register(component.Hardware, Get, component.Order(7),
-		component.Supervise(service.Restart(time.Second, 30*time.Second)))
+	component.Register(sharedcomponent.Hardware, Get, sharedcomponent.Order(7),
+		sharedcomponent.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
 func Get() *Source {
@@ -137,7 +152,7 @@ func (s *Source) Name() string { return "capture" }
 
 func (s *Source) Start(context.Context) (err error) {
 	defer func() {
-		state := component.Progress{Done: err == nil}
+		state := sharedcomponent.Progress{Done: err == nil}
 		if err != nil {
 			state.Failed = true
 			state.Doing = err.Error()
@@ -359,29 +374,29 @@ func (s *Source) broadcast(raw []byte) {
 	frame := s.mixer.Mix(mics)
 
 	sounding := s.sounding(raw, len(mics[CenterMic]))
-	s.leveler.atPlayback(sounding)
+	s.SetPlayback(sounding)
 
 	quiet := s.suppress != nil
 	suppressed := false
 
 	if s.cancelling && s.cancel != nil {
 		if s.reset.Swap(false) {
-			s.cancel.filter.Reset()
+			s.cancel.Reset()
 		}
-		s.cancel.filter.SetAdapting(s.Adapting())
+		s.cancel.SetAdapting(s.Adapting())
 
 		switch {
 		case sounding:
-			var after func([]int16)
+			var after func(int, []int16)
 			if quiet {
-				s.suppress.SetEcho(s.cancel.filter)
-				after = s.suppressBlock
+				s.suppress.SetEcho(s.cancel.Filter(0))
+				after = func(_ int, block []int16) { s.suppressBlock(block) }
 			}
-			if cancelled := s.cancel.apply(s.ref, mics, after); cancelled != nil {
+			if cancelled := s.cancelCenter(mics, after); cancelled != nil {
 				frame, suppressed = cancelled, quiet
 			}
 		default:
-			s.cancel.idle()
+			s.cancel.Idle()
 		}
 	}
 
@@ -401,20 +416,8 @@ func (s *Source) broadcast(raw []byte) {
 		}
 	}
 
-	on := s.leveling.Load()
-	switch {
-	case on:
-		s.leveler.apply(frame)
-	default:
-		if s.wasLeveling {
-			s.leveler.forget()
-		}
-		if len(frame) > 0 {
-			s.leveler.observe(frame)
-		}
-	}
-	s.wasLeveling = on
-	s.remember(frame)
+	s.Process(frame)
+	s.Add(frame)
 
 	for _, l := range s.listeners {
 		if !l.unleveled {

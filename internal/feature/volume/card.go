@@ -1,8 +1,9 @@
 package volume
 
 import (
+	"github.com/ygelfand/libcountertop/pkg/display/shell"
+
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
 
 func (v *Volume) Card() shell.View              { return v.card }

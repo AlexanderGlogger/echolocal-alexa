@@ -6,15 +6,16 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+	"github.com/ygelfand/libcountertop/pkg/host/prompt"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
 	"github.com/ygelfand/echolocal/internal/host/installer"
 )
 
 func resolveName(
 	ctx context.Context,
 	out io.Writer,
-	d *device.Device,
+	d *adb.Device,
 	flag string,
 ) (string, error) {
 	existing, err := installer.ReadName(d)
@@ -34,7 +35,7 @@ func resolveName(
 	if existing != "" {
 		return existing, nil
 	}
-	if !isTerminal() {
+	if !prompt.IsTerminal() {
 		return "", fmt.Errorf("%w: pass --name to name this device", installer.ErrNoName)
 	}
 	return promptName(ctx, out, installer.SuggestName(d))
@@ -49,7 +50,7 @@ func promptName(ctx context.Context, out io.Writer, suggested string) (string, e
 		),
 	)
 
-	return line(ctx, out, "Name this device", suggested, false)
+	return prompt.Line(ctx, out, "Name this device", suggested, false)
 }
 
 func nameFlag(c *cobra.Command, target *string) {

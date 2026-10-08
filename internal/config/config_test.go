@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
+
 	"github.com/ygelfand/echolocal/internal/defaults"
 )
 
@@ -34,10 +36,10 @@ func TestDefaultsWhenUnset(t *testing.T) {
 	if id := got.Wake.Slot(0).ID; id != "" {
 		t.Errorf("slot 1 id = %q, want empty so the slot is off", id)
 	}
-	if v := got.Wake.Slot(1).Threshold; v != DefaultThreshold {
+	if v := got.Wake.Slot(1).Threshold; v != schema.DefaultThreshold {
 		t.Errorf("slot 2 threshold = %v", v)
 	}
-	if v := got.Wake.Slot(0).Delivery; v != DeliveryWhole {
+	if v := got.Wake.Slot(0).Delivery; v != schema.DeliveryWhole {
 		t.Errorf("slot 1 delivery = %q, want the whole file by default", v)
 	}
 }
@@ -64,10 +66,10 @@ func TestSlotSettingsAreIndependent(t *testing.T) {
 	for _, set := range []func() error{
 		func() error { return st.Set().Wake(0).ID("glados") },
 		func() error { return st.Set().Wake(0).Threshold(0.97) },
-		func() error { return st.Set().Wake(0).Tone(ToneRise) },
+		func() error { return st.Set().Wake(0).Tone(schema.ChimeRise) },
 		func() error { return st.Set().Wake(0).FollowUp(8) },
 		func() error { return st.Set().Wake(1).ID("hey_jarvis") },
-		func() error { return st.Set().Wake(1).Delivery(DeliveryStream) },
+		func() error { return st.Set().Wake(1).Delivery(schema.DeliveryStream) },
 	} {
 		if err := set(); err != nil {
 			t.Fatalf("setting a slot: %v", err)
@@ -81,23 +83,23 @@ func TestSlotSettingsAreIndependent(t *testing.T) {
 	if v := got.Slot(0).Threshold; v != 0.97 {
 		t.Errorf("slot 1 threshold = %v", v)
 	}
-	if v := got.Slot(0).Tone; v != ToneRise {
+	if v := got.Slot(0).Tone; v != schema.ChimeRise {
 		t.Errorf("slot 1 tone = %q", v)
 	}
 	if v := got.Slot(0).FollowUp; v != 8 {
 		t.Errorf("slot 1 follow-up = %d", v)
 	}
-	if v := got.Slot(0).Delivery; v != DefaultDelivery {
+	if v := got.Slot(0).Delivery; v != schema.DefaultDelivery {
 		t.Errorf("slot 1 delivery = %q, want slot 2's change not to reach it", v)
 	}
 
-	if v := got.Slot(1).Delivery; v != DeliveryStream {
+	if v := got.Slot(1).Delivery; v != schema.DeliveryStream {
 		t.Errorf("slot 2 delivery = %q", v)
 	}
-	if v := got.Slot(1).Threshold; v != DefaultThreshold {
+	if v := got.Slot(1).Threshold; v != schema.DefaultThreshold {
 		t.Errorf("slot 2 threshold = %v, want the default", v)
 	}
-	if v := got.Slot(1).FollowUp; v != DefaultFollowUp {
+	if v := got.Slot(1).FollowUp; v != schema.DefaultFollowUp {
 		t.Errorf("slot 2 follow-up = %d, want off", v)
 	}
 }
@@ -163,7 +165,7 @@ func TestAPartialFileKeepsTheDefaults(t *testing.T) {
 	if !got.Microphone.Leveling {
 		t.Error("leveling came back off, so a missing key beat its default")
 	}
-	if got.Update.Channel != DefaultChannel {
+	if got.Update.Channel != schema.DefaultChannel {
 		t.Errorf("channel = %q, want the default", got.Update.Channel)
 	}
 }

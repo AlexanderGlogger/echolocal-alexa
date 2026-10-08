@@ -7,10 +7,12 @@ import (
 	"sync"
 	"time"
 
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
+
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/hardware/indicate"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 type Priority = indicate.Priority
@@ -72,9 +74,9 @@ var (
 )
 
 func init() {
-	component.Register(component.Hardware, Get, component.Order(5),
+	component.Register(sharedcomponent.Hardware, Get, sharedcomponent.Order(5),
 		component.Needs(board.Ring),
-		component.Supervise(service.Restart(time.Second, 30*time.Second)))
+		sharedcomponent.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
 func Get() *Driver {

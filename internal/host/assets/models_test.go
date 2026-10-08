@@ -7,8 +7,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/ygelfand/libcountertop/pkg/inference/wake"
+
 	"github.com/ygelfand/echolocal/internal/host/assets"
-	"github.com/ygelfand/echolocal/internal/lib/wake"
 )
 
 var want = []string{"hey_jarvis", "hey_mycroft", "okay_nabu"}

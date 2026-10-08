@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ygelfand/echolocal/internal/host/device"
+	"github.com/ygelfand/libcountertop/pkg/host/adb"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -17,7 +18,7 @@ var rebootSteps = []step{
 	{"echod started on its own", awaitResident},
 }
 
-func RebootAndWait(ctx context.Context, d *device.Device, report Reporter) error {
+func RebootAndWait(ctx context.Context, d *adb.Device, report Reporter) error {
 	r := &run{d: d, ctx: ctx}
 	r.board()
 	return execute(ctx, rebootSteps, r, report)

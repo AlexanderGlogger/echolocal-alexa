@@ -1,14 +1,14 @@
 package detect
 
 import (
-	"context"
-	"log/slog"
 	"sync"
 	"time"
 
-	sharedengine "github.com/ygelfand/libcountertop/pkg/inference/detect"
+	esphome "github.com/ygelfand/go-esphome-device"
 
-	"github.com/ygelfand/echolocal/internal/layout"
+	"github.com/ygelfand/libcountertop/pkg/inference/detect"
+	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
@@ -17,19 +17,19 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
+	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
-	"github.com/ygelfand/echolocal/internal/service"
 )
 
 func init() {
-	component.Register(component.Device, Get, component.Order(40),
-		component.Supervise(service.Restart(time.Second, 30*time.Second)))
+	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(40),
+		sharedcomponent.Supervise(service.Restart(time.Second, 30*time.Second)))
 }
 
 type Detect struct {
-	engine *Engine
-	busy   *wakeBusy
-	stop   *sharedengine.StopWord
+	*detect.Engine
+	busy *wakeBusy
+	stop *detect.StopWord
 }
 
 var (
@@ -56,26 +56,25 @@ func paused() bool {
 }
 
 func newDetect() *Detect {
-	e := New(StopSlot+1, mic.Get())
+	e := detect.New(detect.StopSlot+1, mic.Get())
 	e.Paused = paused
 
 	e.Threshold = func(slot int) float64 {
-		if slot == StopSlot {
+		if slot == detect.StopSlot {
 			return config.Get().Wake.Stop.Threshold
 		}
 		return wakeword.Threshold(slot)
 	}
-
 	e.OnDetect = func(slot int) {
-		if slot == StopSlot {
+		if slot == detect.StopSlot {
 			voice.Get().Interrupt()
 			return
 		}
 		voice.Get().Start(slot)
 	}
 
-	d := &Detect{engine: e, busy: newWakeBusy(led.Get().Busy(), e.Ready)}
-	d.stop = sharedengine.NewStopWord(e, sharedengine.StopOptions{
+	d := &Detect{Engine: e, busy: newWakeBusy(led.Get().Busy(), e.Ready)}
+	d.stop = detect.NewStopWord(e, detect.StopOptions{
 		Directory: layout.StateDir, DeviceID: component.DeviceMicrophone,
 		Read: func() float64 { return config.Get().Wake.Stop.Threshold },
 		Save: func(v float64) error { return config.Set().Stop().Threshold(v) },
@@ -92,58 +91,16 @@ func newDetect() *Detect {
 
 	voice.Get().OnWakeWord(d.load, diag.Get().Measure)
 
-	ours := wake.Lib().Ours()
-	slog.Info("wake words installed", "count", len(ours),
-		"openwakeword", len(wake.OfKind(ours, wake.KindOpenWakeWord)),
-		"microwakeword", len(wake.OfKind(ours, wake.KindMicroWakeWord)))
-
+	detect.LogInstalled(wake.Lib().Ours())
 	return d
 }
 
-func (d *Detect) Name() string { return "wake" }
-
-func (d *Detect) Start(ctx context.Context) error { return d.engine.Start(ctx) }
-
-func (d *Detect) Run(ctx context.Context) error { return d.engine.Run(ctx) }
-
-func (d *Detect) Close() error { return d.engine.Close() }
+func (d *Detect) Entities() []esphome.Entity { return []esphome.Entity{d.stop.Entity} }
+func (d *Detect) Restore(c config.Config)    { d.stop.Restore(c.Wake.Stop.Threshold) }
 
 func (d *Detect) load(ids []string) []string {
 	d.busy.begin()
-
-	models := wake.Lib().Ensure(ids)
-
-	accepted := make([]string, wakeword.Slots)
-	var loaded []int
-	for slot := range wakeword.Slots {
-		if slot >= len(ids) || ids[slot] == "" {
-			d.engine.Clear(slot)
-			continue
-		}
-
-		m, ok := wake.Find(models, ids[slot])
-		if !ok {
-			slog.Warn("unknown wake word", "slot", slot+1, "id", ids[slot])
-			d.engine.Clear(slot)
-			continue
-		}
-		if err := d.engine.Use(slot, m); err != nil {
-			slog.Error(
-				"loading the selected wake word failed",
-				"slot",
-				slot+1,
-				"id",
-				m.ID,
-				"err",
-				err,
-			)
-			d.engine.Clear(slot)
-			continue
-		}
-		accepted[slot] = m.ID
-		loaded = append(loaded, slot)
-	}
-
+	accepted, loaded := detect.Choose(d.Engine, wake.Lib().Ensure(ids), ids, wakeword.Slots)
 	d.busy.waitFor(loaded)
 	return accepted
 }
