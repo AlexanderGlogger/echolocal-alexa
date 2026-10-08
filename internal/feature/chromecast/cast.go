@@ -9,7 +9,6 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/resample"
 	"github.com/ygelfand/libcountertop/pkg/display/surface"
 	"github.com/ygelfand/libcountertop/pkg/display/video"
-	"github.com/ygelfand/libcountertop/pkg/media/cast/preferences"
 	"github.com/ygelfand/libcountertop/pkg/media/castreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
@@ -27,7 +26,6 @@ import (
 )
 
 func init() {
-	preferences.Configure(castreceiver.Preferences("echolocal", config.CastSection))
 	component.Register(
 		sharedcomponent.Device,
 		Get,
@@ -72,7 +70,8 @@ func build() *castreceiver.Receiver {
 			Resample: func(from int) func([]int16) []int16 {
 				return resample.NewRational(from, speaker.Rate, speaker.Channels).Run
 			},
-			Surface: func() *surface.Client { return display.Get().Helper() },
+			Surface:     func() *surface.Client { return display.Get().Helper() },
+			Preferences: castreceiver.Preferences("echolocal", config.CastSection),
 		},
 	})
 }
