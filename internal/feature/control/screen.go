@@ -10,11 +10,12 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
 
-func showing() []*cobra.Command {
+func showing(t *harness.Tree) {
 	shot := &cobra.Command{
 		Use:   "shot <path>",
 		Short: "Write what the panel is showing to a PNG",
@@ -28,7 +29,10 @@ func showing() []*cobra.Command {
 		},
 	}
 
-	return append([]*cobra.Command{shot, thumbsCommand(), setCommand()}, panelCommands()...)
+	open, stack, ready := panelCommands()
+	t.Add(harness.DisplayTask, shot, thumbsCommand(), open, stack)
+	t.Add(harness.DeviceTask, ready)
+	t.Top(setCommand())
 }
 
 func save(path string) error {

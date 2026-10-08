@@ -2,6 +2,6 @@
 
 package control
 
-import "github.com/spf13/cobra"
+import harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
-func showing() []*cobra.Command { return nil }
+func showing(*harness.Tree) {}

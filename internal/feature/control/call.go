@@ -11,7 +11,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 )
 
-func init() { boardCommands = append(boardCommands, callCommand) }
+func init() {
+	boardCommands = append(boardCommands, func(t *harness.Tree) { t.Top(callCommand()) })
+}
 func callCommand() *cobra.Command {
 	c := call.Get()
 	return harness.CallCommand(

@@ -21,8 +21,8 @@ const (
 	readyEvery = 200 * time.Millisecond
 )
 
-func panelCommands() []*cobra.Command {
-	open := &cobra.Command{
+func panelCommands() (open, stack, ready *cobra.Command) {
+	open = &cobra.Command{
 		Use:   "open <page>",
 		Short: "Put a settings page up: " + strings.Join(pages.Pages(), ", "),
 		Args:  cobra.ExactArgs(1),
@@ -38,7 +38,7 @@ func panelCommands() []*cobra.Command {
 		},
 	}
 
-	stack := &cobra.Command{
+	stack = &cobra.Command{
 		Use:   "stack",
 		Short: "The screens up, top first, and which are held",
 		Args:  cobra.NoArgs,
@@ -68,7 +68,7 @@ func panelCommands() []*cobra.Command {
 		},
 	}
 
-	ready := &cobra.Command{
+	ready = &cobra.Command{
 		Use:   "ready [milliseconds]",
 		Short: "Wait until the boot screen lets go of the panel, and say what has it",
 		Args:  cobra.MaximumNArgs(1),
@@ -97,7 +97,7 @@ func panelCommands() []*cobra.Command {
 		},
 	}
 
-	return []*cobra.Command{open, stack, ready}
+	return open, stack, ready
 }
 
 func shown(at display.Priority) string {

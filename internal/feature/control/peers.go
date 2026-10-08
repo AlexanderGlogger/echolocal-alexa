@@ -16,12 +16,12 @@ import (
 var says = harness.Says
 
 func init() {
-	boardCommands = append(boardCommands, func() *cobra.Command {
-		return says(&cobra.Command{
+	boardCommands = append(boardCommands, func(t *harness.Tree) {
+		t.Add(harness.DeviceTask, says(&cobra.Command{
 			Use:   "peers",
 			Short: "Other devices on the network",
 			Args:  cobra.NoArgs,
-		}, peers)
+		}, peers))
 	})
 }
 

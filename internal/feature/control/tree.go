@@ -8,22 +8,20 @@ import (
 )
 
 func (c *Control) tree() *cobra.Command {
-	root := harness.NewRoot()
-
-	root.AddCommand(telling()...)
-	root.AddCommand(showing()...)
-	root.AddCommand(hearing()...)
-	root.AddCommand(cancelling()...)
-	root.AddCommand(waiting())
-	root.AddCommand(c.inputEngine().Commands()...)
+	t := harness.NewTree()
+	t.Add(harness.DeviceTask, telling()...)
+	t.Add(harness.DeviceTask, harness.WaitCommand())
+	t.Add(harness.InputTask, c.inputEngine().Commands()...)
+	t.Add(harness.AudioTask, hearing()...)
+	t.Add(harness.AudioTask, cancelling()...)
+	showing(t)
 	for _, more := range boardCommands {
-		root.AddCommand(more())
+		more(t)
 	}
-	harness.Organize(root)
-	return root
+	return t.Root()
 }
 
-var boardCommands []func() *cobra.Command
+var boardCommands []func(*harness.Tree)
 
 func telling() []*cobra.Command {
 	commands := harness.DeviceCommands(deviceInfo)
@@ -45,5 +43,3 @@ func telling() []*cobra.Command {
 
 	return append(commands, logs)
 }
-
-func waiting() *cobra.Command { return harness.WaitCommand() }

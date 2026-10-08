@@ -27,8 +27,6 @@ var InitRC = Part{Name: "service", Path: layout.InitRC, Data: initRC, Mode: 0o64
 
 var registered []Part
 
-func register(p Part) { registered = append(registered, p) } //nolint:unused
-
 func All() []Part { return registered }
 
 var (

@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	boardCommands = append(boardCommands, btCommand)
+	boardCommands = append(boardCommands, func(t *harness.Tree) { t.Top(btCommand()) })
 	boardSettings = append(boardSettings, speakerRows)
 }
 

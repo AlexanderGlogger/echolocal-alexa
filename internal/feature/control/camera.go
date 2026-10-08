@@ -9,6 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
+
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
 	"github.com/ygelfand/echolocal/internal/feature/vision"
@@ -17,7 +19,7 @@ import (
 const stillPath = "/data/local/tmp/still.jpg"
 
 func init() {
-	boardCommands = append(boardCommands, cameraCommand)
+	boardCommands = append(boardCommands, func(t *harness.Tree) { t.Top(cameraCommand()) })
 	boardSettings = append(boardSettings, cameraSettings)
 }
 

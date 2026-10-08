@@ -17,6 +17,8 @@ var camshim []byte
 //go:embed payload/echolocal-camera
 var camera []byte
 
+func register(p Part) { registered = append(registered, p) }
+
 func init() {
 	register(
 		Part{
