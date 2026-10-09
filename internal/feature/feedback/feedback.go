@@ -84,4 +84,4 @@ func Failure() {
 
 func Cancelled() { Get().Sound(sharedtone.ToneCancel) }
 
-func Volume() { Get().Preview() }
+func Preview(s config.Stream) { Get().Preview(s) }

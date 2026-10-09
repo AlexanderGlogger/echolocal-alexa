@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package settings
 
@@ -26,6 +26,7 @@ func idlePages() *sharedpages.IdlePages {
 			Weather:      weather.Get(),
 			SaverWeather: weather.Get().Saver(),
 			Thumbnail:    visual.Thumbs().Fit,
+			Previews:     previewKit(),
 		},
 	)
 }

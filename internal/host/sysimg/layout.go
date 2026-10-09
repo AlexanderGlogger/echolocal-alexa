@@ -46,6 +46,10 @@ var (
 		OTAKey:   OTAKey,
 		OTAValue: OTAValue,
 	}
+	Crown = Layout{
+		OTAKey:   OTAKey,
+		OTAValue: OTAValue,
+	}
 )
 
 var Rook = Layout{

@@ -15,6 +15,7 @@ var profiles = map[string]Profile{
 	board.Biscuit.Device:  biscuit,
 	board.Checkers.Device: checkers,
 	board.Cronos.Device:   cronos,
+	board.Crown.Device:    crown,
 	board.Rook.Device:     rook,
 }
 

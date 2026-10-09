@@ -61,6 +61,8 @@ type Board struct {
 
 	Keys map[uint16]Key
 
+	Touch string
+
 	MuteDir string
 
 	// A screen capture reads back through the same rotation it was drawn with.

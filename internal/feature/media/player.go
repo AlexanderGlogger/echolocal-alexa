@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -12,7 +13,6 @@ import (
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/libcountertop/pkg/audio/noise"
-	sharedtone "github.com/ygelfand/libcountertop/pkg/audio/tone"
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/media/mediaplayer"
@@ -21,6 +21,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/feedback"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
@@ -49,6 +50,7 @@ type Player struct {
 	layers []*esphome.Select
 
 	Volume hook.Hook[int]
+	Levels *sharedvolume.Mixer
 
 	turns atomic.Pointer[func(delta int) bool]
 
@@ -96,6 +98,15 @@ func build() *Player {
 	}
 	p.layers = noiseLayers()
 	component.Settings.Add(p.duck)
+	p.Levels = sharedvolume.NewMixer(sharedvolume.MixerOptions{
+		Output:  speaker.Get(),
+		Streams: Streams(),
+		Save: func(s config.Stream, level int) error {
+			return config.Set().Volume().Level(s, level)
+		},
+		Device: component.DevicePlayback,
+	})
+	p.Levels.Watch(config.StreamMedia, func(int) { p.Changed() })
 
 	bases := []*esphome.Base{
 		&p.resampling.Base,
@@ -170,6 +181,7 @@ func (p *Player) WatchVolume(changed func(int)) func() { return p.Volume.Listen(
 
 func (p *Player) Entities() []esphome.Entity {
 	out := []esphome.Entity{p.Entity(), p.jack, p.resampling}
+	out = append(out, p.Levels.Entities()...)
 	out = append(out, p.duck.Entities()...)
 	out = append(out, p.asp)
 	for _, sel := range p.layers {
@@ -181,6 +193,8 @@ func (p *Player) Entities() []esphome.Entity {
 func (p *Player) Restore(c config.Config) {
 	p.apply(c.Speaker.Volume, false)
 	slog.Info("restored", "what", "volume", "step", c.Speaker.Volume, "of", VolumeSteps)
+	p.Levels.Restore(c.Volume.Level)
+	p.Changed()
 
 	component.Restore(p.resampling, c.Speaker.Resampling, speaker.Get().SetResampling)
 
@@ -228,17 +242,21 @@ func (p *Player) sound() {
 type mediaVolume struct{ p *Player }
 
 func (v mediaVolume) SetVolume(fraction float32) {
-	v.p.Set(int(math.Round(float64(fraction) * VolumeSteps)))
+	v.p.Levels.Set(config.StreamMedia, int(math.Round(float64(fraction)*100)))
 }
 
-func (v mediaVolume) StepVolume(delta int) { v.p.Adjust(delta) }
+func (v mediaVolume) StepVolume(delta int) {
+	levels := v.p.Levels
+	levels.Set(config.StreamMedia, levels.Level(config.StreamMedia)+delta*sharedvolume.Step)
+}
 
-func (v mediaVolume) Mute(muted bool) {
-	if muted {
-		speaker.Get().SetVolume(0)
-		return
-	}
-	speaker.Get().SetVolume(v.p.Step())
+func (v mediaVolume) Mute(muted bool) { v.p.Levels.Mute(config.StreamMedia, muted) }
+
+func Streams() []config.Stream {
+	return slices.DeleteFunc(
+		config.Streams(),
+		func(s config.Stream) bool { return s == config.StreamMain },
+	)
 }
 
 func (p *Player) SetIdle(v schema.Delay) {
@@ -248,6 +266,8 @@ func (p *Player) SetIdle(v schema.Delay) {
 }
 
 func (p *Player) refresh() {
+	p.Entity().SetVolume(float32(p.Levels.Level(config.StreamMedia)) / 100)
+	p.Entity().SetMuted(p.Levels.Muted(config.StreamMedia))
 	if len(p.Stream().Noise()) == 0 {
 		for _, sel := range p.layers {
 			sel.Set(noiseOff)
@@ -266,7 +286,6 @@ func (p *Player) apply(step int, tell bool) int {
 	step = max(0, min(step, VolumeSteps))
 	p.step.Store(int64(step))
 
-	p.Entity().SetVolume(float32(step) / VolumeSteps)
 	speaker.Get().SetVolume(step)
 	if !tell {
 		return step
@@ -291,7 +310,7 @@ func (p *Player) turn(delta int) {
 
 func (p *Player) Adjust(delta int) {
 	p.Set(p.Step() + delta)
-	speaker.Sound().Chime(sharedtone.ToneVolume)
+	feedback.Get().Preview(config.StreamMain)
 }
 
 func (p *Player) show(step int) {

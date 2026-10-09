@@ -107,7 +107,47 @@ func hearing() []*cobra.Command {
 		},
 	}
 
-	record.AddCommand(echo)
+	raw := &cobra.Command{
+		Use:   "raw <seconds> <path>",
+		Short: "Record every capture channel, raw and undecoded",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			d, err := seconds(args[0])
+			if err != nil {
+				return err
+			}
+
+			frames, stop := mic.Get().ListenRaw()
+			defer stop()
+
+			var buf []byte
+			err = capture.Listen(cmd.Context(), d, frames, func(b []byte) { buf = append(buf, b...) })
+			if err != nil {
+				return err
+			}
+			if len(buf) == 0 {
+				return fmt.Errorf("record raw: nothing captured")
+			}
+
+			chans := mic.DecodeAll(buf)
+			n := len(chans[0])
+			wav := make([]int16, 0, n*len(chans))
+			for i := range n {
+				for c := range chans {
+					wav = append(wav, chans[c][i])
+				}
+			}
+			if err := write(args[1], len(chans), wav); err != nil {
+				return err
+			}
+
+			fmt.Fprintf(cmd.OutOrStdout(), "%s seconds %.2f channels %d\n",
+				args[1], float64(n)/mic.Rate, len(chans))
+			return nil
+		},
+	}
+
+	record.AddCommand(echo, raw)
 	return []*cobra.Command{record}
 }
 

@@ -1,3 +1,3 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package control

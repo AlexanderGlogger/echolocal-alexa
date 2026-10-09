@@ -17,6 +17,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dhcp"
+	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/timesync"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
@@ -80,16 +81,16 @@ func build() *castreceiver.Receiver {
 
 type mediaVolume struct{}
 
-func (mediaVolume) Level() int { return volume.Get().Level(config.StreamMain) }
+func (mediaVolume) Level() int { return volume.Get().Level(config.StreamMedia) }
 
-func (mediaVolume) SetLevel(level int) { volume.Get().Set(config.StreamMain, level) }
+func (mediaVolume) SetLevel(level int) { volume.Get().Set(config.StreamMedia, level) }
+
+func (mediaVolume) Mute(on bool) { media.Get().Levels.Mute(config.StreamMedia, on) }
+
+func (mediaVolume) Muted() bool { return media.Get().Levels.Muted(config.StreamMedia) }
 
 func (mediaVolume) Listen(changed func(int)) func() {
-	return volume.Get().Changed.Listen(func(c volume.Change) {
-		if c.Stream == config.StreamMain {
-			changed(c.Level)
-		}
-	})
+	return media.Get().Levels.Watch(config.StreamMedia, changed)
 }
 
 func deviceName() string {

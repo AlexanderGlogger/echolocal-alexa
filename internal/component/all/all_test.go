@@ -13,6 +13,12 @@ import (
 )
 
 var registered = []string{
+	"alerts_alert",
+	"alerts_info",
+	"alerts_ring_for",
+	"alerts_success",
+	"alerts_timer",
+	"alerts_warning",
 	"ble_advertisements",
 	"bluetooth_proxy",
 	"button_action",
@@ -103,6 +109,10 @@ var registered = []string{
 	"update_status",
 	"verify_certificates",
 	"voice_resampling",
+	"volume_alerts",
+	"volume_feedback",
+	"volume_media",
+	"volume_voice",
 	"wake_assistant_1",
 	"wake_assistant_2",
 	"wake_effect_1",

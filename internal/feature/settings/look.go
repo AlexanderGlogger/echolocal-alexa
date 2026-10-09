@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package settings
 
@@ -15,6 +15,7 @@ func lookPages() *sharedsettings.LookPages {
 			Preferences: preferences(),
 			Shell:       shell.Get(),
 			Thumbnail:   visual.Thumbs().Fit,
+			Previews:    previewKit(),
 		},
 	)
 }

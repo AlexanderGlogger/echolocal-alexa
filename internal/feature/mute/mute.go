@@ -193,7 +193,7 @@ func (m *Mute) pressed(e buttons.Event) {
 	case buttons.Tap:
 		m.Toggle()
 	case buttons.Hold:
-		speaker.Sound().Chime(sharedtone.ToneMuteHold)
+		speaker.Sound().Chime(config.StreamFeedback, sharedtone.ToneMuteHold)
 	}
 }
 
@@ -221,7 +221,8 @@ func (m *Mute) settled(asked bool) {
 	}
 	slog.Info("microphone mute", "muted", muted)
 
-	speaker.Sound().Chime(speaker.MuteTone(config.Get().Microphone.MuteSound, muted))
+	speaker.Sound().
+		Chime(config.StreamFeedback, speaker.MuteTone(config.Get().Microphone.MuteSound, muted))
 }
 
 const pollInterval = 25 * time.Millisecond

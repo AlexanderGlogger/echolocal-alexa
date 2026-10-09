@@ -4,6 +4,10 @@ import (
 	"encoding/binary"
 	"math"
 	"testing"
+
+	"github.com/ygelfand/libcountertop/pkg/audio/volume"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 type recorder struct {
@@ -39,7 +43,7 @@ func newTestPlayer() *Player {
 
 func TestNothingAttachedPlaysTheQueueAlone(t *testing.T) {
 	p := newTestPlayer()
-	p.pending.Push([]int16{100, 200, 300})
+	p.bus.Push(config.StreamMedia, []int16{100, 200, 300})
 
 	got := played(t, p)
 
@@ -53,7 +57,7 @@ func TestNothingAttachedPlaysTheQueueAlone(t *testing.T) {
 
 func TestASourceIsSummedWithTheQueue(t *testing.T) {
 	p := newTestPlayer()
-	p.pending.Push([]int16{100, 200})
+	p.bus.Push(config.StreamMedia, []int16{100, 200})
 	p.Attach(&recorder{fill: 10})
 
 	got := played(t, p)
@@ -68,7 +72,7 @@ func TestASourceIsSummedWithTheQueue(t *testing.T) {
 
 func TestSummingTwoLoudThingsClampsInsteadOfWrapping(t *testing.T) {
 	p := newTestPlayer()
-	p.pending.Push([]int16{math.MaxInt16 - 10})
+	p.bus.Push(config.StreamMedia, []int16{math.MaxInt16 - 10})
 	p.Attach(&recorder{fill: 1000})
 
 	if got := played(t, p)[0]; got != math.MaxInt16 {
@@ -98,5 +102,25 @@ func TestDetachingStopsTheSource(t *testing.T) {
 
 	if got := played(t, p)[0]; got != 0 {
 		t.Errorf("detached = %d, want silence", got)
+	}
+}
+
+func TestTheSourceFollowsTheMediaLevelLive(t *testing.T) {
+	p := newTestPlayer()
+	p.Attach(&recorder{fill: 10000})
+	p.bus.Push(config.StreamVoice, []int16{1000})
+
+	p.SetLevel(config.StreamMedia, 60)
+	p.SetLevel(config.StreamVoice, 100)
+	got := played(t, p)
+
+	want := int16(float32(10000)*volume.Gain(60)) + 1000
+	if got[0] != want {
+		t.Errorf("mixed = %d, want media at its level plus voice at full, %d", got[0], want)
+	}
+
+	p.Mute(config.StreamMedia, true)
+	if got := played(t, p)[0]; got != 0 {
+		t.Errorf("muted media still played %d", got)
 	}
 }

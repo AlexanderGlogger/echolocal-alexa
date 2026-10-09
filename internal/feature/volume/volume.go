@@ -1,11 +1,7 @@
 package volume
 
 import (
-	"log/slog"
-	"slices"
 	"sync"
-
-	esphome "github.com/ygelfand/go-esphome-device"
 
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	sharedview "github.com/ygelfand/libcountertop/pkg/display/volume"
@@ -14,9 +10,9 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/feedback"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
-	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
 
 func init() {
@@ -31,11 +27,9 @@ func init() {
 type Change = sharedvolume.Change
 
 type Volume struct {
-	entities *sharedvolume.Entities
-	Changed  sharedvolume.Changes
+	Changed sharedvolume.Changes
 
-	card    *sharedview.Card
-	numbers map[config.Stream]*esphome.Number
+	card *sharedview.Card
 }
 
 var (
@@ -45,11 +39,10 @@ var (
 
 func Get() *Volume {
 	once.Do(func() {
-		shared = &Volume{numbers: map[config.Stream]*esphome.Number{}}
-		shared.card = sharedview.NewCard(shell.Get())
-		shared.build()
+		shared = &Volume{card: sharedview.NewCard(shell.Get())}
 
 		media.Get().Volume.Listen(func(int) { shared.changed(config.StreamMain) })
+		media.Get().Levels.Changed.Listen(func(c Change) { shared.changed(c.Stream) })
 		media.Get().SetTurns(shared.turn)
 	})
 	return shared
@@ -57,23 +50,11 @@ func Get() *Volume {
 
 func (v *Volume) Name() string { return "volume" }
 
-func (v *Volume) Entities() []esphome.Entity { return v.entities.Entities() }
-
-func (v *Volume) Restore(c config.Config) {
-	for _, s := range config.Streams() {
-		if s == config.StreamMain {
-			continue
-		}
-		v.hold(s, c.Volume.Level(s))
-		slog.Info("restored", "what", v.numbers[s].ObjectID, "using", c.Volume.Level(s))
-	}
-}
-
 func (v *Volume) Level(s config.Stream) int {
 	if s == config.StreamMain {
 		return media.Get().Step() * 100 / media.VolumeSteps
 	}
-	return config.Get().Volume.Level(s)
+	return media.Get().Levels.Level(s)
 }
 
 func (v *Volume) Set(s config.Stream, level int) {
@@ -86,12 +67,7 @@ func (v *Volume) Set(s config.Stream, level int) {
 		media.Get().Set((level*media.VolumeSteps + 50) / 100)
 		return
 	}
-
-	v.hold(s, level)
-	if err := config.Set().Volume().Level(s, level); err != nil {
-		slog.Error("saving a volume failed", "stream", s, "err", err)
-	}
-	v.changed(s)
+	media.Get().Levels.Set(s, level)
 }
 
 func (v *Volume) turn(delta int) bool {
@@ -104,6 +80,7 @@ func (v *Volume) turn(delta int) bool {
 	}
 
 	v.Set(s, v.Level(s)+delta*sharedvolume.Step)
+	feedback.Preview(s)
 	return true
 }
 
@@ -117,11 +94,6 @@ func wanted() (config.Stream, bool) {
 	return v.Wants()
 }
 
-func (v *Volume) hold(s config.Stream, level int) {
-	speaker.Get().SetLevel(s, sharedvolume.Clamp(level))
-	v.numbers[s].Set(float32(sharedvolume.Clamp(level)))
-}
-
 func (v *Volume) changed(s config.Stream) {
 	v.Changed.Emit(Change{Stream: s, Level: v.Level(s)})
 	if showing(s) {
@@ -129,16 +101,6 @@ func (v *Volume) changed(s config.Stream) {
 		return
 	}
 	v.card.Show(s)
-}
-
-func (v *Volume) build() {
-	streams := config.Streams()
-	streams = slices.DeleteFunc(
-		streams,
-		func(s config.Stream) bool { return s == config.StreamMain },
-	)
-	v.entities = sharedvolume.NewEntities(v, streams, component.DevicePlayback)
-	v.numbers = v.entities.Numbers
 }
 
 func (v *Volume) Watch(stream config.Stream, changed func(int)) func() {

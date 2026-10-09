@@ -284,6 +284,8 @@ func (s *Source) ListenRaw() (<-chan []byte, func()) {
 
 func Decode(raw []byte) [][]int16 { return decode(raw, 0, Mics) }
 
+func DecodeAll(raw []byte) [][]int16 { return decode(raw, 0, Channels) }
+
 // The loopback is the DAC feed, bit exact, decimated and aligned with the microphones by the same hardware.
 func Reference(raw []byte) [][]int16 { return decode(raw, Mics, Refs) }
 

@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package settings
 
@@ -14,5 +14,6 @@ var clocks = sharedpages.NewClockPages(
 		Preferences: preferences(),
 		Shell:       shell.Get(),
 		Controller:  dashboard.Get(),
+		Previews:    previewKit(),
 	},
 )

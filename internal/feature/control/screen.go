@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package control
 
@@ -9,6 +9,7 @@ import (
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 	"github.com/ygelfand/libcountertop/pkg/runtime/control/screencmd"
 
+	"github.com/ygelfand/echolocal/internal/feature/timer"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
 
@@ -27,6 +28,6 @@ func showing(t *harness.Tree) {
 	}
 
 	open, stack, ready := panelCommands()
-	t.Add(harness.DisplayTask, shot, thumbsCommand(), open, stack)
+	t.Add(harness.DisplayTask, shot, thumbsCommand(), open, stack, screencmd.Timer(timer.Get))
 	t.Add(harness.DeviceTask, ready)
 }

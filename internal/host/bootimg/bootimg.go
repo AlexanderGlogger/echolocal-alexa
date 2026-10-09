@@ -74,7 +74,18 @@ var Cronos = Image{
 	URL:  downloads + "echolocal-boot-cronos.img",
 }
 
-var Images = []Image{Biscuit, Checkers, Cronos}
+var Crown = Image{
+	SHA256:  "798997a7b65e16ea348b255b30316bd72f32cb31f42e89388884cba97d291f61",
+	Size:    8443904,
+	Cmdline: "androidboot.selinux=permissive",
+	Build:   13222531716,
+	Device:  "crown",
+
+	File: "boot/echolocal-boot-crown.img",
+	URL:  downloads + "echolocal-boot-crown.img",
+}
+
+var Images = []Image{Biscuit, Checkers, Cronos, Crown}
 
 func (i Image) Asset() string {
 	at := strings.LastIndex(i.URL, "/")

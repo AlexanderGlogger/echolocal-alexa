@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_rook
+//go:build with_screen
 
 package settings
 
@@ -6,6 +6,7 @@ import (
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
 	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 
+	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/diag"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
@@ -36,6 +37,8 @@ func basicPages() *sharedsettings.BasicPages {
 			Home:        homecontrol.Get(),
 			HA:          homeassistant.Get(),
 			Marks:       modeMarks(),
+			Alerts:      alerts.Get(),
+			Previews:    previewKit(),
 			PowerPage:   func() sharedshell.View { return powerPage() },
 			VisualPage:  func() sharedshell.View { return visualPage() },
 		},

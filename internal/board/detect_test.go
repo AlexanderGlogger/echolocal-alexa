@@ -49,7 +49,7 @@ func TestDetectFallsBackToBiscuit(t *testing.T) {
 	}{
 		{"prop unreadable", "", errNoProp},
 		{"unknown device", "sailfish", nil},
-		{"no device recorded for it", "crown", nil},
+		{"no device recorded for it", "donut", nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			withDevice(t, tc.said, tc.err)

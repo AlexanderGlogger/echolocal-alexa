@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos
+//go:build with_screen
 
 package call
 
@@ -26,8 +26,7 @@ func (device) Claim(name string, run func(context.Context) error) {
 	speaker.Sound().
 		Claim(name, func(ctx context.Context, _ *speaker.Player) error { return run(ctx) })
 }
-func (device) Sounding()    {}
 func (device) Duck(on bool) { speaker.Sound().Backgrounds().Duck(on) }
-func (device) Chime(level float64, notes ...tone.Note) {
-	speaker.Sound().Interject(func(p *speaker.Player) { p.Chime(level, notes...) })
+func (device) Chime(s config.Stream, level float64, notes ...tone.Note) {
+	speaker.Sound().Interject(func(p *speaker.Player) { p.Chime(s, level, notes...) })
 }

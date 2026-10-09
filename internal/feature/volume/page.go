@@ -9,21 +9,42 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/feedback"
+	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
 
-var page = sync.OnceValue(
-	func() *sharedview.Page { return sharedview.NewPage(Get(), config.Streams(), chimes{}, shell.Get()) },
+var (
+	pageOnce sync.Once
+	sound    *sharedshell.Page
 )
+
+func page() *sharedshell.Page {
+	pageOnce.Do(func() {
+		sound = sharedview.NewPage(sharedview.PageOptions{
+			Levels:    Get(),
+			Streams:   config.Streams(),
+			MainSteps: media.VolumeSteps,
+			Chimes:    chimes{},
+		})
+	})
+	return sound
+}
 
 func Page() sharedshell.View { return page() }
 
 type shows interface{ Shows(config.Stream) bool }
 
-func showing(s config.Stream) bool { v, ok := shell.Get().Top().(shows); return ok && v.Shows(s) }
+func showing(s config.Stream) bool {
+	top := shell.Get().Top()
+	if top == sharedshell.View(page()) {
+		return true
+	}
+	v, ok := top.(shows)
+	return ok && v.Shows(s)
+}
 
 type chimes struct{}
 
 func (chimes) Chime() schema.Chime     { return config.Get().Feedback.Chime }
 func (chimes) SetChime(c schema.Chime) { feedback.Get().SetChime(c) }
-func (chimes) Preview()                { feedback.Volume() }
+func (chimes) Preview(s schema.Stream) { feedback.Preview(s) }

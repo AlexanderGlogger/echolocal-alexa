@@ -19,8 +19,8 @@ func init() {
 		sharedcomponent.Supervise(service.Restart(time.Second, time.Minute)))
 }
 
-const device = "goodix-ts"
-
-var get = sync.OnceValue(func() *touch.Screen { return touch.New(device, display.Get()) })
+var get = sync.OnceValue(
+	func() *touch.Screen { return touch.New(component.Board().Touch, display.Get()) },
+)
 
 func Get() *touch.Screen { return get() }

@@ -21,10 +21,7 @@ func (s outputSink) Written() uint64        { return s.p.Written() }
 
 func newOutput() *core.Output {
 	return core.NewOutput(outputSink{speaker.Get()}, core.Controls{
-		Volume: sharedvolume.Steps(
-			media.Get(),
-			speaker.VolumeSteps,
-		),
+		Volume:       sharedvolume.For(media.Get().Levels, config.StreamMedia),
 		Media:        media.Get(),
 		Settings:     config.MediaSection,
 		HardwareTail: sound.HardwareTail,

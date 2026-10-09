@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"math"
 	"testing"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
 
 func TestRescalingWhatIsQueuedNeverPlaysSilence(t *testing.T) {
@@ -15,7 +17,7 @@ func TestRescalingWhatIsQueuedNeverPlaysSilence(t *testing.T) {
 	for i := range queued {
 		queued[i] = 1000
 	}
-	p.pending.Push(queued)
+	p.bus.Push(config.StreamMedia, queued)
 
 	ducked := make(chan struct{})
 	go func() {

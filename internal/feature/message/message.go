@@ -10,6 +10,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	hwtouch "github.com/ygelfand/echolocal/internal/hardware/touch"
 )
 
@@ -20,6 +21,7 @@ var get = sync.OnceValue(func() *shared.Messages {
 			m.Dismiss(c.ID, image.Pt(c.X, c.Y))
 		}
 	})
+	m.SoundWith(alerts.Get())
 	return m
 })
 

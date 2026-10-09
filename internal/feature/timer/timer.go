@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/ygelfand/libcountertop/pkg/assistant/timer"
-	"github.com/ygelfand/libcountertop/pkg/audio/tone"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
@@ -19,8 +18,6 @@ import (
 func init() {
 	component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(31))
 }
-
-const alarmLevel = 0.6
 
 var (
 	countdownColor = led.Color{R: 0xFF, G: 0x8C, B: 0x00}
@@ -40,11 +37,8 @@ var get = sync.OnceValue(func() *timer.Timers {
 				sound.Backgrounds().Duck(false)
 			}
 		},
-		Chime: func() {
-			speaker.Sound().Interject(func(p *speaker.Player) {
-				p.ChimeStream(config.StreamAlerts, alarmLevel, tone.ToneTimer...)
-			})
-		},
+		Chime:     alerts.Get().RingTimer,
+		RingFor:   alerts.Get().RingFor,
 		Countdown: &ring{claim: countdown},
 	})
 })

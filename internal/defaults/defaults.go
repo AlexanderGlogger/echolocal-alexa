@@ -44,6 +44,7 @@ var sets = map[string]Set{
 	board.Biscuit.Device:  biscuit,
 	board.Checkers.Device: show5(),
 	board.Cronos.Device:   show5(),
+	board.Crown.Device:    show5(),
 }
 
 func For(b board.Board) Set {

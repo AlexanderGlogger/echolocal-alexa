@@ -55,6 +55,7 @@ func TestOnlyBoardsWithADeviceCanMatch(t *testing.T) {
 		"biscuit":  "biscuit_puffin",
 		"checkers": "checkers",
 		"cronos":   "cronos",
+		"crown":    "crown",
 		"rook":     "rook",
 	}
 
@@ -95,7 +96,8 @@ func TestUnsupportedBoardsClaimNothing(t *testing.T) {
 		t.Error("biscuit names no service for echod to be installed as")
 	}
 	supported := map[string]bool{
-		Biscuit.Device: true, Checkers.Device: true, Cronos.Device: true, Rook.Device: true,
+		Biscuit.Device: true, Checkers.Device: true, Cronos.Device: true,
+		Crown.Device: true, Rook.Device: true,
 	}
 
 	for _, b := range All {

@@ -15,6 +15,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/audio/mix"
 	"github.com/ygelfand/libcountertop/pkg/audio/tone"
 	"github.com/ygelfand/libcountertop/pkg/audio/upsample"
+	"github.com/ygelfand/libcountertop/pkg/audio/volume"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
@@ -61,8 +62,6 @@ type Player struct {
 	volume atomic.Uint32
 	step   atomic.Int32
 
-	levels levels
-
 	pathMu sync.Mutex
 	out    Output
 	seq    sequences
@@ -87,20 +86,13 @@ type Player struct {
 
 	deaf atomic.Uint64
 
-	pending mix.Queue
+	bus mix.Bus
+	sum []int32
 
 	written atomic.Uint64
-
-	srcMu  sync.Mutex
-	src    mix.Source
-	srcBuf []int16
 }
 
-func (p *Player) Attach(s mix.Source) {
-	p.srcMu.Lock()
-	defer p.srcMu.Unlock()
-	p.src = s
-}
+func (p *Player) Attach(s mix.Source) { p.bus.Attach(s) }
 
 func (p *Player) Written() uint64 { return p.written.Load() }
 
@@ -330,19 +322,20 @@ func (p *Player) SetTap(t mix.Tap) {
 }
 
 func (p *Player) fill(buf []byte) {
-	chunk := p.pending.Next(period * Channels)
-	take := len(chunk)
+	if cap(p.sum) < period*Channels {
+		p.sum = make([]int32, period*Channels)
+	}
+	mixed := p.sum[:period*Channels]
+	take, rendered := p.bus.Next(p.written.Load(), mixed)
 
 	if take > 0 && take < period*Channels {
 		p.splices.Add(1)
 	}
 
-	rendered := p.render()
-
 	// The internal speaker is one driver wired to the right channel.
 	mono := p.Output() == OutputSpeaker
 
-	fed := take > 0 || len(rendered) > 0
+	fed := take > 0 || rendered
 	drain := fed || p.fed
 	p.fed = fed
 
@@ -361,19 +354,7 @@ func (p *Player) fill(buf []byte) {
 
 	gain := p.Volume()
 	for i, j := 0, 0; i < period*Channels; i, j = i+Channels, j+1 {
-		var l, r int32
-		if i < len(chunk) {
-			l = int32(chunk[i])
-		}
-		if i+1 < len(chunk) {
-			r = int32(chunk[i+1])
-		}
-		if i < len(rendered) {
-			l += int32(rendered[i])
-		}
-		if i+1 < len(rendered) {
-			r += int32(rendered[i+1])
-		}
+		l, r := mixed[i], mixed[i+1]
 		if tap != nil {
 			p.tapBuf[i], p.tapBuf[i+1] = mix.Clamp(
 				int32(float32(l)*gain),
@@ -412,32 +393,9 @@ func (p *Player) fill(buf []byte) {
 	}
 }
 
-func (p *Player) render() []int16 {
-	p.srcMu.Lock()
-	src := p.src
-	p.srcMu.Unlock()
-
-	if src == nil {
-		return nil
-	}
-	if cap(p.srcBuf) < period*Channels {
-		p.srcBuf = make([]int16, period*Channels)
-	}
-	p.srcBuf = p.srcBuf[:period*Channels]
-	clear(p.srcBuf)
-
-	src.Render(p.written.Load(), p.srcBuf)
-	attenuate(p.srcBuf, p.Level(config.StreamMedia))
-	return p.srcBuf
-}
-
 func (p *Player) Play(samples []int16) { p.PlayStream(config.StreamMedia, samples) }
 
 func (p *Player) PlayStream(s config.Stream, samples []int16) {
-	p.queue(quieter(samples, p.Level(s)))
-}
-
-func (p *Player) queue(samples []int16) {
 	if pb, _ := p.device(); pb == nil {
 		if n := p.deaf.Add(1); n == 1 || n%100 == 0 {
 			slog.Warn("audio dropped, no playback device", "times", n)
@@ -445,12 +403,12 @@ func (p *Player) queue(samples []int16) {
 		return
 	}
 
-	p.pending.Push(samples)
+	p.bus.Push(s, samples)
 }
 
-func (p *Player) Take() []int16 { return p.pending.Take() }
+func (p *Player) Take() []int16 { return p.bus.Take(config.StreamMedia) }
 
-func (p *Player) Adjust(rewrite func([]int16)) { p.pending.Adjust(rewrite) }
+func (p *Player) Adjust(rewrite func([]int16)) { p.bus.Adjust(config.StreamMedia, rewrite) }
 
 func (p *Player) PlayVoice(mono []int16) {
 	p.voiceMu.Lock()
@@ -461,7 +419,7 @@ func (p *Player) PlayVoice(mono []int16) {
 }
 
 func (p *Player) Drain() {
-	p.pending.Clear()
+	p.bus.Clear()
 
 	p.voiceMu.Lock()
 	p.voice.Reset()
@@ -503,28 +461,30 @@ func (p *Player) Clipped() uint64 {
 	return p.voice.Clipped()
 }
 
-func (p *Player) Queued() int { return p.pending.Len() / Channels }
+func (p *Player) Queued() int { return p.bus.Len() / Channels }
 
 func (p *Player) Beep(freq float64, ms int, level float64) {
-	p.Chime(level, tone.Note{Freq: freq, Ms: ms})
+	p.Chime(config.StreamFeedback, level, tone.Note{Freq: freq, Ms: ms})
 }
 
-func (p *Player) Chime(level float64, notes ...tone.Note) {
-	p.ChimeStream(config.StreamFeedback, level, notes...)
+func (p *Player) Chime(s config.Stream, level float64, notes ...tone.Note) {
+	p.Overlay(s, mix.Chime(Rate, Channels, level, notes...))
 }
 
-func (p *Player) ChimeStream(s config.Stream, level float64, notes ...tone.Note) {
-	p.Overlay(quieter(mix.Chime(Rate, Channels, level, notes...), p.Level(s)))
-}
-
-func (p *Player) Overlay(samples []int16) {
+func (p *Player) Overlay(s config.Stream, samples []int16) {
 	if pb, _ := p.device(); pb == nil {
-		p.queue(samples)
+		p.PlayStream(s, samples)
 		return
 	}
 
-	p.pending.Overlay(samples)
+	p.bus.Overlay(s, samples)
 }
+
+func (p *Player) SetLevel(s config.Stream, level int) { p.bus.SetGain(s, volume.Gain(level)) }
+
+func (p *Player) Mute(s config.Stream, on bool) { p.bus.Mute(s, on) }
+
+func (p *Player) Muted(s config.Stream) bool { return p.bus.Muted(s) }
 
 func (p *Player) SetVolume(step int) {
 	step = max(0, min(step, VolumeSteps))
