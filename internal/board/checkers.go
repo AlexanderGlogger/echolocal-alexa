@@ -12,7 +12,8 @@ var Checkers = Board{
 	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera,
 	PanelRotation: 270,
 	UISize:        "mini",
-	TesseraBoard:  "sunton8048s070",
+	Diagonal:      5.5,
+	Tessera:       Tessera{Board: "sunton8048s070", Columns: 4, Rows: 2},
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",

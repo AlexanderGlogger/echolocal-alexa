@@ -32,6 +32,11 @@ const (
 	Power      Key = "power"
 )
 
+type Tessera struct {
+	Board         string
+	Columns, Rows int
+}
+
 type Board struct {
 	NativeAPI int
 
@@ -61,9 +66,11 @@ type Board struct {
 	// A screen capture reads back through the same rotation it was drawn with.
 	PanelRotation int
 
+	Diagonal float64
+
 	UISize string
 
-	TesseraBoard string
+	Tessera Tessera
 
 	SecureDecoders map[string]string
 

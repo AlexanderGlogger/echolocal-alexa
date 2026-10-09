@@ -6,6 +6,7 @@ import (
 	shareddashboard "github.com/ygelfand/libcountertop/pkg/display/dashboard"
 	sharedhome "github.com/ygelfand/libcountertop/pkg/homeassistant/homecontrol"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -23,6 +24,10 @@ var get = sync.OnceValue(func() *sharedhome.Engine {
 			Client:   homeassistant.Get(),
 			States:   states.Get(),
 			Shell:    shell.Get(),
+			Grid: schema.TesseraGrid{
+				Columns: component.Board().Tessera.Columns,
+				Rows:    component.Board().Tessera.Rows,
+			},
 		},
 	)
 	component.Settings.Add(e.Controls())

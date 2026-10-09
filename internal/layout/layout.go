@@ -18,6 +18,7 @@ const (
 
 	CastCredentialsPath = StateDir + "/cast-credentials.json"
 	CastAuthorityPath   = StateDir + "/cast-authority.json"
+	TesseraDir          = StateDir
 
 	CastAppDir = StateDir + "/cast"
 

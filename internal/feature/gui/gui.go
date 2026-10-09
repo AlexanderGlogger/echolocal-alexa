@@ -10,6 +10,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	tesseraview "github.com/ygelfand/libcountertop/pkg/tessera/widgets"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -27,6 +28,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/screen"
 	"github.com/ygelfand/echolocal/internal/feature/settings"
 	featureshell "github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/echolocal/internal/feature/tessera"
 	"github.com/ygelfand/echolocal/internal/feature/timer"
 	"github.com/ygelfand/echolocal/internal/feature/volume"
 	"github.com/ygelfand/echolocal/internal/feature/weather"
@@ -83,7 +85,15 @@ var Get = sync.OnceValue(func() *screens.App {
 		Tabs:      dashboard.Tabs(),
 		Home:      homecontrol.Get(),
 		HomeHA:    homeassistant.Get(),
-		Forecast:  weather.Get(),
+		Tessera: tesseraview.New(tesseraview.Dependencies{
+			UI:      look,
+			Screens: tessera.Get(),
+			Perform: homeassistant.Get().Perform,
+
+			HomeAfterIdle: homecontrol.Get().ReturnHome,
+			Logo:          echoui.Logo(),
+		}),
+		Forecast: weather.Get(),
 
 		WeatherPage: func() shell.View { return settings.WeatherPage() },
 		Player:      media.Get(),

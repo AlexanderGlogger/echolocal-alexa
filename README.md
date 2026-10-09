@@ -99,6 +99,6 @@ adb shell echod ctl input button mute
 adb shell echod ctl audio record echo 5 /data/local/tmp/echo.wav
 ```
 
-Display boards also expose `input tap`, `display shot`, `display open`, `settings`, and supported
+Every board has `settings`; display boards also expose `input tap`, `display shot`, `display open`, and supported
 camera/call/Bluetooth commands. Bare `ctl` prints the available groups; commands accept `--help`.
 The local socket accepts root and adb shell. Use the grouped command paths shown in help.
