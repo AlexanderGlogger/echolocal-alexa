@@ -12,7 +12,6 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/ui"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/startup"
-	"github.com/ygelfand/libcountertop/pkg/say"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -80,10 +79,6 @@ func (s *Splash) Run(ctx context.Context) error {
 		Version:  layout.Version,
 		Progress: func() []startup.Progress { return component.Default().Progress() },
 		Ready:    handOver,
-		Raster: func(p *panel.Panel, progress []startup.Progress) error {
-			bootview.Raster(ui.Of(p), chosen(), progress, layout.Version, say.T("boot.skip"))
-			return nil
-		},
 		Blank: func(p *panel.Panel) error {
 			ui.Fill(ui.Of(p), chosen().Background)
 			return nil
