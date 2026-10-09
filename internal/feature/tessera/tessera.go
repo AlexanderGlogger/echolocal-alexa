@@ -7,11 +7,15 @@ import (
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 	shared "github.com/ygelfand/libcountertop/pkg/tessera"
+	tesseraview "github.com/ygelfand/libcountertop/pkg/tessera/widgets"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
+	"github.com/ygelfand/echolocal/internal/feature/idle"
+	"github.com/ygelfand/echolocal/internal/feature/message"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -28,6 +32,12 @@ func init() {
 
 var get = sync.OnceValue(func() *shared.Set {
 	home := homecontrol.Get()
+	alert, unalert := tesseraview.Alerter(message.Get())
+	front := func() {
+		shell.Get().Close()
+		idle.Get().Wake()
+		dashboard.Tabs().Clock()
+	}
 	set := shared.NewSet(shared.New(shared.Options{
 		Facing:   shared.Dashboard,
 		Device:   component.DeviceDashboard,
@@ -38,6 +48,9 @@ var get = sync.OnceValue(func() *shared.Set {
 		Name:     func() string { return config.Get().Device.Name },
 		Speaking: home.Tessera,
 		Keep:     filepath.Join(layout.TesseraDir, "tessera-dashboard.json"),
+		Alert:    alert,
+		Unalert:  unalert,
+		Front:    front,
 	}))
 	home.Speaking.Listen(func(schema.HomeMode) { component.Reconnect.Emit(struct{}{}) })
 	home.Regrid.Listen(func(schema.TesseraGrid) { set.Regrid() })
