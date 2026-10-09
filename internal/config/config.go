@@ -5,6 +5,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/defaults"
+	"github.com/ygelfand/echolocal/internal/layout"
 )
 
 type Config struct {
@@ -21,7 +22,7 @@ type Config struct {
 func Defaults() Config {
 	d := defaults.Current()
 
-	return Config{
+	c := Config{
 		Shared:     schema.DefaultShared(),
 		Speaker:    defaultSpeaker(),
 		Volume:     defaultVolume(),
@@ -29,6 +30,8 @@ func Defaults() Config {
 		Ring:       defaultRing(d),
 		Diag:       defaultDiag(d),
 	}
+	c.Visual.Label = layout.Manufacturer
+	return c
 }
 
 type Device struct {

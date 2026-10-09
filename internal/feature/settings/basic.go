@@ -8,6 +8,8 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/diag"
+	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
+	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
@@ -31,6 +33,9 @@ func basicPages() *sharedsettings.BasicPages {
 			Clocks:      clocks,
 			Idle:        idlePages(),
 			UISize:      uiSize,
+			Home:        homecontrol.Get(),
+			HA:          homeassistant.Get(),
+			Marks:       modeMarks(),
 			PowerPage:   func() sharedshell.View { return powerPage() },
 			VisualPage:  func() sharedshell.View { return visualPage() },
 		},

@@ -13,8 +13,8 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/display/visual"
 	"github.com/ygelfand/libcountertop/pkg/runtime/control/screencmd"
-	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
+	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
 )
@@ -55,7 +55,14 @@ func thumbs(dir string) (int, error) {
 
 	n := 0
 	for _, k := range visual.Built() {
-		img, err := screencmd.Render(gpu.Get(), k, w, h, screencmd.ThumbFrames, schema.DefaultLabel)
+		img, err := screencmd.Render(
+			gpu.Get(),
+			k,
+			w,
+			h,
+			screencmd.ThumbFrames,
+			config.Defaults().Visual.Label,
+		)
 		if err != nil {
 			return n, fmt.Errorf("%s: %w", k, err)
 		}
