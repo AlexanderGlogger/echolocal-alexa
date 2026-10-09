@@ -30,14 +30,14 @@ DEVICE_ENV := GOOS=linux GOARCH=$(DOT_ARCH) CGO_ENABLED=0
 
 BOARD ?=
 
-BOARD_BUILDS := $(shell grep -h '^//go:build' internal/component/all/*.go 2>/dev/null | \
-	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)
+SCREEN_BOARDS := checkers cronos crown
+BOARD_BUILDS := $(SCREEN_BOARDS)
 
 TAGS ?=
 empty :=
 space := $(empty) $(empty)
 comma := ,
-ALL_TAGS := $(strip $(TAGS) $(if $(BOARD),board_$(BOARD)))
+ALL_TAGS := $(strip $(TAGS) $(if $(BOARD),board_$(BOARD)) $(if $(filter $(BOARD),$(SCREEN_BOARDS)),with_screen))
 DEVICE_TAGS := $(if $(ALL_TAGS),-tags $(subst $(space),$(comma),$(ALL_TAGS)),)
 
 DEVICE_LDFLAGS := -s -w $(LDFLAGS) $(if $(BOARD),-X '$(BOARDVARS).pinned=$(BOARD)')
@@ -70,8 +70,7 @@ CAMSHIM_BIN = $(BUILD_DIR)/libecholocal-camshim-api$(NATIVE_API).so
 CAMERA_BIN = $(BUILD_DIR)/echolocal-camera-api$(NATIVE_API)
 COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(NATIVE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
 PARTS_DIR := internal/parts/payload
-PART_BOARDS := $(shell grep -h '^//go:build' internal/parts/*.go 2>/dev/null | \
-	grep -o 'board_[a-z0-9]*' | sed 's/^board_//' | sort -u)
+PART_BOARDS := $(SCREEN_BOARDS)
 
 ##@ Development
 
