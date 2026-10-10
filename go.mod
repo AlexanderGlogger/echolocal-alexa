@@ -5,37 +5,37 @@ go 1.26.0
 require (
 	charm.land/bubbles/v2 v2.1.1
 	charm.land/bubbletea/v2 v2.0.8
-	charm.land/huh/v2 v2.0.3
+	charm.land/huh/v2 v2.0.3 // indirect
 	charm.land/lipgloss/v2 v2.0.5
-	github.com/Sendspin/sendspin-go v1.8.2
-	github.com/asticode/go-astits v1.16.0
-	github.com/bluenviron/gohlslib/v2 v2.4.5
-	github.com/bluenviron/mediacommon/v2 v2.9.5
-	github.com/go-gui-org/go-glyph v1.26.1
+	github.com/Sendspin/sendspin-go v1.8.2 // indirect
+	github.com/asticode/go-astits v1.16.0 // indirect
+	github.com/bluenviron/gohlslib/v2 v2.4.5 // indirect
+	github.com/bluenviron/mediacommon/v2 v2.9.5 // indirect
+	github.com/go-gui-org/go-glyph v1.26.1 // indirect
 	github.com/go-gui-org/go-gui v0.84.0
-	github.com/gorilla/websocket v1.5.3
-	github.com/insomniacslk/dhcp v0.0.0-20260901064844-234b97448fae
-	github.com/jsimonetti/rtnetlink v1.4.2
-	github.com/kkdai/youtube/v2 v2.10.6
-	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/mdlayher/genetlink v1.4.0
-	github.com/mdlayher/netlink v1.9.0
-	github.com/mewkiz/flac v1.0.13
+	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/insomniacslk/dhcp v0.0.0-20260901064844-234b97448fae // indirect
+	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
+	github.com/kkdai/youtube/v2 v2.10.6 // indirect
+	github.com/libp2p/zeroconf/v2 v2.2.0 // indirect
+	github.com/mdlayher/genetlink v1.4.0 // indirect
+	github.com/mdlayher/netlink v1.9.0 // indirect
+	github.com/mewkiz/flac v1.0.13 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.6.1 // indirect
-	github.com/pion/opus v0.1.1-0.20261005072002-44637de087b3
+	github.com/pion/opus v0.1.1-0.20261005072002-44637de087b3 // indirect
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
-	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
-	github.com/tfriedel6/canvas v0.12.1
-	github.com/tphakala/go-aac v0.7.0
+	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
+	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
+	github.com/tfriedel6/canvas v0.12.1 // indirect
+	github.com/tphakala/go-aac v0.7.0 // indirect
 	github.com/ygelfand/libcountertop v0.1.0
 	github.com/zserge/microwakeword v0.0.0-20260330234603-bfaf3840114e
-	golang.org/x/exp/shiny v0.0.0-20260908205506-85c1c2202aba
-	golang.org/x/image v0.46.0
+	golang.org/x/exp/shiny v0.0.0-20260908205506-85c1c2202aba // indirect
+	golang.org/x/image v0.46.0 // indirect
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	rsc.io/qr v0.2.0
+	rsc.io/qr v0.2.0 // indirect
 )
 
 require (
@@ -125,5 +125,5 @@ require (
 	github.com/ygelfand/go-esphome-device v0.0.12
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/sys v0.48.0
-	golang.org/x/text v0.42.0
+	golang.org/x/text v0.42.0 // indirect
 )

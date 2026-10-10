@@ -32,8 +32,8 @@ func TestTheShowsStartTheVisualsUnlifted(t *testing.T) {
 }
 
 func TestAnUnmeasuredBoardBorrowsBiscuits(t *testing.T) {
-	if got := For(board.Crown); got != For(board.Biscuit) {
-		t.Errorf("crown starts from %+v, want biscuit's %+v", got, For(board.Biscuit))
+	if got := For(board.Donut); got != For(board.Biscuit) {
+		t.Errorf("donut starts from %+v, want biscuit's %+v", got, For(board.Biscuit))
 	}
 }
 
