@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"github.com/spf13/cobra"

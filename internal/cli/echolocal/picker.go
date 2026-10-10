@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 )
 
 var errNotRoot = errors.New(
-	"device: adbd is not running as root; write the boot image first (echoctl install --flash-only)",
+	"device: adbd is not running as root; write the boot image first (echolocal install --flash-only)",
 )
 
 func connect(ctx context.Context, out io.Writer, serial string) (*adb.Device, error) {

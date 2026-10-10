@@ -53,7 +53,7 @@ ADB := $(ADB) -s $(DEVICE)
 SERIAL := --serial $(DEVICE)
 endif
 
-BOARD_SH = go run ./cmd/echoctl board --sh $(SERIAL)
+BOARD_SH = go run ./cmd/echolocal board --sh $(SERIAL)
 
 # /system/app is labelled u:object_r:system_file:s0.
 ECHOD_DIR := /system/app/echod
@@ -76,7 +76,7 @@ PART_BOARDS := $(SCREEN_BOARDS)
 ##@ Development
 
 .PHONY: build
-build: build-echoctl build-echod ## Build both binaries
+build: build-echolocal build-echod ## Build both binaries
 
 # go list may know the version before its source archive has been downloaded.
 .PHONY: countertop-native-source
@@ -99,10 +99,10 @@ build-camera: countertop-native-source ## Build the camera helper with the NDK
 test-surface: countertop-native-source ## Run the shared native wire tests with the host compiler
 	+$(COUNTERTOP_NATIVE) test HOST_CC="$(or $(HOST_CC),cc)"
 
-.PHONY: build-echoctl
-build-echoctl: ## Build the host CLI into ./bin
+.PHONY: build-echolocal
+build-echolocal: ## Build the host CLI into ./bin
 	@mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echoctl ./cmd/echoctl
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echolocal ./cmd/echolocal
 
 .PHONY: build-echod
 build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=upx to compress it)
@@ -125,9 +125,9 @@ build-echod-all: ## Build every binary a release publishes, from a clean bin
 		for a in $(BOARD_ARCHES); do $(MAKE) --no-print-directory build-echod DOT_ARCH=$$a BOARD=$$b; done; \
 	done
 
-.PHONY: run-echoctl
-run-echoctl: ## Run echoctl on the host (make run-echoctl ARGS="tools tone -h")
-	go run ./cmd/echoctl $(ARGS)
+.PHONY: run-echolocal
+run-echolocal: ## Run the host CLI (make run-echolocal ARGS="tools tone -h")
+	go run ./cmd/echolocal $(ARGS)
 
 .PHONY: run-echod
 run-echod: push-echod ## Push echod and run it (make run-echod ARGS="tools info")
@@ -201,16 +201,16 @@ device: ## Say which device the device targets would write to, and refuse an unk
 	fi
 	@$(BOARD_SH) >/dev/null || { \
 		echo "these targets remount /system, so an unrecognised device is refused"; exit 1; }
-	@go run ./cmd/echoctl board $(SERIAL)
+	@go run ./cmd/echolocal board $(SERIAL)
 
 .PHONY: dist
-dist: ## Every echod, a manifest naming them in bin/, and an echoctl that installs from it
+dist: ## Every echod, a manifest naming them in bin/, and an echolocal CLI that installs from it
 	@$(MAKE) --no-print-directory manifest FROM=file://$(CURDIR)/$(BUILD_DIR)
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echoctl ./cmd/echoctl
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echolocal ./cmd/echolocal
 
 .PHONY: install
 install: dist ## Install onto an attached device from the locally built manifest
-	$(BUILD_DIR)/echoctl install --manifest $(BUILD_DIR)/manifest.json $(ARGS)
+	$(BUILD_DIR)/echolocal install --manifest $(BUILD_DIR)/manifest.json $(ARGS)
 
 .PHONY: install-echod
 install-echod: ## Install echod into /system/app/echod, built for whatever board is attached
@@ -291,12 +291,12 @@ logos: ## Rescale the committed artwork into what echod embeds
 	done
 
 .PHONY: boot-images
-boot-images: ## Publish the boot images echoctl fetches at install time (run once per board)
+boot-images: ## Publish the boot images the echolocal CLI fetches at install time (run once per board)
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@go test ./internal/host/bootimg/ -run TestEveryImageIsInTheTreeAndIsWhatWeSayItIs
 	@gh release view $(BOOT_TAG) >/dev/null 2>&1 || \
 		gh release create $(BOOT_TAG) --title "Boot images" \
-			--notes "Per-board boot images, fetched by echoctl at install time against a hash compiled into it. Uploaded once per board and never replaced."
+			--notes "Per-board boot images, fetched by the echolocal CLI at install time against a hash compiled into it. Uploaded once per board and never replaced."
 	gh release upload $(BOOT_TAG) $(BOOT_DIR)/*.img --clobber
 	@echo "$(BOOT_TAG) now serves the boot images"
 
@@ -306,7 +306,7 @@ release-dev: ## Publish this working tree to the dev channel, without pushing an
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
 	@command -v upx >/dev/null || { echo "needs upx: brew install upx"; exit 1; }
 	VERSION=$(VERSION) PACK=upx goreleaser release --snapshot --clean
-	@for f in dist/echoctl_*/echoctl dist/echoctl_*/echoctl.exe; do \
+	@for f in dist/host_*/echolocal dist/host_*/echolocal.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \
 		os=$$(echo $$d | cut -d_ -f2); \

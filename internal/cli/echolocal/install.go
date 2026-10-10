@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"context"
@@ -151,7 +151,9 @@ func newInstallCmd() *cobra.Command {
 				fmt.Fprintf(
 					out,
 					"%s\n",
-					styleSkip.Render("• wireless left unconfigured; run `echoctl wifi` when ready"),
+					styleSkip.Render(
+						"• wireless left unconfigured; run `echolocal wifi` when ready",
+					),
 				)
 			}
 

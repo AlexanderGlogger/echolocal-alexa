@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"fmt"
@@ -19,8 +19,8 @@ func newBoardCmd() *cobra.Command {
 		Short: "Say what board a device is, and what echod is installed as there",
 		Long: "The Makefile's device targets read this rather than carrying their own table, so\n" +
 			"there is one answer to which service to stop and which board to build for.\n\n" +
-			"  echoctl board\n" +
-			"  eval \"$(echoctl board --sh)\"",
+			"  echolocal board\n" +
+			"  eval \"$(echolocal board --sh)\"",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			d, err := connect(cmd.Context(), cmd.OutOrStdout(), serial)

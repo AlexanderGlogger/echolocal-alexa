@@ -12,9 +12,9 @@ before:
     - make manifest
 
 builds:
-  - id: echoctl
-    main: ./cmd/echoctl
-    binary: echoctl
+  - id: host
+    main: ./cmd/echolocal
+    binary: echolocal
     env:
       - CGO_ENABLED=0
     goos:

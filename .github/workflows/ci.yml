@@ -36,18 +36,6 @@ jobs:
           make build-echod DOT_ARCH=arm NDK=/nonexistent
           make build-echod DOT_ARCH=arm64 NDK=/nonexistent
 
-      - name: ensure biscuit links no screen or camera code
-        env:
-          GOOS: linux
-          GOARCH: arm
-          CGO_ENABLED: 0
-        run: |
-          go list -deps -tags board_biscuit ./cmd/echod > "$RUNNER_TEMP/biscuit-deps"
-          if grep -E 'libcountertop/pkg/(display/|camera/|input/touch|media/(castreceiver|castoutput|videostream))|echolocal/internal/(feature/(gui|livecam|chromecast)|hardware/display)$' "$RUNNER_TEMP/biscuit-deps" | grep -Ev 'pkg/display/(clockkind|theme)$'; then
-            cat "$RUNNER_TEMP/biscuit-deps"
-            exit 1
-          fi
-
       - name: build without the assembly
         run: make build-echod TAGS=noasm
 

@@ -54,6 +54,7 @@ var castOnly = []string{
 	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/primevideo",
 	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube/unplugged",
 	"github.com/ygelfand/libcountertop/pkg/media/sealed",
+	"github.com/ygelfand/libcountertop/pkg/media/videostream",
 }
 
 var cameraOnly = []string{
@@ -120,12 +121,38 @@ func TestBiscuitLinksNoShowFeatures(t *testing.T) {
 				t.Errorf("%q links Show feature %s", tag, pkg)
 			}
 		}
+		for _, pkg := range deps {
+			if showTree(pkg) {
+				t.Errorf("%q links Show package %s", tag, pkg)
+			}
+		}
 		for _, pkg := range castAudio {
 			if !slices.Contains(deps, pkg) {
 				t.Errorf("%q does not link %s", tag, pkg)
 			}
 		}
 	}
+}
+
+var (
+	showTrees = []string{
+		"github.com/ygelfand/libcountertop/pkg/display/",
+		"github.com/ygelfand/libcountertop/pkg/camera/",
+		"github.com/ygelfand/libcountertop/pkg/input/touch",
+	}
+	biscuitDisplay = []string{
+		"github.com/ygelfand/libcountertop/pkg/display/clockkind",
+		"github.com/ygelfand/libcountertop/pkg/display/theme",
+	}
+)
+
+func showTree(pkg string) bool {
+	if slices.Contains(biscuitDisplay, pkg) {
+		return false
+	}
+	return slices.ContainsFunc(showTrees, func(tree string) bool {
+		return strings.HasPrefix(pkg, tree)
+	})
 }
 
 func TestShowsLinkCastAndCamera(t *testing.T) {

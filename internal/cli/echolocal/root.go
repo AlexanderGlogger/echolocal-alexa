@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"fmt"
@@ -17,9 +17,9 @@ var cfgFile string
 
 func newRoot() *cobra.Command {
 	root := &cobra.Command{
-		Use:   "echoctl",
+		Use:   "echolocal",
 		Short: "EchoLocal host CLI",
-		Long: "echoctl installs and manages EchoLocal on an Echo Dot, and provides host-side\n" +
+		Long: "echolocal installs and manages EchoLocal on an Echo Dot, and provides host-side\n" +
 			"tools for working with captures taken from one.",
 		SilenceUsage: true,
 		Version:      layout.VersionString(),

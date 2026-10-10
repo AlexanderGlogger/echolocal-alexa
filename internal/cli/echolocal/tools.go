@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package echoctl
+package echolocal
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ func newStatusCmd() *cobra.Command {
 			if s.Provisioned {
 				row(
 					"key",
-					styleDone.Render("provisioned")+" "+styleDetail.Render("echoctl key show"),
+					styleDone.Render("provisioned")+" "+styleDetail.Render("echolocal key show"),
 				)
 			} else {
 				row("key", styleSkip.Render("unprovisioned"))

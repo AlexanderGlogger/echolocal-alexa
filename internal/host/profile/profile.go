@@ -37,7 +37,7 @@ type Profile struct {
 // Fire OS 6 is Android 7.1.
 const (
 	fireOS6    = "25"
-	fireOS6Why = "want 25 (Fire OS 6); Fire OS 5 needs echoctl 0.0.6 or earlier"
+	fireOS6Why = "want 25 (Fire OS 6); Fire OS 5 needs echolocal 0.0.6 or earlier"
 )
 
 func (p Profile) SDK() string {
