@@ -1,5 +1,3 @@
-//go:build with_screen
-
 package call
 
 import (

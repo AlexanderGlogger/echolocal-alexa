@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"log/slog"
 	"strings"
 	"sync"
 
@@ -8,12 +9,9 @@ import (
 	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
-	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/feature/shell"
 	"github.com/ygelfand/echolocal/internal/feature/web"
-	"github.com/ygelfand/echolocal/internal/hardware/wifi"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -36,7 +34,13 @@ func (identity) Self() sharedpeer.Peer {
 	}
 }
 
-func ID() string { return strings.ToLower(strings.ReplaceAll(wifi.Get().MAC(), ":", "")) }
+func ID() string {
+	mac, err := layout.FactoryMAC()
+	if err != nil {
+		slog.Warn("no device id", "err", err)
+	}
+	return strings.ToLower(strings.ReplaceAll(mac, ":", ""))
+}
 func caps() []string {
 	c := []string{"audio"}
 	if component.Board().CameraWidth > 0 {
@@ -45,11 +49,7 @@ func caps() []string {
 	return c
 }
 
-var get = sync.OnceValue(func() *shared.Discovery {
-	d := shared.New(identity{})
-	d.Changed.Listen(func(struct{}) { shell.Get().Redraw() })
-	return d
-})
+var get = sync.OnceValue(func() *shared.Discovery { return shared.New(identity{}) })
 
 func Get() *shared.Discovery { return get() }
 func init() {
@@ -57,6 +57,5 @@ func init() {
 		sharedcomponent.Network,
 		Get,
 		sharedcomponent.Order(60),
-		component.Needs(board.Panel),
 	)
 }

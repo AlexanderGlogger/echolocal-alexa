@@ -34,6 +34,7 @@ SCREEN_BOARDS := checkers cronos crown
 BOARD_BUILDS := $(SCREEN_BOARDS)
 
 TAGS ?=
+PACK ?=
 empty :=
 space := $(empty) $(empty)
 comma := ,
@@ -104,9 +105,10 @@ build-echoctl: ## Build the host CLI into ./bin
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echoctl ./cmd/echoctl
 
 .PHONY: build-echod
-build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot)
+build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=upx to compress it)
 	@mkdir -p $(BUILD_DIR)
 	$(DEVICE_ENV) go build $(DEVICE_TAGS) -ldflags "$(DEVICE_LDFLAGS)" -o $(DEVICE_BIN) ./cmd/echod
+	$(if $(PACK),$(PACK) -q $(DEVICE_BIN))
 
 .PHONY: stage-parts
 stage-parts: build-surface build-camshim build-camera ## Stage the native parts echod embeds for the boards that carry them
@@ -292,7 +294,8 @@ boot-images: ## Publish the boot images echoctl fetches at install time (run onc
 release-dev: ## Publish this working tree to the dev channel, without pushing anything
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
-	VERSION=$(VERSION) goreleaser release --snapshot --clean
+	@command -v upx >/dev/null || { echo "needs upx: brew install upx"; exit 1; }
+	VERSION=$(VERSION) PACK=upx goreleaser release --snapshot --clean
 	@for f in dist/echoctl_*/echoctl dist/echoctl_*/echoctl.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \

@@ -79,6 +79,7 @@ type Controller struct {
 	Shutter hook.Hook[bool]
 
 	mu      sync.Mutex
+	takers  []func(Event) bool
 	devices []*input.Device
 	shutter bool
 	covered bool
@@ -240,9 +241,25 @@ func (h *held) stop() {
 	}
 }
 
-func (c *Controller) emit(name Name, kind Kind) {
-	c.Events.Emit(Event{Name: name, Kind: kind})
+func (c *Controller) Take(f func(Event) bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.takers = append(c.takers, f)
 }
+
+func (c *Controller) Press(e Event) {
+	c.mu.Lock()
+	takers := c.takers
+	c.mu.Unlock()
+	for _, take := range takers {
+		if take(e) {
+			return
+		}
+	}
+	c.Events.Emit(e)
+}
+
+func (c *Controller) emit(name Name, kind Kind) { c.Press(Event{Name: name, Kind: kind}) }
 
 func (c *Controller) watch(ctx context.Context, d *input.Device) error {
 	down := map[uint16]*held{}

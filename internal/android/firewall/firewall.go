@@ -16,9 +16,10 @@ const (
 	API      = "ECHOLOCAL_API"
 	ADB      = "ECHOLOCAL_ADB"
 	Sendspin = "ECHOLOCAL_SENDSPIN"
+	Web      = "ECHOLOCAL_WEB"
 )
 
-var All = []string{API, ADB, Sendspin}
+var All = []string{API, ADB, Sendspin, Web}
 
 const iface = "wlan0"
 

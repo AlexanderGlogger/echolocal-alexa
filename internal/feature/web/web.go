@@ -1,13 +1,15 @@
 package web
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 	"sync"
 
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	libweb "github.com/ygelfand/libcountertop/pkg/runtime/web"
 
-	"github.com/ygelfand/echolocal/internal/board"
+	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -16,9 +18,8 @@ import (
 func init() {
 	component.Register(
 		sharedcomponent.Network,
-		Get,
+		func() *server { return &server{Get()} },
 		sharedcomponent.Order(50),
-		component.Needs(board.Panel),
 	)
 }
 
@@ -31,6 +32,15 @@ var get = sync.OnceValue(func() *libweb.Server {
 })
 
 func Get() *libweb.Server { return get() }
+
+type server struct{ *libweb.Server }
+
+func (s *server) Run(ctx context.Context) error {
+	if err := firewall.Open(firewall.Web, Port); err != nil {
+		slog.Error("opening the web port failed", "port", Port, "err", err)
+	}
+	return s.Server.Run(ctx)
+}
 
 func Handle(pattern string, h http.Handler) { Get().Handle(pattern, h) }
 

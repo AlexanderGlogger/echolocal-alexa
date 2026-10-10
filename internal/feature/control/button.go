@@ -20,7 +20,7 @@ func newInput() *harness.Input {
 		"action": buttons.Action,
 	}
 	options.Press = func(name string) error {
-		buttons.Get().Events.Emit(buttons.Event{Name: names[name], Kind: buttons.Tap})
+		buttons.Get().Press(buttons.Event{Name: names[name], Kind: buttons.Tap})
 		return nil
 	}
 	configureTouch(&options)

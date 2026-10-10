@@ -23,7 +23,6 @@ var screenOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/gui",
 	"github.com/ygelfand/echolocal/internal/feature/screen",
 	"github.com/ygelfand/echolocal/internal/feature/dashboard",
-	"github.com/ygelfand/echolocal/internal/feature/web",
 	"github.com/ygelfand/echolocal/internal/feature/poster",
 	"github.com/ygelfand/echolocal/internal/feature/message",
 	"github.com/ygelfand/echolocal/internal/feature/assistant",
@@ -42,11 +41,6 @@ var screenOnly = []string{
 
 var castOnly = []string{
 	"github.com/ygelfand/echolocal/internal/feature/chromecast",
-	"github.com/ygelfand/echolocal/internal/feature/discovery",
-	"github.com/ygelfand/echolocal/internal/feature/call",
-	"github.com/ygelfand/libcountertop/pkg/media/rtc",
-	"github.com/ygelfand/libcountertop/pkg/media/call",
-	"github.com/pion/webrtc/v4",
 	"github.com/ygelfand/libcountertop/pkg/display/video",
 	"github.com/ygelfand/libcountertop/pkg/media/webm",
 	"github.com/ygelfand/libcountertop/pkg/media/hls",

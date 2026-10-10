@@ -121,7 +121,12 @@ func hearing() []*cobra.Command {
 			defer stop()
 
 			var buf []byte
-			err = capture.Listen(cmd.Context(), d, frames, func(b []byte) { buf = append(buf, b...) })
+			err = capture.Listen(
+				cmd.Context(),
+				d,
+				frames,
+				func(b []byte) { buf = append(buf, b...) },
+			)
 			if err != nil {
 				return err
 			}
