@@ -9,6 +9,7 @@ import (
 	sharedpeer "github.com/ygelfand/libcountertop/pkg/network/peer"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
+	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/web"
@@ -43,6 +44,9 @@ func ID() string {
 }
 func caps() []string {
 	c := []string{"audio"}
+	if component.Board().Has(board.Panel) {
+		c = append(c, "sync")
+	}
 	if component.Board().CameraWidth > 0 {
 		c = append(c, "video")
 	}

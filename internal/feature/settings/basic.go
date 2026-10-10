@@ -5,6 +5,7 @@ package settings
 import (
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
 	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
+	"github.com/ygelfand/libcountertop/pkg/display/syncview"
 
 	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
@@ -40,6 +41,7 @@ func basicPages() *sharedsettings.BasicPages {
 			Alerts:      alerts.Get(),
 			Previews:    previewKit(),
 			PowerPage:   func() sharedshell.View { return powerPage() },
+			SyncPage:    func() sharedshell.View { return &syncview.Directory{} },
 			VisualPage:  func() sharedshell.View { return visualPage() },
 		},
 	)

@@ -49,15 +49,47 @@ Everything above works with stock Home Assistant. The
 ## Installing
 
 You need a 2nd-generation Echo Dot, connected via a USB cable, and a device that has been unlocked with TWRP as its
-recovery partition. `echoctl` does the rest. It'll prompt for wifi configuration if it hasn't been setup and provide espHome encryption key
+recovery partition. `echolocal` does the rest. It'll prompt for wifi configuration if it hasn't been setup and provide espHome encryption key
+
+Download `echolocal` for your computer from the [latest release](https://github.com/ygelfand/echolocal/releases/latest):
+
+| Computer | File |
+|---|---|
+| Mac (Apple silicon) | `echolocal_darwin_arm64` |
+| Mac (Intel) | `echolocal_darwin_x86_64` |
+| Linux (x86-64) | `echolocal_linux_x86_64` |
+| Linux (ARM64) | `echolocal_linux_arm64` |
+| Windows (x86-64) | `echolocal_windows_x86_64.exe` |
+| Windows (ARM64) | `echolocal_windows_arm64.exe` |
+
+On macOS and Linux, rename it and make it executable:
 
 ```sh
-echoctl install --name living-room
+mv echolocal_darwin_arm64 echolocal
+chmod +x echolocal
 ```
 
-![echoctl install, from flashing the boot image to the device coming back on wifi](docs/images/install.gif)
+On macOS, if Gatekeeper blocks it, clear the quarantine flag:
 
-It then turns up in Home Assistant on its own, and the key `echoctl` printed is what pairs it:
+```sh
+xattr -d com.apple.quarantine echolocal
+```
+
+Then run the installer with the Dot plugged in:
+
+```sh
+./echolocal install --name living-room
+```
+
+On Windows, run the downloaded file directly:
+
+```powershell
+.\echolocal_windows_x86_64.exe install --name living-room
+```
+
+![echolocal install, from flashing the boot image to the device coming back on wifi](docs/images/install.gif)
+
+It then turns up in Home Assistant on its own, and the key `echolocal` printed is what pairs it:
 
 <p align="center">
   <img src="docs/images/echolocal_discovery.png" alt="Home Assistant discovering the device as an ESPHome node" height="230">
@@ -70,10 +102,8 @@ Shared Go packages and native helper sources come from the `libcountertop` versi
 `go.mod`. CI and release builds need no sibling checkout. Native targets compile those sources
 with the Android NDK and stage the resulting helpers into this project's embedded payload.
 For local changes across repositories, use an untracked `go.work` containing this directory and
-`../libcountertop`; both Go compilation and native source resolution then use that checkout.
-Until the initial `v0.1.0` is published, include a version-specific workspace replacement:
-`replace github.com/ygelfand/libcountertop v0.1.0 => ../libcountertop`.
-
+`../libcountertop`, with `replace github.com/ygelfand/libcountertop v0.1.0 => ../libcountertop`;
+both Go compilation and native source resolution then use that checkout.
 
 ```sh
 make build-echod     # cross-compile the daemon for the Dot
@@ -84,7 +114,7 @@ make install-echod   # build, install, and restart it on a connected device
 
 - **echod** runs on the Dot: the hardware, the wake word engines, the conversation, and an ESPHome
   native API server.
-- **echoctl** is the host CLI: installing, re-installing, provisioning, and offline tools for debugging the device.
+- **echolocal** is the host CLI: installing, re-installing, provisioning, and offline tools for debugging the device.
 - **[go-esphome-device](https://github.com/ygelfand/go-esphome-device)** implements the device half of
   the ESPHome protocol, including the voice satellite and Bluetooth proxy.
 

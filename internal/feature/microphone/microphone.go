@@ -92,7 +92,7 @@ func Table(mixings []config.Mixing) *setting.Table[config.Microphone] {
 			},
 			func(m *config.Microphone) *int { return &m.Sensitivity },
 		),
-	}, setting.Messages{Text: say.T, Missing: say.Missing})
+	}, setting.Messages{Text: say.T, Missing: say.Missing}).Local()
 }
 
 var applies = map[string]func(*config.Microphone) error{

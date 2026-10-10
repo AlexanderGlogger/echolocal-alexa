@@ -19,6 +19,7 @@ var registered = []string{
 	"alerts_warning",
 	"ble_advertisements",
 	"bluetooth_proxy",
+	"bluetooth_scan",
 	"button_action",
 	"button_mute",
 	"button_volume_down",
