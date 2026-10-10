@@ -5,6 +5,7 @@
 <a href="https://github.com/ygelfand/echolocal/releases/latest"><img src="https://shields.io/github/v/release/ygelfand/echolocal?style=for-the-badge&color=5da3a6" alt="Version"></a>
 <a href="https://github.com/ygelfand/echolocal/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ygelfand/echolocal/ci.yml?style=for-the-badge&label=Build&color=3fbf5f" alt="Build"></a>
 <a href="https://buymeacoffee.com/ygelfand"><img src="https://img.shields.io/badge/Buy_me_a_coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=000" alt="Buy me a coffee"></a>
+<a href="https://discord.gg/efWnv89pg2"><img src="https://img.shields.io/badge/Join_the_community-5865f2?style=for-the-badge&logo=discord&logoColor=fff" alt="Join the community on Discord"></a>
 
 Upgrade your 2nd-generation Amazon Echo Dot (biscuit, RS03QR) into a local Home Assistant voice satellite (and more).
 
