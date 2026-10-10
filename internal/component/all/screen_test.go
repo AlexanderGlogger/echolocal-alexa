@@ -85,11 +85,11 @@ func echodDeps(t *testing.T, tags string) []string {
 
 func TestOnlyHelperBoardsEmbedTheHelper(t *testing.T) {
 	for tags, want := range map[string]bool{
-		"":                           false,
-		"board_biscuit":              false,
-		"with_screen,board_checkers": true,
-		"with_screen,board_cronos":   true,
-		"with_screen,board_crown":    true,
+		"board_biscuit":          false,
+		"board_checkers":         false,
+		"board_checkers,payload": true,
+		"board_cronos,payload":   true,
+		"board_crown,payload":    true,
 	} {
 		files := goList(
 			t,
@@ -107,7 +107,7 @@ func TestOnlyHelperBoardsEmbedTheHelper(t *testing.T) {
 }
 
 func TestBiscuitLinksNoShowFeatures(t *testing.T) {
-	for _, tag := range []string{"", "board_biscuit"} {
+	for _, tag := range []string{"board_biscuit"} {
 		deps := echodDeps(t, tag)
 		for _, pkg := range slices.Concat(screenOnly, castOnly, cameraOnly) {
 			if slices.Contains(deps, pkg) {
@@ -118,7 +118,7 @@ func TestBiscuitLinksNoShowFeatures(t *testing.T) {
 }
 
 func TestShowsLinkCastAndCamera(t *testing.T) {
-	for _, tag := range []string{"with_screen,board_checkers", "with_screen,board_cronos", "with_screen,board_crown"} {
+	for _, tag := range []string{"board_checkers", "board_cronos", "board_crown"} {
 		deps := echodDeps(t, tag)
 		for _, pkg := range slices.Concat(castOnly, cameraOnly) {
 			if !slices.Contains(deps, pkg) {
@@ -130,10 +130,10 @@ func TestShowsLinkCastAndCamera(t *testing.T) {
 
 func TestScreenBoardsLinkTheScreen(t *testing.T) {
 	for _, tag := range []string{
-		"with_screen,board_checkers",
-		"with_screen,board_cronos",
-		"with_screen,board_crown",
-		"with_screen,board_rook",
+		"board_checkers",
+		"board_cronos",
+		"board_crown",
+		"board_rook",
 	} {
 		deps := echodDeps(t, tag)
 		for _, pkg := range screenOnly {

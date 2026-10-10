@@ -1,4 +1,4 @@
-//go:build with_screen
+//go:build payload
 
 package parts
 

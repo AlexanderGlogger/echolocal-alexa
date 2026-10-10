@@ -38,7 +38,7 @@ PACK ?=
 empty :=
 space := $(empty) $(empty)
 comma := ,
-ALL_TAGS := $(strip $(TAGS) $(if $(BOARD),board_$(BOARD)) $(if $(filter $(BOARD),$(SCREEN_BOARDS)),with_screen))
+ALL_TAGS := $(strip $(TAGS) board_$(or $(BOARD),biscuit) $(if $(filter $(BOARD),$(SCREEN_BOARDS)),payload))
 DEVICE_TAGS := $(if $(ALL_TAGS),-tags $(subst $(space),$(comma),$(ALL_TAGS)),)
 
 DEVICE_LDFLAGS := -s -w $(LDFLAGS) $(if $(BOARD),-X '$(BOARDVARS).pinned=$(BOARD)')
@@ -139,8 +139,9 @@ push-echod: build-echod ## Push echod to /data/local/tmp for iteration
 	@$(ADB) shell chmod 755 $(DEVICE_TMP)/echod
 
 .PHONY: test
-test: ## Run tests
+test: ## Run tests, for the Shows and for biscuit
 	go test ./...
+	go test -tags board_biscuit ./...
 
 .PHONY: test-race
 test-race: ## Run tests with the race detector
@@ -160,13 +161,14 @@ fmt-check: ## Fail when any Go source is unformatted
 	golangci-lint fmt --diff
 
 .PHONY: vet
-vet: ## Run go vet
+vet: ## Run go vet, for the Shows and for biscuit
 	go vet ./...
+	go vet -tags board_biscuit ./...
 
 .PHONY: lint
 lint: ## Run golangci-lint
 	@if command -v golangci-lint >/dev/null; then \
-		golangci-lint run; \
+		golangci-lint run && golangci-lint run --build-tags board_biscuit; \
 	else \
 		echo "golangci-lint not installed, skipping"; \
 	fi

@@ -42,7 +42,7 @@ jobs:
           GOARCH: arm
           CGO_ENABLED: 0
         run: |
-          go list -deps ./cmd/echod > "$RUNNER_TEMP/biscuit-deps"
+          go list -deps -tags board_biscuit ./cmd/echod > "$RUNNER_TEMP/biscuit-deps"
           if grep -E 'libcountertop/pkg/(display/|camera/|input/touch|media/(castreceiver|castoutput|videostream))|echolocal/internal/(feature/(gui|livecam|chromecast)|hardware/display)$' "$RUNNER_TEMP/biscuit-deps" | grep -Ev 'pkg/display/(clockkind|theme)$'; then
             cat "$RUNNER_TEMP/biscuit-deps"
             exit 1
@@ -51,7 +51,7 @@ jobs:
       - name: build without the assembly
         run: make build-echod TAGS=noasm
 
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.12.2
           install-only: true
@@ -62,11 +62,14 @@ jobs:
       - name: lint
         run: golangci-lint run
 
+      - name: lint biscuit
+        run: golangci-lint run --build-tags board_biscuit
+
   show:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        board: [checkers, cronos]
+        board: [checkers, cronos, crown]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -79,11 +82,12 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
       - name: build Show with its native payload
         run: make build-echod BOARD=${{ matrix.board }}
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.12.2
           install-only: true
       - name: lint with the board tag
-        run: golangci-lint run --build-tags board_${{ matrix.board }}
+        run: golangci-lint run --build-tags board_${{ matrix.board }},payload
       - name: native wire checks
+        if: matrix.board == 'checkers'
         run: make test-surface

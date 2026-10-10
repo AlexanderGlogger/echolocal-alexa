@@ -1,3 +1,3 @@
-//go:build with_screen
+//go:build !board_biscuit
 
 package control
