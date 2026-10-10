@@ -128,6 +128,7 @@ func build() *Player {
 		DuckDB:   func() float64 { return config.Get().Media.DuckDB },
 		Volume:   mediaVolume{p},
 		Changed:  p.refresh,
+		Device:   component.DevicePlayback,
 	})
 	component.Bind(p.resampling, speaker.Resamplings(), speaker.Get().SetResampling,
 		config.Set().Speaker().Resampling)
@@ -180,7 +181,7 @@ func (p *Player) Name() string { return "media player" }
 func (p *Player) WatchVolume(changed func(int)) func() { return p.Volume.Listen(changed) }
 
 func (p *Player) Entities() []esphome.Entity {
-	out := []esphome.Entity{p.Entity(), p.jack, p.resampling}
+	out := append([]esphome.Entity{p.Entity(), p.jack, p.resampling}, p.Track()...)
 	out = append(out, p.Levels.Entities()...)
 	out = append(out, p.duck.Entities()...)
 	out = append(out, p.asp)

@@ -14,6 +14,7 @@ import (
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
+	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dhcp"
@@ -44,11 +45,18 @@ func (r *receiver) Run(ctx context.Context) error {
 	return r.Receiver.Run(ctx)
 }
 
+func network(ctx context.Context) bool {
+	if !component.Board().Has(board.Wifi) {
+		return true
+	}
+	return dhcp.Get().Wait(ctx)
+}
+
 func build() *castreceiver.Receiver {
 	r := castreceiver.NewReceiver(castreceiver.ReceiverOptions{
 		Settings: config.CastSection,
 		DeviceID: component.DevicePlayback,
-		Network:  func(ctx context.Context) bool { return dhcp.Get().Wait(ctx) },
+		Network:  network,
 		Want:     wants,
 		Server: castreceiver.Config{
 			Name:            deviceName,
