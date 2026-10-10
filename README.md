@@ -53,14 +53,14 @@ recovery partition. `echolocal` does the rest. It'll prompt for wifi configurati
 
 Download `echolocal` for your computer from the [latest release](https://github.com/ygelfand/echolocal/releases/latest):
 
-| Computer | File |
-|---|---|
-| Mac (Apple silicon) | `echolocal_darwin_arm64` |
-| Mac (Intel) | `echolocal_darwin_x86_64` |
-| Linux (x86-64) | `echolocal_linux_x86_64` |
-| Linux (ARM64) | `echolocal_linux_arm64` |
-| Windows (x86-64) | `echolocal_windows_x86_64.exe` |
-| Windows (ARM64) | `echolocal_windows_arm64.exe` |
+| Computer            | File                           |
+| ------------------- | ------------------------------ |
+| Mac (Apple silicon) | `echolocal_darwin_arm64`       |
+| Mac (Intel)         | `echolocal_darwin_x86_64`      |
+| Linux (x86-64)      | `echolocal_linux_x86_64`       |
+| Linux (ARM64)       | `echolocal_linux_arm64`        |
+| Windows (x86-64)    | `echolocal_windows_x86_64.exe` |
+| Windows (ARM64)     | `echolocal_windows_arm64.exe`  |
 
 On macOS and Linux, rename it and make it executable:
 
@@ -98,13 +98,6 @@ It then turns up in Home Assistant on its own, and the key `echolocal` printed i
 
 ## Building it yourself
 
-Shared Go packages and native helper sources come from the `libcountertop` version selected by
-`go.mod`. CI and release builds need no sibling checkout. Native targets compile those sources
-with the Android NDK and stage the resulting helpers into this project's embedded payload.
-For local changes across repositories, use an untracked `go.work` containing this directory and
-`../libcountertop`, with `replace github.com/ygelfand/libcountertop v0.1.0 => ../libcountertop`;
-both Go compilation and native source resolution then use that checkout.
-
 ```sh
 make build-echod     # cross-compile the daemon for the Dot
 make install-echod   # build, install, and restart it on a connected device
@@ -117,18 +110,3 @@ make install-echod   # build, install, and restart it on a connected device
 - **echolocal** is the host CLI: installing, re-installing, provisioning, and offline tools for debugging the device.
 - **[go-esphome-device](https://github.com/ygelfand/go-esphome-device)** implements the device half of
   the ESPHome protocol, including the voice satellite and Bluetooth proxy.
-
-## Local control harness
-
-The shared `libcountertop` harness acts on the running daemon:
-
-```sh
-adb shell echod ctl device version
-adb shell echod ctl device state
-adb shell echod ctl input button mute
-adb shell echod ctl audio record echo 5 /data/local/tmp/echo.wav
-```
-
-Every board has `settings`; display boards also expose `input tap`, `display shot`, `display open`, and supported
-camera/call/Bluetooth commands. Bare `ctl` prints the available groups; commands accept `--help`.
-The local socket accepts root and adb shell. Use the grouped command paths shown in help.
