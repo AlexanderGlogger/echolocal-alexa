@@ -7,11 +7,15 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/unsupported"
 	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
 	"github.com/ygelfand/libcountertop/pkg/media/castoutput"
+	"github.com/ygelfand/libcountertop/pkg/media/castreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
 )
 
 func needs() []sharedcomponent.Option { return nil }
+
+func wants(g setting.Group) bool { return g != castreceiver.PrimeGroup }
 
 func apps() []cast.Maker { return []cast.Maker{unsupported.Maker, youtube.Maker(nil)} }
 

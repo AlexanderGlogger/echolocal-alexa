@@ -18,6 +18,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	"github.com/ygelfand/libcountertop/pkg/media/videostream"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
 
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -25,6 +26,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/ui"
 )
+
+func wants(setting.Group) bool { return true }
 
 func needs() []sharedcomponent.Option {
 	return []sharedcomponent.Option{component.Needs(board.Panel)}

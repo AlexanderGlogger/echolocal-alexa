@@ -14,6 +14,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/tones"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 )
 
@@ -54,6 +55,10 @@ func Get() *WakeWord {
 			Write:    func(slot int) schema.WakeWriter { return config.Set().Wake(slot) },
 			Wake:     Requested.Emit,
 			Extras:   shared.extras,
+			Tones:    tones.Get().Choices,
+		})
+		tones.Get().Changed.Listen(func(struct{}) {
+			shared.Refresh(config.Get().Wake.Slots(Slots))
 		})
 	})
 	return shared

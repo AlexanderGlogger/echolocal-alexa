@@ -9,17 +9,23 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/tones"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
 
 func init() { component.Register(sharedcomponent.Device, Get, sharedcomponent.Order(30)) }
 
 var get = sync.OnceValue(func() *shared.Alerts {
-	a := shared.New(config.AlertsSection, component.DevicePlayback, func(notes []tone.Note) {
-		speaker.Sound().
-			Interject(func(p *speaker.Player) { p.Chime(config.StreamAlerts, shared.Level, notes...) })
-	})
+	a := shared.New(
+		config.AlertsSection,
+		component.DevicePlayback,
+		tones.Get(),
+		func(s tone.Sound) {
+			speaker.Sound().Sound(config.StreamAlerts, shared.Level, s)
+		},
+	)
 	component.Settings.Add(a.Controls)
+	tones.Get().Changed.Listen(func(struct{}) { a.Refresh() })
 	return a
 })
 

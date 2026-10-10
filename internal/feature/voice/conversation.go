@@ -14,6 +14,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/mute"
 	"github.com/ygelfand/echolocal/internal/feature/recording"
+	"github.com/ygelfand/echolocal/internal/feature/tones"
 	"github.com/ygelfand/echolocal/internal/hardware/mic"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
@@ -41,8 +42,12 @@ func dependencies() turn.Dependencies {
 		HardwareTail: sound.HardwareTail,
 		Failure:      feedback.Failure,
 		Cancelled:    feedback.Cancelled,
-		Words:        turn.Words{Settings: config.WakeSection, Speaker: speaker.Sound()},
-		Muted:        mute.Get().Muted,
+		Words: turn.Words{
+			Settings: config.WakeSection,
+			Speaker:  speaker.Sound(),
+			Sounds:   tones.Get(),
+		},
+		Muted: mute.Get().Muted,
 		Presentation: &turn.Presentation{
 			Settings: config.WakeSection,
 			Shown:    &Shown,

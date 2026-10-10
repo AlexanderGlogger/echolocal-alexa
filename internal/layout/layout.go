@@ -17,6 +17,7 @@ const (
 	NamePath = StateDir + "/name"
 
 	CastCredentialsPath = StateDir + "/cast-credentials.json"
+	CastBundlePath      = StateDir + "/cast-bundle.json"
 	CastAuthorityPath   = StateDir + "/cast-authority.json"
 	TesseraDir          = StateDir
 
@@ -95,6 +96,8 @@ const StatePath = StateDir + "/state.json"
 const ModelDir = StateDir + "/models"
 
 const RecordingDir = StateDir + "/recordings"
+
+const ToneDir = StateDir + "/tones"
 
 const TempDir = StateDir + "/tmp"
 

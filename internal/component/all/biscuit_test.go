@@ -32,6 +32,12 @@ var registered = []string{
 	"call_peer",
 	"call_state",
 	"call_stream",
+	"cast_bundle",
+	"cast_credentials",
+	"cast_credentials_expire",
+	"cast_oracle",
+	"cast_receiver",
+	"cast_youtube_lounge",
 	"check_for_updates",
 	"cpu_cores",
 	"cpu_cores_online",
@@ -132,6 +138,8 @@ var registered = []string{
 	"wifi_received",
 	"wifi_sent",
 	"wifi_signal",
+	"youtube_live_delay",
+	"youtube_sponsorblock",
 }
 
 func TestEveryComponentStillRegisters(t *testing.T) {

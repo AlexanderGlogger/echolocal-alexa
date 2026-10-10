@@ -8,6 +8,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
+	"github.com/ygelfand/echolocal/internal/feature/tones"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/lib/wake"
@@ -20,9 +21,13 @@ func assistantPages() *sharedsettings.AssistantPages {
 			Preferences: preferences(),
 			Models:      wake.Lib().Ours,
 			Requested:   &wakeword.Requested,
-			Words:       turn.Words{Settings: config.WakeSection, Speaker: speaker.Sound()},
-			Look:        lookPages(),
-			Shell:       shell.Get(),
+			Words: turn.Words{
+				Settings: config.WakeSection,
+				Speaker:  speaker.Sound(),
+				Sounds:   tones.Get(),
+			},
+			Look:  lookPages(),
+			Shell: shell.Get(),
 		},
 	)
 }

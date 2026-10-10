@@ -49,6 +49,7 @@ func build() *castreceiver.Receiver {
 		Settings: config.CastSection,
 		DeviceID: component.DevicePlayback,
 		Network:  func(ctx context.Context) bool { return dhcp.Get().Wait(ctx) },
+		Want:     wants,
 		Server: castreceiver.Config{
 			Name:            deviceName,
 			Model:           component.Board().Model,
@@ -59,6 +60,7 @@ func build() *castreceiver.Receiver {
 			Address:         func() string { return config.Get().Network.Address },
 			Timezone:        func() string { return timesync.Get().Zone() },
 			CredentialsPath: layout.CastCredentialsPath,
+			BundlePath:      layout.CastBundlePath,
 			AuthorityPath:   layout.CastAuthorityPath,
 			AppDir:          layout.CastAppDir,
 			Synced: func(do func()) func() {
