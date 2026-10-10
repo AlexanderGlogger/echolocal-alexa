@@ -7,37 +7,42 @@ import (
 	"sync"
 
 	"github.com/ygelfand/libcountertop/pkg/audio/resample"
-	"github.com/ygelfand/libcountertop/pkg/display/surface"
-	"github.com/ygelfand/libcountertop/pkg/display/video"
+	"github.com/ygelfand/libcountertop/pkg/audio/volume"
+	"github.com/ygelfand/libcountertop/pkg/media/cast"
 	"github.com/ygelfand/libcountertop/pkg/media/castreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 
-	"github.com/ygelfand/echolocal/internal/board"
+	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dhcp"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/timesync"
-	"github.com/ygelfand/echolocal/internal/feature/volume"
-	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
-	"github.com/ygelfand/echolocal/internal/ui"
 )
 
 func init() {
 	component.Register(
 		sharedcomponent.Device,
-		Get,
-		sharedcomponent.Order(60),
-		component.Needs(board.Panel),
+		func() *receiver { return &receiver{Get()} },
+		append([]sharedcomponent.Option{sharedcomponent.Order(60)}, needs()...)...,
 	)
 }
 
 var get = sync.OnceValue(build)
 
 func Get() *castreceiver.Receiver { return get() }
+
+type receiver struct{ *castreceiver.Receiver }
+
+func (r *receiver) Run(ctx context.Context) error {
+	if err := firewall.Open(firewall.Cast, cast.Port, cast.SetupPort); err != nil {
+		slog.Error("opening the cast ports failed", "err", err)
+	}
+	return r.Receiver.Run(ctx)
+}
 
 func build() *castreceiver.Receiver {
 	r := castreceiver.NewReceiver(castreceiver.ReceiverOptions{
@@ -50,7 +55,7 @@ func build() *castreceiver.Receiver {
 			Version:         layout.Version,
 			Hardware:        hardware,
 			Host:            layout.Slug,
-			Logo:            ui.Logo().PNG,
+			Logo:            logo(),
 			Address:         func() string { return config.Get().Network.Address },
 			Timezone:        func() string { return timesync.Get().Zone() },
 			CredentialsPath: layout.CastCredentialsPath,
@@ -60,9 +65,7 @@ func build() *castreceiver.Receiver {
 				return timesync.Get().Synced.Listen(func(timesync.Sync) { do() })
 			},
 			Volume: mediaVolume{},
-			Video: func() playback.Target {
-				return video.Target(display.Get(), component.Board().MaxFPS)
-			},
+			Video:  pictures(),
 			Output: func(ended func()) playback.Output {
 				o := newOutput()
 				o.SetEnded(ended)
@@ -71,7 +74,7 @@ func build() *castreceiver.Receiver {
 			Resample: func(from int) func([]int16) []int16 {
 				return resample.NewRational(from, speaker.Rate, speaker.Channels).Run
 			},
-			Surface:     func() *surface.Client { return display.Get().Helper() },
+			Apps:        apps(),
 			Preferences: castreceiver.Preferences("echolocal", config.CastSection),
 		},
 	})
@@ -81,9 +84,11 @@ func build() *castreceiver.Receiver {
 
 type mediaVolume struct{}
 
-func (mediaVolume) Level() int { return volume.Get().Level(config.StreamMedia) }
+func (mediaVolume) Level() int { return media.Get().Levels.Level(config.StreamMedia) }
 
-func (mediaVolume) SetLevel(level int) { volume.Get().Set(config.StreamMedia, level) }
+func (mediaVolume) SetLevel(level int) {
+	media.Get().Levels.Set(config.StreamMedia, volume.Clamp(level))
+}
 
 func (mediaVolume) Mute(on bool) { media.Get().Levels.Mute(config.StreamMedia, on) }
 

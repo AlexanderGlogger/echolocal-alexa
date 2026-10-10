@@ -17,9 +17,10 @@ const (
 	ADB      = "ECHOLOCAL_ADB"
 	Sendspin = "ECHOLOCAL_SENDSPIN"
 	Web      = "ECHOLOCAL_WEB"
+	Cast     = "ECHOLOCAL_CAST"
 )
 
-var All = []string{API, ADB, Sendspin, Web}
+var All = []string{API, ADB, Sendspin, Web, Cast}
 
 const iface = "wlan0"
 
@@ -33,20 +34,25 @@ func jumpRule(chain string) []string {
 	return []string{"INPUT", "-i", iface, "-j", chain}
 }
 
-func Open(chain string, port int) error {
+func Open(chain string, ports ...int) error {
 	ready.Lock()
 	defer ready.Unlock()
-	return open(chain, port)
+	return open(chain, ports)
 }
 
-func open(chain string, port int) error {
+func open(chain string, ports []int) error {
 	if err := ensure(chain); err != nil {
 		return err
 	}
 	if err := iptablesRun("-F", chain); err != nil {
 		return err
 	}
-	return iptablesRun(append([]string{"-A"}, acceptRule(chain, port)...)...)
+	for _, port := range ports {
+		if err := iptablesRun(append([]string{"-A"}, acceptRule(chain, port)...)...); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func Close(chain string) error {
