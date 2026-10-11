@@ -305,7 +305,7 @@ release-dev: ## Publish this working tree to the dev channel, without pushing an
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
 	@command -v upx >/dev/null || { echo "needs upx: brew install upx"; exit 1; }
-	VERSION=$(VERSION) PACK=upx goreleaser release --snapshot --clean
+	VERSION=$(VERSION) PACK="upx --lzma" goreleaser release --snapshot --clean
 	@for f in dist/host_*/echolocal dist/host_*/echolocal.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \
@@ -315,7 +315,7 @@ release-dev: ## Publish this working tree to the dev channel, without pushing an
 		ext=$${f##*.}; [ "$$ext" = exe ] && ext=.exe || ext=; \
 		cp "$$f" "dist/echolocal_$${os}_$${arch}$${ext}"; \
 	done
-	@$(MAKE) --no-print-directory manifest VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
+	@$(MAKE) --no-print-directory manifest PACK="upx --lzma" VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
 	@gh release view dev >/dev/null 2>&1 || \
 		gh release create dev --prerelease --title dev --notes "Rolling build for devices on the dev channel."
 	gh release upload dev dist/echolocal_* $(BUILD_DIR)/echod-* $(BUILD_DIR)/manifest.json --clobber
