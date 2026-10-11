@@ -110,7 +110,7 @@ func New() *Player {
 	p.on.Store(config.DefaultASP)
 
 	files := component.Board().Tuning
-	if !files.Listed() {
+	if !files.Listed() || androidTuned() {
 		return p
 	}
 	t, err := asp.Load(asp.VendorDir, files)
