@@ -11,12 +11,8 @@ import (
 )
 
 var registered = []string{
-	"alerts_alert",
-	"alerts_info",
 	"alerts_ring_for",
-	"alerts_success",
 	"alerts_timer",
-	"alerts_warning",
 	"artist",
 	"ble_advertisements",
 	"bluetooth_proxy",
@@ -45,6 +41,9 @@ var registered = []string{
 	"cpu_temperature",
 	"device_chime",
 	"failure_effect",
+	"feedback_cancel",
+	"feedback_failure",
+	"feedback_hold",
 	"firmware",
 	"follow_up_1",
 	"follow_up_2",
