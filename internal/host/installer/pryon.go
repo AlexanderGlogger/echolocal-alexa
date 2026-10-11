@@ -67,18 +67,7 @@ func PryonInstall(
 	report Reporter,
 ) (bool, error) {
 	p := &pryonRun{run: &run{d: d, ctx: ctx, cfg: Config{Echod: cfg.Echod}}, pcfg: cfg}
-	steps := []step{
-		{"check device", p.checkDevice},
-		{"inspect Pryon firmware", p.inspect},
-		{"install Android media bridge", p.installHelper},
-		{"remount /system rw", remountRW},
-		{"install Pryon companion", p.installAPK},
-		{"install echod", p.installEchod},
-		{"stop echod", stopService},
-		{"remount /system ro", p.remountRO},
-		{"start echod", startService},
-	}
-	if err := execute(ctx, steps, p.run, report); err != nil {
+	if err := execute(ctx, pryonInstallSteps(p), p.run, report); err != nil {
 		return false, err
 	}
 	scanned, err := PryonScanned(d)
@@ -86,6 +75,22 @@ func PryonInstall(
 		return false, err
 	}
 	return p.reboot || !scanned, nil
+}
+
+// echod stops before its binary is written. While it runs, the old binary stays allocated after adb
+// unlinks it, and a Fire OS 5 /system has no room for two current builds.
+func pryonInstallSteps(p *pryonRun) []step {
+	return []step{
+		{"check device", p.checkDevice},
+		{"inspect Pryon firmware", p.inspect},
+		{"install Android media bridge", p.installHelper},
+		{"remount /system rw", remountRW},
+		{"install Pryon companion", p.installAPK},
+		{"stop echod", stopService},
+		{"install echod", p.installEchod},
+		{"remount /system ro", p.remountRO},
+		{"start echod", startService},
+	}
 }
 
 // FinalizePryon runs once Android has scanned the companion. It pins the package UID the bridge
