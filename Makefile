@@ -20,6 +20,11 @@ LDFLAGS := -X '$(BUILDVARS).Version=$(VERSION)' \
 
 BUILD_DIR := bin
 
+# UPX 5.x packs static ARM executables that fail upx -t.
+UPX_VERSION := 4.2.4
+UPX_DIR := $(BUILD_DIR)/upx-$(UPX_VERSION)
+UPX := $(UPX_DIR)/build/upx
+
 # Echo Dot 2: MT8163, Android 5.1 (API 22); Fire OS 5 runs an arm64 kernel, Fire OS 6 a 32-bit one that cannot exec arm64.
 ARCHES := arm64 arm
 
@@ -105,10 +110,21 @@ build-echolocal: ## Build the host CLI into ./bin
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echolocal ./cmd/echolocal
 
 .PHONY: build-echod
-build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=upx to compress it)
+build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=bin/upx-4.2.4/build/upx to compress it)
 	@mkdir -p $(BUILD_DIR)
 	$(DEVICE_ENV) go build $(DEVICE_TAGS) -ldflags "$(DEVICE_LDFLAGS)" -o $(DEVICE_BIN) ./cmd/echod
 	$(if $(PACK),$(PACK) -q $(DEVICE_BIN))
+	$(if $(PACK),$(firstword $(PACK)) -q -t $(DEVICE_BIN))
+
+.PHONY: upx
+upx: $(UPX) ## Build the pinned UPX that packs device binaries
+
+$(UPX):
+	@command -v cmake >/dev/null || { echo "needs cmake: brew install cmake"; exit 1; }
+	@mkdir -p $(UPX_DIR)
+	curl -sSfL https://github.com/upx/upx/releases/download/v$(UPX_VERSION)/upx-$(UPX_VERSION)-src.tar.xz | tar -xJ -C $(UPX_DIR) --strip-components=1
+	cmake -S $(UPX_DIR) -B $(UPX_DIR)/build -DCMAKE_BUILD_TYPE=Release >/dev/null
+	cmake --build $(UPX_DIR)/build -j >/dev/null
 
 .PHONY: stage-parts
 stage-parts: build-surface build-camshim build-camera ## Stage the native parts echod embeds for the boards that carry them
@@ -301,11 +317,10 @@ boot-images: ## Publish the boot images the echolocal CLI fetches at install tim
 	@echo "$(BOOT_TAG) now serves the boot images"
 
 .PHONY: release-dev
-release-dev: ## Publish this working tree to the dev channel, without pushing anything
+release-dev: $(UPX) ## Publish this working tree to the dev channel, without pushing anything
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
-	@command -v upx >/dev/null || { echo "needs upx: brew install upx"; exit 1; }
-	VERSION=$(VERSION) PACK="upx --lzma" goreleaser release --snapshot --clean
+	VERSION=$(VERSION) PACK="$(UPX) --lzma" goreleaser release --snapshot --clean
 	@for f in dist/host_*/echolocal dist/host_*/echolocal.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \
@@ -315,7 +330,7 @@ release-dev: ## Publish this working tree to the dev channel, without pushing an
 		ext=$${f##*.}; [ "$$ext" = exe ] && ext=.exe || ext=; \
 		cp "$$f" "dist/echolocal_$${os}_$${arch}$${ext}"; \
 	done
-	@$(MAKE) --no-print-directory manifest PACK="upx --lzma" VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
+	@$(MAKE) --no-print-directory manifest PACK="$(UPX) --lzma" VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
 	@gh release view dev >/dev/null 2>&1 || \
 		gh release create dev --prerelease --title dev --notes "Rolling build for devices on the dev channel."
 	gh release upload dev dist/echolocal_* $(BUILD_DIR)/echod-* $(BUILD_DIR)/manifest.json --clobber
