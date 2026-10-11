@@ -14,6 +14,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
 
+func configureSettings(c *sharedcall.Calls) {}
+
 func front(d *sharedcall.Dependencies) {
 	d.Privacy = privacy.Get()
 	d.Stage = callview.NewStage(shell.Get())

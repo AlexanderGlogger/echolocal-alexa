@@ -33,6 +33,7 @@ func Get() *sharedcall.Calls {
 		}
 		front(&d)
 		shared = sharedcall.New(d)
+		configureSettings(shared)
 		component.Settings.Add(shared.Controls())
 	})
 	return shared

@@ -88,6 +88,7 @@ func build() *castreceiver.Receiver {
 			Preferences: castreceiver.Preferences("echolocal", config.CastSection),
 		},
 	})
+	configureSettings(r)
 	component.Settings.Add(r.Settings())
 	return r
 }

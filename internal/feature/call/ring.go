@@ -34,6 +34,10 @@ func front(d *sharedcall.Dependencies) {
 	}
 }
 
+func configureSettings(c *sharedcall.Calls) {
+	c.Controls().Table = c.Controls().Table.Without("stream")
+}
+
 type muted struct{}
 
 func (muted) MicMuted() bool {
