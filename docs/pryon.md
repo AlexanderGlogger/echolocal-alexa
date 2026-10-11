@@ -95,6 +95,11 @@ independent recorders. The helper continues to own `AudioTrack` playback. EchoLo
 the companion process by Android UID before accepting wake events. No audio is sent to Amazon or
 another remote service by this integration.
 
+Playback goes through `AudioTrack`, and Fire OS's audio service applies Amazon's speaker tuning (the
+`EQ_*.cfg` FIR and `MBCL.cfg` compressor in `/vendor/etc/audio-algorithms`) to it. echod therefore
+leaves its own copy of that tuning out, and the **Speaker EQ** switch stays off: running both
+applies the tuning twice, which sounds muffled and hissy.
+
 In echod, the bridge's audio joins the microphone path at leveling: there is no array to beamform
 and no loopback to cancel against, so those stages are skipped. Its byte stream is cut into the
 20 ms frames everything downstream counts time in.
@@ -122,7 +127,7 @@ files upstream does not have:
 
 | Area | Fork-owned files | Hooks in upstream files |
 | --- | --- | --- |
-| Android media bridge | `internal/android/amazon/`, `internal/hardware/{mic,speaker}/android.go`, `internal/layout/pryon.go` | `mic.go` (Start/Run/Close, and `deliver` split out of `broadcast`), `speaker.go` and `acquire.go` (Start/Run/Close, `available`), `startup.go` in both (startup progress) |
+| Android media bridge | `internal/android/amazon/`, `internal/hardware/{mic,speaker}/android.go`, `internal/layout/pryon.go` | `mic.go` (Start/Run/Close, and `deliver` split out of `broadcast`), `acquire.go` (Start), `speaker.go` (Run/Close, `available`, and `New` skipping the driver tuning), `startup.go` in both (startup progress) |
 | Alexa routing | `internal/feature/pryon/`, `internal/lib/wake/pryon.go`, `internal/feature/detect/pryon.go`, `internal/component/all/all_pryon.go` | `lib/wake/wake.go` (`Lib` returns the Pryon-aware library), `feature/detect/detect.go` (one call: `choose` keeps Pryon out of the PCM engine), `feature/voice/conversation.go` (one call: Alexa as first-run default) |
 | Startup ring | — | `hardware/led/splash.go` (startup walk gives up after 60 s) |
 | Installer | `internal/host/installer/pryon.go`, `internal/cli/echolocal/pryon.go`, `provision-echo-dot.ps1` | one line in `echolocal/root.go` |
