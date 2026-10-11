@@ -3,7 +3,7 @@ package buttons
 import (
 	"testing"
 
-	"github.com/ygelfand/echolocal/internal/lib/input"
+	"github.com/ygelfand/libcountertop/pkg/input"
 )
 
 func press(c *Controller, down map[uint16]*held, code uint16, at, until uint64) {

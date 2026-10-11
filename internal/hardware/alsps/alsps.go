@@ -12,7 +12,7 @@ import (
 
 	"github.com/ygelfand/libcountertop/pkg/system/metrics"
 
-	"github.com/ygelfand/echolocal/internal/lib/input"
+	"github.com/ygelfand/libcountertop/pkg/input"
 )
 
 var current atomic.Pointer[Sensor]
