@@ -15,6 +15,11 @@ import (
 // service, so playback goes through AudioTrack in the bridge rather than to the codec directly. The
 // queue, mixing and volume are unchanged: only where each filled period is written differs.
 
+// androidTuned reports whether Fire OS tunes the speaker itself. Its audio service runs the same
+// vendor EQ and MBCL from asp.VendorDir on everything AudioTrack plays, so running the chain here
+// too would apply the tuning twice: muffled, with the compressors lifting the noise floor.
+func androidTuned() bool { return amazon.Enabled() }
+
 func startAndroid() error {
 	if !amazon.Get().Connected() {
 		return errors.New("speaker: Android media helper is not connected")
