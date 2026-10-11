@@ -104,3 +104,22 @@ func TestMDNSAdvertisedReadsEitherEchod(t *testing.T) {
 		}
 	}
 }
+
+// A running echod keeps its old binary allocated, and a Fire OS 5 /system has no room for two
+// current builds: writing the new one before the stop runs out of space after adb has unlinked the
+// installed binary.
+func TestPryonInstallStopsEchodBeforeWritingIt(t *testing.T) {
+	at := map[string]int{}
+	for i, s := range pryonInstallSteps(&pryonRun{run: &run{}}) {
+		at[s.name] = i
+	}
+
+	stop, stops := at["stop echod"]
+	write, writes := at["install echod"]
+	if !stops || !writes {
+		t.Fatalf("steps %v lack stopping or installing echod", at)
+	}
+	if stop > write {
+		t.Fatalf("echod is stopped at step %d, after its binary is written at step %d", stop, write)
+	}
+}
