@@ -57,6 +57,10 @@ func TestSavedKeysKeepTheirLayout(t *testing.T) {
 		"weather",
 		"speaker",
 		"ring",
+		"calendar",
+		"radio",
+		"todo",
+		"voice",
 	}
 	slices.Sort(want)
 	got := make([]string, 0, len(top))

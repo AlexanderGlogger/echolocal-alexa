@@ -43,7 +43,7 @@ PACK ?=
 empty :=
 space := $(empty) $(empty)
 comma := ,
-ALL_TAGS := $(strip $(TAGS) board_$(or $(BOARD),biscuit) $(if $(filter $(BOARD),$(SCREEN_BOARDS)),payload))
+ALL_TAGS := $(strip $(TAGS) board_$(or $(BOARD),biscuit) voice $(if $(filter $(BOARD),$(SCREEN_BOARDS)),payload))
 DEVICE_TAGS := $(if $(ALL_TAGS),-tags $(subst $(space),$(comma),$(ALL_TAGS)),)
 
 DEVICE_LDFLAGS := -s -w $(LDFLAGS) $(if $(BOARD),-X '$(BOARDVARS).pinned=$(BOARD)')
@@ -74,7 +74,8 @@ SURFACE_SRC = $(LIBCOUNTERTOP_DIR)/native/surface
 SURFACE_BIN = $(BUILD_DIR)/echolocal-surface-api$(NATIVE_API)
 CAMSHIM_BIN = $(BUILD_DIR)/libecholocal-camshim-api$(NATIVE_API).so
 CAMERA_BIN = $(BUILD_DIR)/echolocal-camera-api$(NATIVE_API)
-COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(NATIVE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))"
+VOICE_BIN = $(BUILD_DIR)/echolocal-voice-api$(NATIVE_API)
+COUNTERTOP_NATIVE = $(MAKE) -f "$(LIBCOUNTERTOP_DIR)/native/Makefile" API=$(NATIVE_API) PREFIX=echolocal OUT="$(abspath $(BUILD_DIR))" NDK="$(NDK)" SURFACE_BIN="$(abspath $(SURFACE_BIN))" CAMERA_BIN="$(abspath $(CAMERA_BIN))" CAMSHIM_BIN="$(abspath $(CAMSHIM_BIN))" VOICE_BIN="$(abspath $(VOICE_BIN))"
 PARTS_DIR := internal/parts/payload
 PART_BOARDS := $(SCREEN_BOARDS)
 
@@ -110,7 +111,7 @@ build-echolocal: ## Build the host CLI into ./bin
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/echolocal ./cmd/echolocal
 
 .PHONY: build-echod
-build-echod: $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ## Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=bin/upx-4.2.4/build/upx to compress it)
+build-echod: stage-voice $(if $(filter $(BOARD),$(PART_BOARDS)),stage-parts) ##Cross-compile echod for the Echo Dot (DOT_ARCH=arm64 for a Fire OS 5 kernel; TAGS=noasm for the portable dot; PACK=bin/upx-4.2.4/build/upx to compress it)
 	@mkdir -p $(BUILD_DIR)
 	$(DEVICE_ENV) go build $(DEVICE_TAGS) -ldflags "$(DEVICE_LDFLAGS)" -o $(DEVICE_BIN) ./cmd/echod
 	$(if $(PACK),$(PACK) -q $(DEVICE_BIN))
@@ -125,6 +126,12 @@ $(UPX):
 	curl -sSfL https://github.com/upx/upx/releases/download/v$(UPX_VERSION)/upx-$(UPX_VERSION)-src.tar.xz | tar -xJ -C $(UPX_DIR) --strip-components=1
 	cmake -S $(UPX_DIR) -B $(UPX_DIR)/build -DCMAKE_BUILD_TYPE=Release >/dev/null
 	cmake --build $(UPX_DIR)/build -j >/dev/null
+
+.PHONY: stage-voice
+stage-voice: countertop-native-source ## Build and stage the voice command helper echod embeds
+	+$(COUNTERTOP_NATIVE) voice
+	@mkdir -p $(PARTS_DIR)
+	cp $(VOICE_BIN) $(PARTS_DIR)/echolocal-voice
 
 .PHONY: stage-parts
 stage-parts: build-surface build-camshim build-camera ## Stage the native parts echod embeds for the boards that carry them

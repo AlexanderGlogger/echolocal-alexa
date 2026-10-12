@@ -24,6 +24,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/idle"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/message"
+	"github.com/ygelfand/echolocal/internal/feature/nws"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
@@ -96,6 +97,7 @@ var Get = sync.OnceValue(func() *screens.App {
 			Logo:          echoui.Logo(),
 		}),
 		Forecast: weather.Get(),
+		Warnings: nws.Get(),
 
 		WeatherEntities: func() shell.View { return settings.WeatherEntities() },
 		Player:          media.Get(),

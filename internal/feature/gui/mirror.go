@@ -1,0 +1,25 @@
+//go:build !board_biscuit
+
+package gui
+
+import (
+	"github.com/ygelfand/libcountertop/pkg/display/mirror"
+	"github.com/ygelfand/libcountertop/pkg/display/screens"
+	"github.com/ygelfand/libcountertop/pkg/display/widgets"
+
+	"github.com/ygelfand/echolocal/internal/component"
+	"github.com/ygelfand/echolocal/internal/feature/apps"
+	"github.com/ygelfand/echolocal/internal/feature/settings"
+	"github.com/ygelfand/echolocal/internal/feature/shell"
+)
+
+func init() {
+	extensions = append(extensions, func(look *widgets.UI, o *screens.Options) {
+		if component.Board().CameraWidth == 0 {
+			return
+		}
+		m := mirror.New(mirror.Options{Shell: shell.Get(), Camera: settings.Preview()})
+		apps.Get().Add(m.App())
+		o.Views = append(o.Views, m.Screen)
+	})
+}

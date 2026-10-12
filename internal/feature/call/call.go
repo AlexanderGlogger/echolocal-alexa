@@ -11,6 +11,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/detect"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	"github.com/ygelfand/echolocal/internal/feature/media"
+	"github.com/ygelfand/echolocal/internal/feature/tones"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 )
@@ -30,6 +31,7 @@ func Get() *sharedcall.Calls {
 			Port:     web.Port,
 			Media:    media.Get(),
 			Sound:    device{},
+			Tones:    tones.Get(),
 		}
 		front(&d)
 		shared = sharedcall.New(d)
