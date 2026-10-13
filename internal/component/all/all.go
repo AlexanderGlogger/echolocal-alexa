@@ -6,7 +6,6 @@ import (
 	_ "github.com/ygelfand/echolocal/internal/feature/api"
 	_ "github.com/ygelfand/echolocal/internal/feature/bluetooth"
 	_ "github.com/ygelfand/echolocal/internal/feature/buttons"
-	_ "github.com/ygelfand/echolocal/internal/feature/commands"
 	_ "github.com/ygelfand/echolocal/internal/feature/control"
 	_ "github.com/ygelfand/echolocal/internal/feature/detect"
 	_ "github.com/ygelfand/echolocal/internal/feature/dhcp"

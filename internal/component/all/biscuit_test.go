@@ -125,7 +125,6 @@ var registered = []string{
 	"update_outcome",
 	"update_status",
 	"verify_certificates",
-	"voice_commands",
 	"voice_resampling",
 	"volume_alerts",
 	"volume_feedback",
