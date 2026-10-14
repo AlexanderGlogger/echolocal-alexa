@@ -116,6 +116,7 @@ var Get = sync.OnceValue(func() *screens.App {
 			return screens.Marks{Mic: m.MicMuted, Camera: m.CameraBlocked}
 		},
 		Redraws: []screens.Watch{
+			screens.On(&firmware.Get().Offered),
 			screens.On(&privacy.Get().Changed),
 			screens.On(&web.Get().Offered),
 		},

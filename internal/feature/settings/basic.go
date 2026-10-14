@@ -10,6 +10,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/diag"
+	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
@@ -39,6 +40,7 @@ func basicPages() *sharedsettings.BasicPages {
 			HA:          homeassistant.Get(),
 			Marks:       modeMarks(),
 			Alerts:      alerts.Get(),
+			Updates:     firmware.Get(),
 			Previews:    previewKit(),
 			PowerPage:   func() sharedshell.View { return powerPage() },
 			SyncPage:    func() sharedshell.View { return &syncview.Directory{} },
