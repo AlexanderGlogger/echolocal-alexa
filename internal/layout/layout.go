@@ -16,6 +16,8 @@ const (
 	KeyPath  = StateDir + "/psk"
 	NamePath = StateDir + "/name"
 
+	CrashPath = StateDir + "/crash"
+
 	CastCredentialsPath = StateDir + "/cast-credentials.json"
 	CastBundlePath      = StateDir + "/cast-bundle.json"
 	CastAuthorityPath   = StateDir + "/cast-authority.json"
@@ -104,6 +106,8 @@ const TileDir = StateDir + "/tiles"
 const RecordingDir = StateDir + "/recordings"
 
 const ToneDir = StateDir + "/tones"
+
+const PhotoDir = StateDir + "/photos"
 
 const TempDir = StateDir + "/tmp"
 
