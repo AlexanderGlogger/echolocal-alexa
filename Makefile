@@ -331,7 +331,7 @@ boot-images: ## Publish the boot images the echolocal CLI fetches at install tim
 release-dev: $(UPX) ## Publish this working tree to the dev channel, without pushing anything
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
-	VERSION=$(VERSION) PACK="$(UPX) --lzma" goreleaser release --snapshot --clean
+	VERSION=$(VERSION) PACK="$(UPX) --lzma -2" goreleaser release --snapshot --clean
 	@for f in dist/host_*/echolocal dist/host_*/echolocal.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \
