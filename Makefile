@@ -288,7 +288,11 @@ FROM ?= $(RELEASES)/download/$(AT)
 PAGE ?= $(RELEASES)/tag/$(AT)
 
 .PHONY: manifest
-manifest: build-echod-all ## Write the manifest a device fetches to find this build
+manifest: build-echod-all ## Build every release binary and write the manifest a device fetches to find this build
+	@$(MAKE) --no-print-directory manifest-json
+
+.PHONY: manifest-json
+manifest-json: ## Write the manifest for the binaries already in bin
 	@mkdir -p $(BUILD_DIR)
 	go run ./cmd/mkmanifest \
 		-version "$(AT)" \
@@ -337,7 +341,7 @@ release-dev: $(UPX) ## Publish this working tree to the dev channel, without pus
 		ext=$${f##*.}; [ "$$ext" = exe ] && ext=.exe || ext=; \
 		cp "$$f" "dist/echolocal_$${os}_$${arch}$${ext}"; \
 	done
-	@$(MAKE) --no-print-directory manifest PACK="$(UPX) --lzma" VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
+	@$(MAKE) --no-print-directory manifest-json VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
 	@gh release view dev >/dev/null 2>&1 || \
 		gh release create dev --prerelease --title dev --notes "Rolling build for devices on the dev channel."
 	gh release upload dev dist/echolocal_* $(BUILD_DIR)/echod-* $(BUILD_DIR)/manifest.json --clobber
