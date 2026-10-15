@@ -64,7 +64,5 @@ func SetGain(db int) error {
 		return err
 	}
 	applyGain(db)
-
-	Get().SetInputGain(db)
 	return nil
 }

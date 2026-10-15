@@ -34,8 +34,6 @@ const (
 
 const Refs = Channels - Mics
 
-const floorReferenceGain = 20
-
 const FrameSamples = Rate / 50
 
 // The init service holding the capture device on a fresh boot.
@@ -124,12 +122,10 @@ func New() *Source {
 
 func newLeveler(cfg config.Microphone) *level.Leveler {
 	return level.New(level.Config{
-		Rate:          Rate,
-		Frame:         FrameSamples,
-		ReferenceGain: floorReferenceGain,
-		Gain:          cfg.Gain,
-		Sensitivity:   cfg.Sensitivity,
-		Leveling:      cfg.Leveling,
+		Rate:        Rate,
+		Frame:       FrameSamples,
+		Sensitivity: cfg.Sensitivity,
+		Leveling:    cfg.Leveling,
 	})
 }
 
