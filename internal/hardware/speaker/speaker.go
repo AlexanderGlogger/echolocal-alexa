@@ -412,7 +412,7 @@ func (p *Player) Adjust(rewrite func([]int16)) { p.bus.Adjust(config.StreamMedia
 
 func (p *Player) PlayVoice(mono []int16) {
 	p.voiceMu.Lock()
-	out := p.voice.Run(mono, make([]int16, 0, len(mono)*Rate/VoiceRate*Channels))
+	out := p.voice.Run(mono, make([]int16, 0, len(mono)*(Rate/VoiceRate)*Channels))
 	p.voiceMu.Unlock()
 
 	p.PlayStream(config.StreamVoice, out)
