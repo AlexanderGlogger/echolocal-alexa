@@ -11,6 +11,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/alarm"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/timer"
 	"github.com/ygelfand/echolocal/internal/feature/wakeword"
@@ -48,6 +49,7 @@ func build() *Voice {
 			Slots:   wakeword.Slots,
 			Initial: slots,
 			Timers:  timer.Get(),
+			Alarms:  alarm.Get(),
 			Sound:   speaker.Sound(),
 			Player:  media.Get(),
 			Save:    func(slot int, id string) error { return config.Set().Wake(slot).ID(id) },
@@ -72,4 +74,4 @@ func build() *Voice {
 	return v
 }
 
-func (v *Voice) ActionHold() { v.Start(1) }
+func (v *Voice) ActionHold() { v.Satellite.ActionHold(1) }
