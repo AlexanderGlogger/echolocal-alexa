@@ -17,10 +17,17 @@ type Beamformer struct {
 	bands []complex64
 	at    int
 
-	beam   []complex64
+	beams  [][]complex64
+	merged []complex64
 	energy []float32
 
-	using, winning, held int
+	power   []float32
+	floor   []float32
+	history [][]float32
+	filled  int
+	slot    int
+
+	using, held int
 
 	carry [][]float32
 	pcm   []float32
@@ -32,19 +39,27 @@ func (w *Weights) New() *Beamformer {
 	f := fft.New(g.FFTLen)
 
 	b := &Beamformer{
-		w:      w,
-		g:      g,
-		scale:  float32(math.Pow(10, g.boostDB/20)) / bankGain(g, w.window),
-		an:     make([]*analysis, g.Inputs()),
-		syn:    newSynthesis(g, w.window, f),
-		bands:  make([]complex64, g.Taps*g.Inputs()*g.Bands),
-		beam:   make([]complex64, g.Bands),
-		energy: make([]float32, g.Beams),
-		carry:  make([][]float32, g.Inputs()),
-		pcm:    make([]float32, g.Hop),
+		w:       w,
+		g:       g,
+		scale:   float32(math.Pow(10, g.boostDB/20)) / bankGain(g, w.window),
+		an:      make([]*analysis, g.Inputs()),
+		syn:     newSynthesis(g, w.window, f),
+		bands:   make([]complex64, g.Taps*g.Inputs()*g.Bands),
+		beams:   make([][]complex64, g.Beams),
+		merged:  make([]complex64, g.Bands),
+		energy:  make([]float32, g.Beams),
+		power:   make([]float32, g.Beams),
+		floor:   make([]float32, g.Beams),
+		history: make([][]float32, g.Beams),
+		carry:   make([][]float32, g.Inputs()),
+		pcm:     make([]float32, g.Hop),
 	}
 	for m := range b.an {
 		b.an[m] = newAnalysis(g, w.window, f)
+	}
+	for j := range g.Beams {
+		b.beams[j] = make([]complex64, g.Bands)
+		b.history[j] = make([]float32, noiseFrames)
 	}
 	return b
 }
@@ -103,9 +118,7 @@ func (b *Beamformer) frame() {
 				}
 			}
 
-			if j == b.using {
-				b.beam[band] = acc
-			}
+			b.beams[j][band] = acc
 			if band >= first && band <= last {
 				energy += real(acc)*real(acc) + imag(acc)*imag(acc)
 			}
@@ -113,8 +126,10 @@ func (b *Beamformer) frame() {
 		b.energy[j] = energy
 	}
 
+	b.listen()
 	b.steer()
-	b.syn.pull(b.beam, b.pcm)
+	b.merge()
+	b.syn.pull(b.merged, b.pcm)
 
 	for _, v := range b.pcm {
 		b.out = append(b.out, clamp(v*b.scale))
@@ -122,29 +137,76 @@ func (b *Beamformer) frame() {
 	b.at = (b.at + 1) % g.Taps
 }
 
+func (b *Beamformer) listen() {
+	for j := range b.g.Beams {
+		b.power[j] = signalAlpha*b.power[j] + (1-signalAlpha)*b.energy[j]
+		b.history[j][b.slot] = b.power[j]
+	}
+	b.slot = (b.slot + 1) % noiseFrames
+	b.filled = min(b.filled+1, noiseFrames)
+
+	for j := range b.g.Beams {
+		b.floor[j] = quietest(b.history[j][:b.filled])
+	}
+}
+
+func quietest(history []float32) float32 {
+	var least float32
+	for _, p := range history {
+		if p > 0 && (least == 0 || p < least) {
+			least = p
+		}
+	}
+	return least
+}
+
+func (b *Beamformer) clarity(group int) float32 {
+	var signal, noise float32
+	for _, j := range b.g.groups[group] {
+		signal += b.power[j]
+		noise += b.floor[j]
+	}
+	if noise <= 0 {
+		return 1
+	}
+	return signal / noise
+}
+
 func (b *Beamformer) steer() {
-	loudest := 0
-	for j := 1; j < b.g.Beams; j++ {
-		if b.energy[j] > b.energy[loudest] {
-			loudest = j
+	if b.held > 0 {
+		b.held--
+		return
+	}
+
+	clearest, best := 0, b.clarity(0)
+	for group := 1; group < len(b.g.groups); group++ {
+		if c := b.clarity(group); c > best {
+			clearest, best = group, c
 		}
 	}
 
-	if loudest == b.using {
-		b.held = 0
-		return
+	if clearest != b.using && best >= b.g.margin*b.clarity(b.using) {
+		b.using, b.held = clearest, b.g.hold
 	}
-	if loudest != b.winning {
-		b.winning, b.held = loudest, 0
-		return
-	}
-	if b.held++; b.held >= b.g.holdFrames() {
-		b.using, b.held = loudest, 0
+}
+
+func (b *Beamformer) merge() {
+	group := b.g.groups[b.using]
+	share := 1 / float32(len(group))
+	for band := range b.merged {
+		var sum complex64
+		for _, j := range group {
+			sum += b.beams[j][band]
+		}
+		b.merged[band] = sum * complex(share, 0)
 	}
 }
 
 // The vendor configuration does not say which direction beam 0 faces.
-func (b *Beamformer) Beam() int { return b.using }
+func (b *Beamformer) Beam() int {
+	group := b.g.groups[b.using]
+	return group[len(group)/2]
+}
 
 func clamp(v float32) int16 {
 	switch {

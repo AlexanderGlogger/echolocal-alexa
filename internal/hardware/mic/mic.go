@@ -370,6 +370,7 @@ func (s *Source) broadcast(raw []byte) {
 
 	mics := Decode(raw)
 	frame := s.mixer.Mix(mics)
+	heard := frame
 
 	sounding := s.sounding(raw, len(mics[CenterMic]))
 	s.SetPlayback(sounding)
@@ -414,7 +415,7 @@ func (s *Source) broadcast(raw []byte) {
 		}
 	}
 
-	s.Process(frame)
+	s.Process(heard, frame)
 	s.Add(frame)
 
 	for _, l := range s.listeners {

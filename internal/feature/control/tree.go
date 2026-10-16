@@ -2,11 +2,14 @@ package control
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 
+	"github.com/ygelfand/echolocal/internal/android/prop"
+	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/logging"
 )
 
@@ -39,6 +42,15 @@ func telling() []*cobra.Command {
 			level, err := harness.LogLevel(&logging.Log.Level, args)
 			if err != nil {
 				return err
+			}
+			if len(args) == 1 {
+				priority := "I"
+				if logging.Log.Level.Level() < slog.LevelInfo {
+					priority = "D"
+				}
+				if err := prop.Set("log.tag."+layout.LogTag, priority); err != nil {
+					return err
+				}
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), level)
 			return nil
