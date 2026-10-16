@@ -70,6 +70,7 @@ const (
 	EffectBeacon = "Beacon"
 
 	EffectFollower    = "Room Compass"
+	EffectBeamCompass = "Beam Compass"
 	EffectRoomGlow    = "Room Glow"
 	EffectRoomMeter   = "Room Meter"
 	EffectRoomOcean   = "Room Ocean"

@@ -80,7 +80,18 @@ func (b *Beamformer) Mix(mics [][]int16) []int16 {
 		return nil
 	}
 	b.out = b.out[:0]
+	b.feed(mics, b.speak)
+	return b.out
+}
 
+func (b *Beamformer) Look(mics [][]int16) {
+	if len(mics) < b.g.Channels() {
+		return
+	}
+	b.feed(mics, nil)
+}
+
+func (b *Beamformer) feed(mics [][]int16, after func()) {
 	for m, ch := range b.g.mics {
 		for _, s := range mics[ch] {
 			b.carry[m] = append(b.carry[m], float32(s))
@@ -93,12 +104,14 @@ func (b *Beamformer) Mix(mics [][]int16) []int16 {
 			b.an[m].push(b.carry[m][at:at+b.g.Hop], b.frameBands(b.at, m))
 		}
 		b.frame()
+		if after != nil {
+			after()
+		}
 		at += b.g.Hop
 	}
 	for m := range b.g.Inputs() {
 		b.carry[m] = append(b.carry[m][:0], b.carry[m][at:]...)
 	}
-	return b.out
 }
 
 func (b *Beamformer) frame() {
@@ -128,13 +141,16 @@ func (b *Beamformer) frame() {
 
 	b.listen()
 	b.steer()
+	b.at = (b.at + 1) % g.Taps
+}
+
+func (b *Beamformer) speak() {
 	b.merge()
 	b.syn.pull(b.merged, b.pcm)
 
 	for _, v := range b.pcm {
 		b.out = append(b.out, clamp(v*b.scale))
 	}
-	b.at = (b.at + 1) % g.Taps
 }
 
 func (b *Beamformer) listen() {
@@ -202,7 +218,6 @@ func (b *Beamformer) merge() {
 	}
 }
 
-// The vendor configuration does not say which direction beam 0 faces.
 func (b *Beamformer) Beam() int {
 	group := b.g.groups[b.using]
 	return group[len(group)/2]

@@ -20,6 +20,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/audio"
+	"github.com/ygelfand/echolocal/internal/lib/subband"
 )
 
 const (
@@ -80,6 +81,10 @@ type Source struct {
 	finder     *Beamformer
 	facing     atomic.Int32
 	wantFacing atomic.Bool
+
+	compass      *subband.Beamformer
+	compassBeam  atomic.Int32
+	compassAsked atomic.Int64
 }
 
 func (s *Source) SetMixing(m config.Mixing) config.Mixing {
@@ -115,6 +120,7 @@ func New() *Source {
 	}
 	s.finder.hold = 1
 	s.facing.Store(-1)
+	s.compassBeam.Store(-1)
 	s.adapt.Store(true)
 	s.suppress = newSuppressor(s.cancel)
 	return s
@@ -408,6 +414,7 @@ func (s *Source) broadcast(raw []byte) {
 	s.lowCut.apply(frame)
 
 	s.findFacing(mics)
+	s.followBeam(mics)
 
 	for _, l := range s.listeners {
 		if l.unleveled {
