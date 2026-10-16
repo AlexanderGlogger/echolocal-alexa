@@ -11,6 +11,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	featureremember "github.com/ygelfand/echolocal/internal/feature/remember"
+	"github.com/ygelfand/echolocal/internal/feature/timesync"
 	"github.com/ygelfand/echolocal/internal/hardware/led"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 )
@@ -41,6 +42,7 @@ var get = sync.OnceValue(func() *alarm.Alarms {
 			}
 		},
 		RingFor: alerts.Get().RingFor,
+		Trusted: timesync.Get().Valid,
 	})
 	a.Told.Listen(component.Fire.Emit)
 	a.Dawning.Listen(func(d alarm.Dawn) {
