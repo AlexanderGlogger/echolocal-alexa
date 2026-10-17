@@ -396,8 +396,8 @@ func (p *Player) fill(buf []byte) {
 	}
 	right := p.lanes[len(p.lanes)-1]
 	for i, j := 0, 0; i < period*Channels; i, j = i+Channels, j+1 {
-		binary.LittleEndian.PutUint16(buf[i*2:], uint16(int16(p.lanes[0][j]*full*gain)))
-		binary.LittleEndian.PutUint16(buf[(i+1)*2:], uint16(int16(right[j]*full*gain)))
+		binary.LittleEndian.PutUint16(buf[i*2:], uint16(mix.Clamp(int32(p.lanes[0][j]*full*gain))))
+		binary.LittleEndian.PutUint16(buf[(i+1)*2:], uint16(mix.Clamp(int32(right[j]*full*gain))))
 	}
 }
 
