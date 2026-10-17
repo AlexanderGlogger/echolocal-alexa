@@ -21,7 +21,6 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/runtime/safe"
 	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
-	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/lib/asp"
@@ -71,11 +70,10 @@ type Player struct {
 	resampling upsample.Kind
 	splices    atomic.Uint64
 
-	tuning *asp.Tuning
-	chain  *asp.Chain
-	on     atomic.Bool
-	stale  atomic.Bool
-	mono   []float32
+	chain *asp.Chain
+	on    atomic.Bool
+	stale atomic.Bool
+	mono  []float32
 
 	fed bool
 
@@ -102,10 +100,11 @@ func New() *Player {
 	p.SetVolume(VolumeSteps)
 	p.on.Store(config.DefaultASP)
 
-	if !component.Board().Has(board.ASP) {
+	files := component.Board().Tuning
+	if !files.Listed() {
 		return p
 	}
-	t, err := asp.Load(asp.VendorDir)
+	t, err := asp.Load(asp.VendorDir, files)
 	if err != nil {
 		slog.Error("the driver tuning is not available, playing untuned", "err", err)
 		return p
@@ -115,7 +114,7 @@ func New() *Player {
 		slog.Error("the driver tuning will not run, playing untuned", "err", err)
 		return p
 	}
-	p.tuning, p.chain, p.mono = t, c, make([]float32, period)
+	p.chain, p.mono = c, make([]float32, period)
 	return p
 }
 
@@ -341,12 +340,6 @@ func (p *Player) fill(buf []byte) {
 
 	tuned := mono && p.chain != nil && p.on.Load() && drain
 
-	// The vendor's volume is two halves: its EQ bucket's gain before the tuning, the curve's attenuation after.
-	makeup := float32(1)
-	if tuned {
-		makeup = float32(p.tuning.Makeup(float64(p.step.Load()) / VolumeSteps))
-	}
-
 	tap := p.tap.Load()
 	if tap != nil && cap(p.tapBuf) < period*Channels {
 		p.tapBuf = make([]int16, period*Channels)
@@ -367,7 +360,7 @@ func (p *Player) fill(buf []byte) {
 			r = l
 		}
 		if tuned {
-			p.mono[j] = float32(mix.Clamp(l)) / full * makeup
+			p.mono[j] = float32(mix.Clamp(l)) / full
 			continue
 		}
 		binary.LittleEndian.PutUint16(buf[i*2:], uint16(int16(float32(mix.Clamp(l))*gain)))
@@ -385,7 +378,7 @@ func (p *Player) fill(buf []byte) {
 	}
 
 	// The tuning's limiter holds a fixed ceiling.
-	p.chain.Process(p.mono)
+	p.chain.Process(p.mono, float64(p.step.Load())/VolumeSteps)
 	for i, j := 0, 0; i < period*Channels; i, j = i+Channels, j+1 {
 		s := int16(p.mono[j] * full * gain)
 		binary.LittleEndian.PutUint16(buf[i*2:], uint16(s))

@@ -1,6 +1,10 @@
 package board
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/ygelfand/echolocal/internal/lib/asp"
+)
 
 type Cap uint32
 
@@ -16,8 +20,6 @@ const (
 	Camera
 
 	MuteLight
-
-	ASP
 
 	MicMutesCamera
 )
@@ -77,6 +79,8 @@ type Board struct {
 	SecureDecoders map[string]string
 
 	MaxFPS int
+
+	Tuning asp.Files
 
 	DecodeWidth, DecodeHeight int
 

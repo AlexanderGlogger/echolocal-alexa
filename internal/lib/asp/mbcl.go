@@ -11,16 +11,20 @@ const attack = 2 * time.Millisecond
 const floorDB = -120
 
 type mbclState struct {
-	split *crossover
-	bands []*bandState
-	full  *limiter
-	work  [][]float32
+	in     float32
+	split  *crossover
+	bands  []*bandState
+	fullIn float32
+	full   *limiter
+	work   [][]float32
 }
 
 type bandState struct {
+	compIn        float64
 	compThreshDB  float64
 	compRatio     float64
 	compGainMinDB float64
+	limIn         float32
 
 	env    float64
 	gainDB float64
@@ -58,27 +62,25 @@ func (l *limiter) pushLow(i int, want float64) {
 	l.tail = (l.tail + 1) % len(l.low)
 }
 
-func newMBCL(m mbcl, rate int) (*mbclState, error) {
+func newMBCL(name string, m mbcl, rate int) (*mbclState, error) {
 	if !m.PreFilterBypass {
-		return nil, fmt.Errorf("asp: %s wants a prefilter we do not have", mbclFile)
+		return nil, fmt.Errorf("asp: %s wants a prefilter we do not have", name)
 	}
 
 	s := &mbclState{
-		split: newCrossover(m.Crossovers, rate),
-		full:  newLimiter(m.Full.LimThresh, millis(m.Full.LimRelease), rate),
+		in:     float32(gainOf(m.InVol)),
+		split:  newCrossover(m.Crossovers, rate),
+		fullIn: float32(gainOf(m.Full.LimInVol)),
+		full:   newLimiter(m.Full.LimThresh, millis(m.Full.LimRelease), rate),
 	}
 
 	for _, b := range m.Bands {
-		if b.CompInVol != 0 || b.LimInVol != 0 {
-			return nil, fmt.Errorf("asp: %s asks for band input gain we do not apply", mbclFile)
-		}
-		if b.CompRatio < 1 {
-			return nil, fmt.Errorf("asp: %s has a compression ratio of %g", mbclFile, b.CompRatio)
-		}
 		s.bands = append(s.bands, &bandState{
+			compIn:        gainOf(b.CompInVol),
 			compThreshDB:  b.CompThresh,
-			compRatio:     b.CompRatio,
+			compRatio:     max(b.CompRatio, 1),
 			compGainMinDB: b.CompGainMin,
+			limIn:         float32(gainOf(b.LimInVol)),
 			attack:        smoothing(attack, rate),
 			relCo:         smoothing(millis(b.LimRelease), rate),
 			lim:           newLimiter(b.LimThresh, millis(b.LimRelease), rate),
@@ -109,6 +111,8 @@ func smoothing(d time.Duration, rate int) float64 {
 
 func millis(v float64) time.Duration { return time.Duration(v * float64(time.Millisecond)) }
 
+func gainOf(db float64) float64 { return math.Pow(10, db/20) }
+
 func (s *mbclState) reset() {
 	s.split.reset()
 	for _, b := range s.bands {
@@ -132,6 +136,9 @@ func (s *mbclState) process(x []float32) {
 		}
 	}
 
+	for i := range x {
+		x[i] *= s.in
+	}
 	s.split.process(x, s.work)
 	for i, b := range s.bands {
 		b.process(s.work[i])
@@ -142,14 +149,15 @@ func (s *mbclState) process(x []float32) {
 		for _, band := range s.work {
 			sum += band[i]
 		}
-		x[i] = sum
+		x[i] = sum * s.fullIn
 	}
 	s.full.process(x)
 }
 
 func (b *bandState) process(x []float32) {
 	for i, v := range x {
-		level := b.track(float64(v))
+		in := float64(v) * b.compIn
+		level := b.track(in)
 
 		want := 0.0
 		if level > b.compThreshDB {
@@ -158,7 +166,7 @@ func (b *bandState) process(x []float32) {
 		}
 
 		b.gainDB = approach(b.gainDB, want, b.attack, b.relCo)
-		x[i] = float32(float64(v) * math.Pow(10, b.gainDB/20))
+		x[i] = float32(in*math.Pow(10, b.gainDB/20)) * b.limIn
 	}
 	b.lim.process(x)
 }

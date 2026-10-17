@@ -1,6 +1,9 @@
 package board
 
-import "github.com/ygelfand/echolocal/internal/layout"
+import (
+	"github.com/ygelfand/echolocal/internal/layout"
+	"github.com/ygelfand/echolocal/internal/lib/asp"
+)
 
 // Crown is the 1st-generation Echo Show 8.
 var Crown = Board{
@@ -16,6 +19,15 @@ var Crown = Board{
 	Tessera:       Tessera{Board: "sunton8048s070", Columns: 4, Rows: 2},
 	DecodeWidth:   1920,
 	DecodeHeight:  1088,
+	Tuning: asp.Files{
+		EQ: []asp.Step{
+			{UpTo: 0.3, Name: "EQ_30.cfg"},
+			{UpTo: 0.5, Name: "EQ_50.cfg"},
+			{UpTo: 0.7, Name: "EQ_70.cfg"},
+			{UpTo: 1.0, Name: "EQ_100.cfg"},
+		},
+		Limiter: "MBCL_default.cfg",
+	},
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",
