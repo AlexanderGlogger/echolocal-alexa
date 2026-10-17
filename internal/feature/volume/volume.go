@@ -41,7 +41,6 @@ func Get() *Volume {
 	once.Do(func() {
 		shared = &Volume{card: sharedview.NewCard(shell.Get())}
 
-		media.Get().Volume.Listen(func(int) { shared.changed(config.StreamMain) })
 		media.Get().Levels.Changed.Listen(func(c Change) { shared.changed(c.Stream) })
 		media.Get().SetTurns(shared.turn)
 	})
@@ -50,21 +49,11 @@ func Get() *Volume {
 
 func (v *Volume) Name() string { return "volume" }
 
-func (v *Volume) Level(s config.Stream) int {
-	if s == config.StreamMain {
-		return media.Get().Step() * 100 / media.VolumeSteps
-	}
-	return media.Get().Levels.Level(s)
-}
+func (v *Volume) Level(s config.Stream) int { return media.Get().Levels.Level(s) }
 
 func (v *Volume) Set(s config.Stream, level int) {
 	level = sharedvolume.Clamp(level)
 	if v.Level(s) == level {
-		return
-	}
-
-	if s == config.StreamMain {
-		media.Get().Set((level*media.VolumeSteps + 50) / 100)
 		return
 	}
 	media.Get().Levels.Set(s, level)

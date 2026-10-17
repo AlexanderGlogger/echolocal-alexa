@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
-	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -50,7 +49,7 @@ type Player struct {
 	layers []*esphome.Select
 
 	Volume hook.Hook[int]
-	Levels *sharedvolume.Mixer
+	Levels *sharedvolume.Volume
 
 	turns atomic.Pointer[func(delta int) bool]
 
@@ -98,13 +97,17 @@ func build() *Player {
 	}
 	p.layers = noiseLayers()
 	component.Settings.Add(p.duck)
-	p.Levels = sharedvolume.NewMixer(sharedvolume.MixerOptions{
-		Output:  speaker.Get(),
-		Streams: Streams(),
-		Save: func(s config.Stream, level int) error {
-			return config.Set().Volume().Level(s, level)
+	p.Levels = sharedvolume.NewVolume(sharedvolume.Options{
+		Mixer: sharedvolume.MixerOptions{
+			Output:  speaker.Get(),
+			Streams: config.Streams(),
+			Save: func(s config.Stream, level int) error {
+				return config.Set().Volume().Level(s, level)
+			},
+			Device: component.DevicePlayback,
 		},
-		Device: component.DevicePlayback,
+		Main:      sharedvolume.Steps(p, VolumeSteps),
+		MainSteps: VolumeSteps,
 	})
 	p.Levels.Watch(config.StreamMedia, func(int) { p.Changed() })
 
@@ -252,13 +255,6 @@ func (v mediaVolume) StepVolume(delta int) {
 }
 
 func (v mediaVolume) Mute(muted bool) { v.p.Levels.Mute(config.StreamMedia, muted) }
-
-func Streams() []config.Stream {
-	return slices.DeleteFunc(
-		config.Streams(),
-		func(s config.Stream) bool { return s == config.StreamMain },
-	)
-}
 
 func (p *Player) SetIdle(v schema.Delay) {
 	if err := config.Set().Idle().Media(v); err != nil {
