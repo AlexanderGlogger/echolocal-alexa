@@ -82,6 +82,8 @@ type Board struct {
 
 	Tuning asp.Files
 
+	Stereo bool
+
 	DecodeWidth, DecodeHeight int
 
 	CameraWidth, CameraHeight int

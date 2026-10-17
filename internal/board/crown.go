@@ -28,6 +28,7 @@ var Crown = Board{
 		},
 		Limiter: "MBCL_default.cfg",
 	},
+	Stereo: true,
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",
