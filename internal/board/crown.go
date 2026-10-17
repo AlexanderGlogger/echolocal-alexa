@@ -14,6 +14,8 @@ var Crown = Board{
 	UISize:        "mini",
 	Diagonal:      8.0,
 	Tessera:       Tessera{Board: "sunton8048s070", Columns: 4, Rows: 2},
+	DecodeWidth:   1920,
+	DecodeHeight:  1088,
 	SecureDecoders: map[string]string{
 		"video/avc":  "OMX.MTK.VIDEO.DECODER.AVC.secure",
 		"video/hevc": "OMX.MTK.VIDEO.DECODER.HEVC.secure",

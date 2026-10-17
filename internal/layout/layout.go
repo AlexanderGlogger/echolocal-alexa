@@ -101,6 +101,10 @@ const ModelDir = StateDir + "/models"
 
 const VoiceHelper = StateDir + "/bin/echolocal-voice"
 
+const AirPlayHelper = StateDir + "/bin/echolocal-airplay"
+
+const AirPlayKey = StateDir + "/airplay.pem"
+
 const TileDir = StateDir + "/tiles"
 
 const RecordingDir = StateDir + "/recordings"
