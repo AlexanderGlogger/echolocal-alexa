@@ -11,8 +11,8 @@ import (
 	sharedpreview "github.com/ygelfand/libcountertop/pkg/display/camerapreview"
 	sharedsettings "github.com/ygelfand/libcountertop/pkg/display/settings"
 	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
+	"github.com/ygelfand/libcountertop/pkg/say"
 
-	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
 	"github.com/ygelfand/echolocal/internal/feature/rtspd"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -31,20 +31,22 @@ var cameraPages = sync.OnceValue(func() *sharedsettings.CameraPages[live.Knobs] 
 	cam := livecam.Get()
 	preview := Preview()
 	return sharedsettings.NewCameraPages(sharedsettings.CameraOptions[live.Knobs]{
-		Table:     cam.Table,
-		Read:      cam.Saved,
-		Save:      cam.Set,
-		Reset:     cam.Reset,
-		Stream:    func() bool { return config.Get().RTSP.Enabled },
-		SetStream: rtspd.Get().SetEnabled,
-		Push:      shell.Get().Push,
-		Redraw:    shell.Get().Redraw,
-		Preview:   preview.Want,
-		Wrap:      preview.Page,
+		Table:   cam.Table,
+		Read:    cam.Saved,
+		Save:    cam.Set,
+		Reset:   cam.Reset,
+		Push:    shell.Get().Push,
+		Redraw:  shell.Get().Redraw,
+		Preview: preview.Want,
+		Wrap:    preview.Page,
 	})
 })
 
 func cameraPage() *sharedshell.Page { return cameraPages().Page() }
+
+func streamPage() *sharedshell.Page {
+	return sharedsettings.ServicePage(say.T("features.rtsp"), rtspd.Get().Settings())
+}
 
 func init() {
 	sections = append(
@@ -52,4 +54,5 @@ func init() {
 		section{label: "settings.camera", glyph: gogui.IconCamera, page: cameraPage},
 	)
 	pages["camera"] = cameraPage
+	features = append(features, feature{key: "features.rtsp", page: streamPage})
 }
