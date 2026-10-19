@@ -9,8 +9,8 @@ import (
 
 func TestEachShowFindsItsAmp(t *testing.T) {
 	for want, controls := range map[string][]string{
-		"rt5616":   {"Ext_Speaker_Amp_Switch", "DAC1 Playback Volume", "OUT Playback Volume", "ADC_A MICPGA Volume Ctrl"},
-		"tas5805m": {"Ext_Speaker_Amp_Switch", "Master TAS5805m Playback Volume A", "TAS5805m EQ Enable", "ADC_A MICPGA Volume Ctrl"},
+		"rt5616":             {"Ext_Speaker_Amp_Switch", "DAC1 Playback Volume", "OUT Playback Volume", "ADC_A MICPGA Volume Ctrl"},
+		"tas5805m":           {"Ext_Speaker_Amp_Switch", "Master TAS5805m Playback Volume A", "TAS5805m EQ Enable", "ADC_A MICPGA Volume Ctrl"},
 		"tas5805m-amplifier": {"Ext_Speaker_Amp_Switch", "Master TAS5805m Playback Volume", "TAS5805m LPM mode", "Ch1 Gain A"},
 	} {
 		got, ok := whichShowAmp(func(c string) bool { return slices.Contains(controls, c) })
