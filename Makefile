@@ -35,7 +35,7 @@ DEVICE_ENV := GOOS=linux GOARCH=$(DOT_ARCH) CGO_ENABLED=0
 
 BOARD ?=
 
-SCREEN_BOARDS := checkers cronos crown
+SCREEN_BOARDS := checkers cronos crown athena
 BOARD_BUILDS := $(SCREEN_BOARDS)
 
 TAGS ?=
