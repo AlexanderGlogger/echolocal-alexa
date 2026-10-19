@@ -18,20 +18,19 @@ import (
 )
 
 func assistantPages() *sharedsettings.AssistantPages {
+	mac := func() string {
+		mac, _ := layout.FactoryMAC()
+		return mac
+	}
 	return sharedsettings.NewAssistantPages(
 		sharedsettings.AssistantDependencies{
 			Slots:       wakeword.Slots,
 			Preferences: preferences(),
 			Models:      wake.Lib().Ours,
 			Phrases:     wake.Lib().Phrases,
-			Chooser: sharedha.WakeWords{
-				Controller: homeassistant.Get(),
-				MAC: func() string {
-					mac, _ := layout.FactoryMAC()
-					return mac
-				},
-			},
-			Requested: &wakeword.Requested,
+			Chooser:     sharedha.WakeWords{Controller: homeassistant.Get(), MAC: mac},
+			Pipelines:   sharedha.Pipelines{Controller: homeassistant.Get(), MAC: mac},
+			Requested:   &wakeword.Requested,
 			Words: turn.Words{
 				Settings: config.WakeSection,
 				Speaker:  speaker.Sound(),

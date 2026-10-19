@@ -25,6 +25,7 @@ discovers it the way it discovers any ESPHome device.
 | Echo Show 5 (1st gen) | checkers | 5.5", 960 × 480 | Yes    |
 | Echo Show 5 (2nd gen) | cronos   | 5.5", 960 × 480 | Yes    |
 | Echo Show 8 (1st gen) | crown    | 8", 1280 × 800  | Yes    |
+| Echo Show 8 (2nd gen) | athena   | 8", 1280 × 800  | Yes    |
 
 ## Features
 
@@ -84,6 +85,7 @@ You need the device connected over USB with TWRP as its recovery. Follow the XDA
 - [Echo Show 5 (1st gen)](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900)
 - [Echo Show 5 (2nd gen)](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596)
 - [Echo Show 8 (1st gen)](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687)
+- [Echo Show 8 (2nd gen)](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-2nd-gen-2021-athena.4804958/)
 
 Download `echolocal` for your computer from the
 [latest release](https://github.com/ygelfand/echolocal/releases/latest):
@@ -132,7 +134,7 @@ The full guide, with every setting and where to find it, is at
 
 ```sh
 make build-echod                  # echod for the Echo Dot
-make build-echod BOARD=crown      # echod for an Echo Show: checkers, cronos or crown
+make build-echod BOARD=crown      # echod for an Echo Show: checkers, cronos, crown or athena
 make install-echod                # build, install and restart it on the attached device (requires prior full installation)
 ```
 
