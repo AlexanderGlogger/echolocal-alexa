@@ -1,0 +1,44 @@
+---
+title: Camera
+description: RTSP, ONVIF, a snapshot camera, and the camera's settings.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+On the Echo Show 5, Show 5 (2nd gen), Show 8 and Show 8 (2nd gen). The Echo Dot has no camera.
+
+## RTSP
+
+Off by default. Turn it on with **Camera stream** in **Settings → Camera** or the **RTSP server**
+switch (`rtsp`) in Home Assistant.
+
+```text
+rtsp://192.168.1.50:8554/main
+```
+
+The Echo cameras have one stream. Set its resolution (1280×720, 864×480 or 640×480), keyframe
+interval and quality under **Settings → Camera → Streams**.
+
+ONVIF discovery is supported.
+
+## Snapshot
+
+Home Assistant gets a camera entity with still pictures.
+
+## Picture
+
+**Settings → Camera** has a live preview and pages for **Picture**, **Exposure**, **White Balance**
+and **Streams**, and **Reset to defaults**. Every setting is listed on
+[Settings on the screen](/use/settings/#camera) and is also in Home Assistant. Camera settings
+aren't copied by config sync.
+
+## Shutter
+
+With the shutter closed, the stream won't start, snapshots fail, and a privacy mark shows on screen.
+Home Assistant's **Camera covered** sensor (`camera_covered`) follows it.
+
+Muting the microphones with the mute button also cuts the camera, the way Amazon designed it.
+
+<Aside type="caution">
+The RTSP stream has no password. Anyone on your network can watch it while it's on.
+</Aside>

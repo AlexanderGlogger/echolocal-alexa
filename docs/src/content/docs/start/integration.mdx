@@ -1,0 +1,127 @@
+---
+title: The EchoLocal integration
+description: A card for every Echo, a dashboard for all of them, wake words and custom tones.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import dashboard from '../../../assets/screens/dashboard.png';
+import card from '../../../assets/screens/hacs-card.png';
+import cardShow from '../../../assets/screens/hacs-card-show.png';
+import screen from '../../../assets/screens/hacs-screen.png';
+import assistant from '../../../assets/screens/hacs-assistant.png';
+import tones from '../../../assets/screens/hacs-tones.png';
+import health from '../../../assets/screens/hacs-health.png';
+
+The Echo works in Home Assistant without this. The integration is an optional companion that adds:
+
+- **A card** for each Echo, with its settings and controls laid out by area
+- **A dashboard** in the sidebar with every Echo, plus wake words, activity, groups, tones and health
+- What the ESPHome integration can't do on its own: a shared wake word library, custom tones and
+  recordings of each turn
+
+<Image src={dashboard} alt="The EchoLocal dashboard with Echo Dots and Echo Shows" class="screen-wide" />
+
+## Install
+
+Needs Home Assistant **2026.8** or newer.
+
+<Steps>
+
+1. In HACS, open **⋮ → Custom repositories**, add `https://github.com/ygelfand/echolocal-hacs` with
+   the category **Integration**.
+
+   [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ygelfand&repository=echolocal-hacs&category=Integration)
+
+2. Install **EchoLocal**, then restart Home Assistant.
+
+3. **Settings → Devices & services → Add integration → EchoLocal**.
+
+</Steps>
+
+Its only option is **Show the EchoLocal dashboard in the sidebar**. Change it later from the
+integration's **Configure**.
+
+## The card
+
+Each card is drawn like its device: a Dot from above with its ring, or a Show with its screen. The
+buttons under it open a panel of settings for each area: microphone, playback, ring, screen,
+posters, camera and each assistant. Every setting has a **?** beside it that says what it does.
+
+<div class="pair even">
+<Image src={card} alt="The card for an Echo Dot, ring lit, showing the room's light level" />
+<Image src={cardShow} alt="The card for an Echo Show 8, with buttons for each area" />
+</div>
+
+<Image src={screen} alt="The Screen panel for an Echo Show 8: brightness, theme, style, dock side, visual, clock face and idle settings" class="screen-wide" />
+
+<Image src={assistant} alt="An assistant panel: wake word, pipeline, sensitivity, timings, chime, reply delivery and recordings to keep" class="screen-wide" />
+
+Add one to any dashboard: **Edit dashboard → Add card → EchoLocal Satellite**, then pick the device.
+
+```yaml
+type: custom:echolocal-satellite-card
+device_id: 0123456789abcdef0123456789abcdef
+shell: auto
+help: true
+```
+
+| Option | Does |
+|---|---|
+| `device_id` | The Echo |
+| `shell` | Echo Dot only: `auto` (the color the Dot reports, grey if unknown), `black`, `white` or `grey`. An Echo Show is always drawn charcoal |
+| `help` | Show the **?** beside each setting. On by default |
+
+## The dashboard
+
+**EchoLocal** in the sidebar.
+
+### Home
+
+Every Echo's card on one page, or one section per group. Each group's bar has **Mute all**, **Ring**
+and **Stop**, which act on every device in it. If only some of them take it, the bar says how many
+did.
+
+### Activity
+
+Every turn a device reports: what woke it, what it heard, what it answered, and how long listening,
+thinking and replying took. Where a recording was kept, play back what the microphones sent. How
+many recordings each assistant keeps is in its panel on the card.
+
+### Wake words
+
+Which device listens for what, and the wake word library every device can use. Drop a microWakeWord
+`.tflite` file onto the tab to add it; it's offered to every Echo straight away, with no restart.
+The library lives in Home Assistant's `config/custom_wake_words/`.
+
+### Groups
+
+A table of devices against groups. Tick a box to put a device in a group, rename a group in its
+heading, or add and delete groups. Groups are Home Assistant labels, so they also work in
+automations and in Home Assistant's own filters.
+
+### Tones
+
+Upload a sound, tidy it up, and send it to devices. It then shows up in their sound pickers for
+chimes, timers, alarms, rings and the wake tone. See [Custom tones](/features/tones/).
+
+<Image src={tones} alt="The Tones tab: a custom chime sent to four devices" class="screen-wide" />
+
+### Health
+
+One row per device: version, update status, Wi‑Fi signal, CPU temperature, load, memory, disk and
+address.
+
+<Image src={health} alt="The Health tab: one row per device" class="screen-wide" />
+
+## Actions
+
+| Action | Does |
+|---|---|
+| `echolocal.assign_tone` | Send a tone from the library to devices (`tone`, `device_id`) |
+| `echolocal.unassign_tone` | Remove a tone from devices; it stays in the library |
+
+<Aside>
+Each Echo's own actions, such as messages, alarms and timers, come from the ESPHome integration.
+See [Messages, timers and alarms](/features/messages/).
+</Aside>
