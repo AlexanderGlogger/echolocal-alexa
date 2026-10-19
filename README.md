@@ -6,6 +6,7 @@
 <a href="https://github.com/ygelfand/echolocal/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ygelfand/echolocal/ci.yml?style=for-the-badge&label=Build&color=3fbf5f" alt="Build"></a>
 <a href="https://buymeacoffee.com/ygelfand"><img src="https://img.shields.io/badge/Buy_me_a_coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=000" alt="Buy me a coffee"></a>
 <a href="https://discord.gg/efWnv89pg2"><img src="https://img.shields.io/badge/Join_the_community-5865f2?style=for-the-badge&logo=discord&logoColor=fff" alt="Join the community on Discord"></a>
+<a href="https://www.echolocal.link"><img src="https://img.shields.io/badge/Docs-www.echolocal.link-ff8a2a?style=for-the-badge" alt="Documentation"></a>
 
 Turn an Amazon Echo Dot or Echo Show into a local Home Assistant voice satellite, speaker and display.
 
@@ -123,6 +124,9 @@ It then shows up in Home Assistant. Add it, and Home Assistant sets its encrypti
   <img src="docs/images/echolocal_discovery.png" alt="Home Assistant discovering the device as an ESPHome node" height="230">
   <img src="docs/images/echolocal_discovery_add.png" alt="The confirmation dialog for adding the discovered device" height="230">
 </p>
+
+The full guide, with every setting and where to find it, is at
+[www.echolocal.link](https://www.echolocal.link).
 
 ## Building it yourself
 
