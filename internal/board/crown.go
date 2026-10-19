@@ -38,6 +38,7 @@ var Crown = Board{
 	MuteDir: "/sys/devices/platform/amazon-gating",
 
 	CameraWidth: 1280, CameraHeight: 720,
+	CameraSizes: []string{"1280x720", "960x480", "864x480", "640x480"},
 
 	Service:     layout.Binary,
 	ServiceName: layout.Service,

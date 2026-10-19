@@ -20,7 +20,6 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/livecam"
 	"github.com/ygelfand/echolocal/internal/feature/vision"
-	"github.com/ygelfand/echolocal/internal/hardware/buttons"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -58,7 +57,6 @@ func Get() *Server {
 			Served:   livecam.Get().Served,
 			FPS:      live.FPS,
 			Bitrate:  livecam.Get().Bitrate,
-			Allowed:  func() bool { return !buttons.Get().Covered() },
 			ONVIF:    describe,
 		})}
 		shared.build()

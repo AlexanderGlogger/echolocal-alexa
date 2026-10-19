@@ -87,6 +87,8 @@ type Board struct {
 	DecodeWidth, DecodeHeight int
 
 	CameraWidth, CameraHeight int
+	CameraSizes               []string
+	SubWidth                  int
 
 	Service     string
 	ServiceName string

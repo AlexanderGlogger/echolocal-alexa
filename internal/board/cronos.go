@@ -26,6 +26,7 @@ var Cronos = Board{
 	MuteDir: "/sys/devices/platform/gpio-privacy",
 
 	CameraWidth: 1280, CameraHeight: 720,
+	CameraSizes: []string{"1280x960", "1280x720", "864x480", "640x480"},
 
 	Service:     layout.Binary,
 	ServiceName: layout.Service,

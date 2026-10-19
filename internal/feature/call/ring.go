@@ -45,8 +45,6 @@ func (muted) MicMuted() bool {
 	return on
 }
 
-func (muted) CameraCovered() bool { return false }
-
 func (muted) Watch(changed func()) func() {
 	return mute.Get().Changed.Listen(func(bool) { changed() })
 }

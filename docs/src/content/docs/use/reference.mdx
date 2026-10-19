@@ -27,7 +27,13 @@ On the Echo Shows only.
 | Size | mini | mini, compact, medium, large, xlarge | `select.<device>_screen_size` |
 | Style | standard | standard, material, glass, eink, metro, terminal, hifi, neon, skeuo | `select.<device>_screen_style` |
 | Timer style | Bar | Bar, Banner, Dial, Full screen, Clock face, Corner | `select.<device>_screen_timer_style` |
-| Theme | Default | Default, Midnight, Nocturne, Slate, Ember, Forest, Ocean, Plum, Carbon, Phosphor, Amber, Graphite, Synthwave, Paper, Linen, Mist, Bloom, Braun, Ink | `select.<device>_screen_theme` |
+| Theme | Default | Default, Midnight, Nocturne, Slate, Ember, Forest, Ocean, Plum, Carbon, Phosphor, Amber, Graphite, Synthwave, Paper, Linen, Mist, Bloom, Braun, Ink, Custom | `select.<device>_screen_theme` |
+| Custom theme accent | #2f6fdb | Text | `text.<device>_screen_custom_theme_accent` |
+| Custom theme second accent | #7a5af0 | Text | `text.<device>_screen_custom_theme_second_accent` |
+| Custom theme background | #f7f5f1 | Text | `text.<device>_screen_custom_theme_background` |
+| Custom theme secondary text | #6d7480 | Text | `text.<device>_screen_custom_theme_secondary_text` |
+| Custom theme cards | #ffffff | Text | `text.<device>_screen_custom_theme_cards` |
+| Custom theme text | #22252a | Text | `text.<device>_screen_custom_theme_text` |
 
 ## Screen saver
 
@@ -74,7 +80,7 @@ On the Echo Shows only.
 | Visual frame cap | 60 | 10, 15, 20, 30, 45, 60 | `select.<device>_screen_visual_frame_cap` |
 | Visual label | EchoLocal | Text | `text.<device>_screen_visual_label` |
 | Visual seed | 0 | 0 to 1024 | `number.<device>_screen_visual_seed` |
-| Visualizer lift | 0 dB | 0 to 40 dB | `number.<device>_screen_visualizer_lift` |
+| Visualizer lift | 0 dB (Echo Show 5), 10 dB (Echo Show 8 (2nd gen)) | 0 to 40 dB | `number.<device>_screen_visualizer_lift` |
 
 ## Weather
 
@@ -86,7 +92,7 @@ On the Echo Shows only.
 | Dashboard weather horizontal position | Right | Left, Center, Right | `select.<device>_screen_dashboard_weather_horizontal_position` |
 | Animate dashboard weather | On | On, Off | `switch.<device>_screen_animate_dashboard_weather` |
 | Weather on dashboard | On | On, Off | `switch.<device>_screen_weather_on_dashboard` |
-| entity | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | On the screen only |
+| entity | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | On the screen only |
 | Dashboard weather look | Compact | Compact, Stack, Icon, Words, Card, Detail | `select.<device>_screen_dashboard_weather_look` |
 | Dashboard weather vertical position | Top | Top, Center, Bottom | `select.<device>_screen_dashboard_weather_vertical_position` |
 | Radar starting range | 200 mi | 50 mi, 100 mi, 200 mi, 300 mi, 400 mi, 600 mi, 800 mi | `select.<device>_screen_radar_starting_range` |
@@ -116,7 +122,7 @@ On the Echo Shows only.
 
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
-| Photo albums | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | `text.<device>_screen_photo_albums` |
+| Photo albums | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | `text.<device>_screen_photo_albums` |
 | Photos favorites only | Off | On, Off | `switch.<device>_screen_photos_favorites_only` |
 | Photo interval | 30 seconds | 10 seconds, 15 seconds, 30 seconds, 1 minute, 2 minutes, 5 minutes | `select.<device>_screen_photo_interval` |
 | Immich API key | — | Text | `text.<device>_screen_immich_api_key` |
@@ -124,9 +130,9 @@ On the Echo Shows only.
 | Photos app motion | On | On, Off | `switch.<device>_screen_photos_app_motion` |
 | Wallpaper motion | Off | On, Off | `switch.<device>_screen_wallpaper_motion` |
 | Photo screen saver motion | On | On, Off | `switch.<device>_screen_photo_screen_saver_motion` |
-| Photo people | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | `text.<device>_screen_photo_people` |
-| Immich server | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | `text.<device>_screen_immich_server` |
-| Photo tags | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | `text.<device>_screen_photo_tags` |
+| Photo people | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | `text.<device>_screen_photo_people` |
+| Immich server | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | `text.<device>_screen_immich_server` |
+| Photo tags | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | `text.<device>_screen_photo_tags` |
 
 ## Calendar
 
@@ -134,7 +140,7 @@ On the Echo Shows only.
 
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
-| entities | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | On the screen only |
+| entities | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | On the screen only |
 | span | 7 days | On, Off | On the screen only |
 
 ## Shopping list
@@ -144,7 +150,7 @@ On the Echo Shows only.
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
 | completed | off | On, Off | On the screen only |
-| entity | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | On the screen only |
+| entity | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | On the screen only |
 
 ## Apps
 
@@ -153,7 +159,7 @@ On the Echo Shows only.
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
 | dock | player,calls | Text | On the screen only |
-| order | — (Echo Show 5 (2nd gen)), — (Echo Show 8) | Text | On the screen only |
+| order | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | On the screen only |
 
 ## Media
 
@@ -199,7 +205,7 @@ On the Echo Shows only.
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
 | Auto-answer from | Everyone | Everyone, Selected | `select.<device>_auto_answer_from` |
-| Auto-answer panels | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Dot) | Text | `text.<device>_auto_answer_panels` |
+| Auto-answer panels | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)), — (Echo Dot) | Text | `text.<device>_auto_answer_panels` |
 | Auto-answer calls | Off | On, Off | `switch.<device>_auto_answer_calls` |
 | Auto-answer with camera on | Off | On, Off | `switch.<device>_auto_answer_with_camera_on` |
 | Incoming calls | On | On, Off | `switch.<device>_incoming_calls` |
@@ -240,7 +246,7 @@ On the Echo Shows only.
 | Microphone leveling | On | On, Off | `switch.<device>_microphone_microphone_leveling` |
 | Microphone mixing | Center mic | Center mic, Delay and sum, Beamformer (where the Echo's own beamformer tuning loads) | `select.<device>_microphone_microphone_mixing` |
 | Room sensitivity | 8 dB | 4 to 20 dB | `number.<device>_microphone_room_sensitivity` |
-| Mute LED brightness | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Dot) | Dim, Bright | `select.<device>_microphone_mute_led_brightness` |
+| Mute LED brightness | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)), — (Echo Dot) | Dim, Bright | `select.<device>_microphone_mute_led_brightness` |
 | Mute sound | Mute tones | None, Chirp, Ding, Rise, Mute tones | `select.<device>_microphone_mute_sound` |
 | Stop word sensitivity | 0.7 | 0.5 to 1 | `number.<device>_microphone_stop_word_sensitivity` |
 
@@ -270,27 +276,28 @@ On the Echo Shows only.
 
 ## Camera
 
-On the Echo Shows only.
-
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
-| Anti-banding | Auto | Auto, Off, 50 Hz, 60 Hz | `select.<device>_camera_anti_banding` |
-| Brightness | Medium | Low, Medium, High | `select.<device>_camera_brightness` |
-| Contrast | Medium | Low, Medium, High | `select.<device>_camera_contrast` |
-| Effect | None | None, Mono, Negative, Sepia, Aqua, Whiteboard, Blackboard | `select.<device>_camera_effect` |
-| Exposure compensation | 0 | -3 to 3 | `number.<device>_camera_exposure_compensation` |
-| Frame rate | 30 fps | 15 to 30 fps | `number.<device>_camera_frame_rate` |
-| Auto frame rate | On | On, Off | `switch.<device>_camera_auto_frame_rate` |
-| Hue | Medium | Low, Medium, High | `select.<device>_camera_hue` |
-| ISO | auto | auto, 100, 200, 400, 800, 1600 | `select.<device>_camera_iso` |
-| Keyframe interval | 2 s | 1 to 10 s | `number.<device>_camera_keyframe_interval` |
-| Main stream | On | On, Off | `switch.<device>_camera_main_stream` |
-| Main resolution | 1280×720 | 1280×720, 864×480, 640×480 | `select.<device>_camera_main_resolution` |
-| Quality | Standard | Low, Standard, High | `select.<device>_camera_quality` |
-| Saturation | Medium | Low, Medium, High | `select.<device>_camera_saturation` |
-| Scene | Auto | Auto, Portrait, Landscape, Night | `select.<device>_camera_scene` |
-| Sharpness | Medium | Low, Medium, High | `select.<device>_camera_sharpness` |
-| White balance | Auto | Auto, Incandescent, Fluorescent, Warm fluorescent, Daylight, Cloudy, Twilight, Shade | `select.<device>_camera_white_balance` |
+| Anti-banding (Echo Shows) | Auto | Auto, Off, 50 Hz, 60 Hz | `select.<device>_camera_anti_banding` |
+| Brightness (Echo Shows) | Medium (Echo Show 5), 5 (Echo Show 8 (2nd gen)) | Low, Medium, High | `select.<device>_camera_brightness` |
+| Contrast (Echo Shows) | Medium (Echo Show 5), 5 (Echo Show 8 (2nd gen)) | Low, Medium, High | `select.<device>_camera_contrast` |
+| Effect (Echo Shows) | None | None, Mono, Negative, Sepia, Aqua, Whiteboard, Blackboard | `select.<device>_camera_effect` |
+| Exposure compensation (Echo Shows) | 0 | -3 to 3 | `number.<device>_camera_exposure_compensation` |
+| Frame rate (Echo Shows) | 30 fps | 15 to 30 fps | `number.<device>_camera_frame_rate` |
+| Auto frame rate (Echo Shows) | On | On, Off | `switch.<device>_camera_auto_frame_rate` |
+| Hue (Echo Show 5, Echo Show 5 (2nd gen), Echo Show 8) | Medium | Low, Medium, High | `select.<device>_camera_hue` |
+| ISO (Echo Show 5, Echo Show 5 (2nd gen), Echo Show 8) | auto | auto, 100, 200, 400, 800, 1600 | `select.<device>_camera_iso` |
+| Keyframe interval (Echo Shows) | 2 s | 1 to 10 s | `number.<device>_camera_keyframe_interval` |
+| Main stream (Echo Shows) | On | On, Off | `switch.<device>_camera_main_stream` |
+| Main resolution (Echo Shows) | 1280×720 | 1280×720, 960×480, 864×480, 640×480 | `select.<device>_camera_main_resolution` |
+| Noise reduction (Echo Show 8 (2nd gen)) | Fast | Off, Fast, High quality, Minimal | `select.<device>_camera_noise_reduction` |
+| Quality (Echo Shows) | Standard | Low, Standard, High | `select.<device>_camera_quality` |
+| Saturation (Echo Shows) | Medium (Echo Show 5), 5 (Echo Show 8 (2nd gen)) | Low, Medium, High | `select.<device>_camera_saturation` |
+| Scene (Echo Shows) | Auto | Auto, Portrait, Landscape, Night | `select.<device>_camera_scene` |
+| Sharpness (Echo Shows) | Medium (Echo Show 5), 2 (Echo Show 8 (2nd gen)) | Low, Medium, High | `select.<device>_camera_sharpness` |
+| Sub stream (Echo Show 8 (2nd gen)) | On | On, Off | `switch.<device>_camera_sub_stream` |
+| Sub resolution (Echo Show 8 (2nd gen)) | 640 px wide | 960 px wide, 768 px wide, 640 px wide, 480 px wide, 320 px wide | `select.<device>_camera_sub_resolution` |
+| White balance (Echo Shows) | Auto | Auto, Incandescent, Fluorescent, Warm fluorescent, Daylight, Cloudy, Twilight, Shade | `select.<device>_camera_white_balance` |
 
 ## Camera stream
 
@@ -317,8 +324,8 @@ On the Echo Dot only.
 
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
-| Cast bundle | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Dot) | Text | `text.<device>_playback_cast_bundle` |
-| Cast oracle | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Dot) | Text | `text.<device>_playback_cast_oracle` |
+| Cast bundle | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)), — (Echo Dot) | Text | `text.<device>_playback_cast_bundle` |
+| Cast oracle | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)), — (Echo Dot) | Text | `text.<device>_playback_cast_oracle` |
 | White noise layer 1 | None | None, White, Pink, Brown, Rain, Ocean, Brook, Wind, Fire, Crickets, Fan, Cabin | `select.<device>_playback_white_noise_layer_1` |
 | White noise layer 2 | None | None, White, Pink, Brown, Rain, Ocean, Brook, Wind, Fire, Crickets, Fan, Cabin | `select.<device>_playback_white_noise_layer_2` |
 | Speaker EQ | On, where the Echo's own audio tuning loads | On, Off | `switch.<device>_playback_speaker_eq` |

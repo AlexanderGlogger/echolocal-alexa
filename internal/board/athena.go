@@ -27,6 +27,8 @@ var Athena = Board{
 	MuteDir: "/sys/devices/platform/gpio-privacy",
 
 	CameraWidth: 1280, CameraHeight: 720,
+	CameraSizes: []string{"1920x1080", "1280x720", "640x480"},
+	SubWidth:    640,
 
 	Service:     layout.Binary,
 	ServiceName: layout.Service,

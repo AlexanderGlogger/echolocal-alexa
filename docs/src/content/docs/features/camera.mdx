@@ -14,10 +14,21 @@ switch (`rtsp`) in Home Assistant.
 
 ```text
 rtsp://192.168.1.50:8554/main
+rtsp://192.168.1.50:8554/sub
 ```
 
-The Echo cameras have one stream. Set its resolution (1280×720, 864×480 or 640×480), keyframe
-interval and quality under **Settings → Camera → Streams**.
+`main` is full resolution. `sub`, a smaller stream for previews and motion detection, is on the
+Echo Show 8 (2nd gen) only. Set resolutions, keyframe interval and quality under
+**Settings → Camera → Streams**.
+
+| Device | Main resolutions | Sub stream widths |
+|---|---|---|
+| Echo Show 5 | **1280×720**, 960×480, 864×480, 640×480 | No sub stream |
+| Echo Show 5 (2nd gen) | 1280×960, **1280×720**, 864×480, 640×480 | No sub stream |
+| Echo Show 8 | **1280×720**, 960×480, 864×480, 640×480 | No sub stream |
+| Echo Show 8 (2nd gen) | 1920×1080, **1280×720**, 640×480 | 960, 768, **640**, 480, 320 px |
+
+Defaults in bold. The sub stream keeps the main stream's shape and is never wider than it.
 
 ONVIF discovery is supported.
 
@@ -37,7 +48,9 @@ aren't copied by config sync.
 With the shutter closed, the stream won't start, snapshots fail, and a privacy mark shows on screen.
 Home Assistant's **Camera covered** sensor (`camera_covered`) follows it.
 
-Muting the microphones with the mute button also cuts the camera, the way Amazon designed it.
+Muting the microphones with the mute button also cuts the camera, the way Amazon designed it. The
+camera preview and Mirror show **Microphones are muted** instead of the picture, a call turns your
+camera off for both sides, and video comes back about a second after you unmute.
 
 <Aside type="caution">
 The RTSP stream has no password. Anyone on your network can watch it while it's on.

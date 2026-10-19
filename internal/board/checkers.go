@@ -36,6 +36,7 @@ var Checkers = Board{
 	},
 
 	CameraWidth: 1280, CameraHeight: 720,
+	CameraSizes: []string{"1280x720", "960x480", "864x480", "640x480"},
 
 	// The mute button reports KEY_POWER, on a node of its own called "gating".
 	Keys:    map[uint16]Key{116: Mute},

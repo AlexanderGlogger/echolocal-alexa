@@ -93,7 +93,7 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 | Pause wake word during calls | Don't listen for the wake word on a call | On | `switch.<device>_pause_wake_word_during_calls` |
 | Video stream | Send the camera's main or sub stream | Main | `select.<device>_call_video_stream` |
 
-The Echo cameras have only a main stream, so Video stream always sends it.
+Video stream isn't on the Echos; calls send the main stream.
 
 ## Display
 
@@ -103,7 +103,8 @@ The Echo cameras have only a main stream, so Video stream always sends it.
 |---|---|---|---|---|
 | Brightness | Screen brightness | 0–100 % | 70 % | `number.<device>_screen_brightness` |
 | Adaptive brightness | Follow the room's light | | On | `switch.<device>_screen_auto_brightness` |
-| Theme → | Color theme ([Styles and themes](/use/styles/)) | Default and 18 themes | Default | `select.<device>_screen_theme` |
+| Theme → | Color theme ([Styles and themes](/use/styles/)) | Default, 18 themes and Custom | Default | `select.<device>_screen_theme` |
+| Custom colors | The custom theme's Background, Cards, Text, Secondary text, Accent and Second accent ([Custom theme](/use/styles/#custom-theme)) | `#rrggbb` | Paper's colors | `text.<device>_screen_custom_theme_background`, `text.<device>_screen_custom_theme_cards`, `text.<device>_screen_custom_theme_text`, `text.<device>_screen_custom_theme_secondary_text`, `text.<device>_screen_custom_theme_accent`, `text.<device>_screen_custom_theme_second_accent` |
 | Style → | How controls are drawn | Standard, Material You, Glass, E-ink, Metro, Terminal, Hi-fi, Neon, Skeuo | Standard | `select.<device>_screen_style` |
 | Size | How big everything is | Mini, Compact, Medium, Large, Extra large | Mini | `select.<device>_screen_size` |
 | Dashboard → | [Below](#dashboard) | | | |
@@ -267,7 +268,7 @@ Timing, follow-up and recordings are in [Home Assistant](/use/entities/#voice-as
 
 ## Camera
 
-On the Echo Show 5, Show 5 (2nd gen) and Show 8. Camera settings stay on the
+On the Echo Show 5, Show 5 (2nd gen), Show 8 and Show 8 (2nd gen). Camera settings stay on the
 device; [config sync](/use/configuration/#config-sync) doesn't copy them.
 
 | Page | Setting | Choices | Default | Entity |
@@ -281,7 +282,8 @@ device; [config sync](/use/configuration/#config-sync) doesn't copy them.
 | Exposure | ISO | Auto, 100–1600 | Auto | `select.<device>_camera_iso` |
 | Exposure | Auto frame rate, Frame rate | 15, 20 or 30 fps | On, 30 | `switch.<device>_camera_auto_frame_rate`, `number.<device>_camera_frame_rate` |
 | White Balance | White balance | Auto, Incandescent, Fluorescent, Warm fluorescent, Daylight, Cloudy, Twilight, Shade | Auto | `select.<device>_camera_white_balance` |
-| Streams | Main stream, Main resolution | 1280×720, 864×480, 640×480 | On, 1280×720 | `switch.<device>_camera_main_stream`, `select.<device>_camera_main_resolution` |
+| Streams | Main stream, Main resolution | By device ([Camera](/features/camera/#rtsp)) | On, 1280×720 | `switch.<device>_camera_main_stream`, `select.<device>_camera_main_resolution` |
+| Streams | Sub stream, Sub resolution (Show 8 2nd gen) | 960, 768, 640, 480, 320 px wide | On, 640 | `switch.<device>_camera_sub_stream`, `select.<device>_camera_sub_resolution` |
 | Streams | Keyframe interval | 1–10 s | 2 s | `number.<device>_camera_keyframe_interval` |
 | Streams | Quality | Low, Standard, High | Standard | `select.<device>_camera_quality` |
 | | Camera stream | The RTSP server on port 8554 ([Camera](/features/camera/)) | Off | `switch.<device>_camera_rtsp_server` |
