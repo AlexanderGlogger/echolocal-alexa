@@ -54,7 +54,7 @@ var vendor = live.Vendor{
 
 var Get = sync.OnceValue(func() Camera {
 	b := component.Board()
-	c := Camera{live.New(live.Options{
+	o := live.Options{
 		Vendor: vendor,
 		Streams: live.Streams{
 			Main:        []string{"1280x720", "864x480", "640x480"},
@@ -67,7 +67,16 @@ var Get = sync.OnceValue(func() Camera {
 		Saved:           func() schema.Camera { return config.Get().Camera },
 		Writer:          func() schema.CameraWriter { return config.Set().Camera() },
 		Device:          component.DeviceCamera,
-	})}
+	}
+	if b.NativeAPI >= 26 {
+		o.StillOnKeyframe = false
+		o.Turn = func() int { return 0 }
+		o.Vendor.Levels = false
+		o.Vendor.Sliders = true
+		o.Vendor.ISOs = nil
+		o.Vendor.Noises = []string{"off", "fast", "high_quality", "minimal"}
+	}
+	c := Camera{live.New(o)}
 	component.Settings.Add(c.Controls())
 	return c
 })

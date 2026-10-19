@@ -80,14 +80,16 @@ func newInstallCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if (!state.Ready || reflash) && p.Boot.SHA256 != "" {
-				if cfg.BootImage, cfg.BootImageFrom, err = resolveBootImage(
-					cmd.Context(),
-					out,
-					p,
-					bootImage,
-				); err != nil {
-					return err
+			if (!state.Ready || reflash) && (p.Boot.SHA256 != "" || !p.System.Empty()) {
+				if p.Boot.SHA256 != "" {
+					if cfg.BootImage, cfg.BootImageFrom, err = resolveBootImage(
+						cmd.Context(),
+						out,
+						p,
+						bootImage,
+					); err != nil {
+						return err
+					}
 				}
 				if cfg.Approved, err = approveFlash(
 					cmd.Context(),

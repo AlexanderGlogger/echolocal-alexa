@@ -16,7 +16,7 @@ var Crown = Board{
 	PanelRotation: 270,
 	UISize:        "mini",
 	Diagonal:      8.0,
-	Tessera:       Tessera{Board: "sunton8048s070", Columns: 4, Rows: 2},
+	Tessera:       Tessera{Board: "jc8012p4a1", Columns: 6, Rows: 4},
 	DecodeWidth:   1920,
 	DecodeHeight:  1088,
 	Tuning: asp.Files{

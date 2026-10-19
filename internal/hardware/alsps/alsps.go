@@ -1,3 +1,5 @@
+//go:build !board_athena
+
 package alsps
 
 import (

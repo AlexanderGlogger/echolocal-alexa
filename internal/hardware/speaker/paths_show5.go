@@ -1,4 +1,4 @@
-//go:build board_checkers || board_cronos || board_crown
+//go:build board_checkers || board_cronos || board_crown || board_athena
 
 package speaker
 
@@ -62,6 +62,16 @@ var showAmps = []showAmp{
 			{name: "Audio_I2S0dl1_hd_Switch", value: "On"},
 			{name: "Master TAS5805m Playback Volume A", level: 110},
 		},
+	},
+	{
+		name:   "tas5805m-amplifier",
+		marker: "Master TAS5805m Playback Volume",
+		init: []kctl{
+			{name: "Audio_I2S0dl1_hd_Switch", value: "On"},
+			{name: "Master TAS5805m Playback Volume", level: 100},
+		},
+		on:  []kctl{{name: AmpSwitch, value: "On"}},
+		off: []kctl{{name: AmpSwitch, value: "Off"}},
 	},
 	{
 		name:   "max98396",

@@ -44,8 +44,7 @@ const (
 const VoiceRate = upsample.VoiceRate
 
 const (
-	Card           = 0
-	PlaybackDevice = 23
+	Card = 0
 
 	AmpSwitch = "Ext_Speaker_Amp_Switch"
 )

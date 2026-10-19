@@ -48,7 +48,7 @@ const (
 type Source struct {
 	startup atomic.Pointer[sharedcomponent.Progress]
 	devMu   sync.Mutex
-	pcm     *alsa.Capture
+	pcm     stream
 
 	mu        sync.Mutex
 	listeners map[int]*listener
@@ -199,15 +199,13 @@ func Acquire() (*Source, error) {
 	return s, nil
 }
 
+type stream interface {
+	Read(buf []byte) (int, error)
+	Close() error
+}
+
 func (s *Source) open() error {
-	pcm, err := alsa.Open(Card, CaptureDevice, alsa.Config{
-		Channels:   Channels,
-		Rate:       Rate,
-		Format:     alsa.FormatS24_3LE,
-		Bits:       Bits,
-		PeriodSize: period,
-		Periods:    periods,
-	})
+	pcm, err := openCapture()
 	if err != nil {
 		return fmt.Errorf("mic: opening capture: %w", err)
 	}
@@ -221,7 +219,7 @@ func (s *Source) open() error {
 	return nil
 }
 
-func (s *Source) device() *alsa.Capture {
+func (s *Source) device() stream {
 	s.devMu.Lock()
 	defer s.devMu.Unlock()
 	return s.pcm
@@ -470,6 +468,14 @@ func (s *Source) offer(l *listener, frame []int16) {
 }
 
 func (s *Source) Dropped() uint64 { return s.dropped.Load() }
+
+func SetGain(db int) error {
+	if err := config.Set().Microphone().Gain(db); err != nil {
+		return err
+	}
+	applyGain(db)
+	return nil
+}
 
 func (s *Source) Close() error {
 	s.devMu.Lock()
