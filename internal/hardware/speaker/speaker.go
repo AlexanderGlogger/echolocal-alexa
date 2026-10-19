@@ -417,6 +417,8 @@ func (p *Player) Take() []int16 { return p.bus.Take(config.StreamMedia) }
 
 func (p *Player) Adjust(rewrite func([]int16)) { p.bus.Adjust(config.StreamMedia, rewrite) }
 
+func (p *Player) Heard(s config.Stream, within time.Duration) bool { return p.bus.Heard(s, within) }
+
 func (p *Player) PlayVoice(mono []int16) {
 	p.voiceMu.Lock()
 	out := p.voice.Run(mono, make([]int16, 0, len(mono)*(Rate/VoiceRate)*Channels))

@@ -51,7 +51,7 @@ type Player struct {
 	Volume hook.Hook[int]
 	Levels *sharedvolume.Volume
 
-	turns atomic.Pointer[func(delta int) bool]
+	screen atomic.Pointer[Screen]
 
 	step atomic.Int64
 }
@@ -288,7 +288,7 @@ func (p *Player) apply(step int, tell bool) int {
 		return step
 	}
 
-	p.show(step)
+	p.show(float64(step) / VolumeSteps)
 	p.Volume.Emit(step)
 	slog.Info("volume", "step", step, "of", VolumeSteps)
 	return step
@@ -296,13 +296,31 @@ func (p *Player) apply(step int, tell bool) int {
 
 func (p *Player) Step() int { return int(p.step.Load()) }
 
-func (p *Player) SetTurns(fn func(delta int) bool) { p.turns.Store(&fn) }
+func (p *Player) Settings() *sharedvolume.Ducking { return p.duck }
+
+type Screen interface {
+	Selected() (config.Stream, bool)
+	Top() any
+}
+
+func (p *Player) SetScreen(s Screen) { p.screen.Store(&s) }
 
 func (p *Player) turn(delta int) {
-	if fn := p.turns.Load(); fn != nil && (*fn)(delta) {
+	aim := sharedvolume.Aim{
+		Mode:  config.Get().Media.Buttons,
+		Heard: func(s config.Stream) bool { return speaker.Get().Heard(s, sharedvolume.Recent) },
+	}
+	if s := p.screen.Load(); s != nil {
+		aim.Picked, aim.Screen = (*s).Selected, (*s).Top
+	}
+	s := sharedvolume.Target(aim)
+	if s == config.StreamMain {
+		p.Adjust(delta)
 		return
 	}
-	p.Adjust(delta)
+	p.Levels.Set(s, p.Levels.Level(s)+delta*sharedvolume.Step)
+	feedback.Get().Preview(s)
+	p.show(float64(p.Levels.Level(s)) / 100)
 }
 
 func (p *Player) Adjust(delta int) {
@@ -310,13 +328,13 @@ func (p *Player) Adjust(delta int) {
 	feedback.Get().Preview(config.StreamMain)
 }
 
-func (p *Player) show(step int) {
+func (p *Player) show(fraction float64) {
 	leds := led.Get()
 	if !leds.Present() {
 		return
 	}
 
-	frame := led.Volume(float64(step) / VolumeSteps)
+	frame := led.Volume(fraction)
 	leds.Claim(led.PriorityNotice).PaintFor(frame, volumeFlash)
 }
 

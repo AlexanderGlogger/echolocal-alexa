@@ -127,6 +127,7 @@ var registered = []string{
 	"verify_certificates",
 	"voice_resampling",
 	"volume_alerts",
+	"volume_buttons",
 	"volume_feedback",
 	"volume_main",
 	"volume_media",
