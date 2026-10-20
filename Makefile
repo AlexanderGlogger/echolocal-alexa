@@ -334,11 +334,21 @@ boot-images: ## Publish the boot images the echolocal CLI fetches at install tim
 	gh release upload $(BOOT_TAG) $(BOOT_DIR)/*.img --clobber
 	@echo "$(BOOT_TAG) now serves the boot images"
 
+NEXT_DEV := $(BASE)-dev.$(EPOCH)
+
 .PHONY: release-dev
-release-dev: $(UPX) ## Publish this working tree to the dev channel, without pushing anything
+release-dev: ## Tag this commit as the next dev prerelease; the release workflow builds it
+	@$(MAKE) --no-print-directory tag TAG=$(NEXT_DEV)
+
+.PHONY: release-dev-local
+release-dev-local: $(UPX) ## Build this working tree here and publish it as the next dev prerelease
 	@command -v gh >/dev/null || { echo "needs the gh CLI: brew install gh"; exit 1; }
 	@command -v goreleaser >/dev/null || { echo "needs goreleaser: brew install goreleaser"; exit 1; }
-	VERSION=$(VERSION) PACK="$(UPX) --lzma -2" goreleaser release --snapshot --clean
+	@$(MAKE) --no-print-directory publish-local TAG=$(NEXT_DEV)_local
+
+.PHONY: publish-local
+publish-local:
+	VERSION=$(TAG) PACK="$(UPX) --lzma -2" goreleaser release --snapshot --clean
 	@for f in dist/host_*/echolocal dist/host_*/echolocal.exe; do \
 		[ -f "$$f" ] || continue; \
 		d=$$(basename $$(dirname $$f)); \
@@ -348,19 +358,24 @@ release-dev: $(UPX) ## Publish this working tree to the dev channel, without pus
 		ext=$${f##*.}; [ "$$ext" = exe ] && ext=.exe || ext=; \
 		cp "$$f" "dist/echolocal_$${os}_$${arch}$${ext}"; \
 	done
-	@$(MAKE) --no-print-directory manifest-json VERSION=$(VERSION) FROM=$(RELEASES)/download/dev PAGE=$(RELEASES)/tag/dev
-	@gh release view dev >/dev/null 2>&1 || \
-		gh release create dev --prerelease --title dev --notes "Rolling build for devices on the dev channel."
-	gh release upload dev dist/echolocal_* $(BUILD_DIR)/echod-* $(BUILD_DIR)/manifest.json --clobber
-	@echo "dev channel now serves $(VERSION)"
+	@$(MAKE) --no-print-directory manifest-json VERSION=$(TAG) FROM=$(RELEASES)/download/$(TAG) PAGE=$(RELEASES)/tag/$(TAG)
+	gh release create $(TAG) --prerelease --title $(TAG) \
+		--notes "Built locally from $(BUILT_FROM), not by CI." \
+		dist/echolocal_* $(BUILD_DIR)/echod-* $(BUILD_DIR)/manifest.json
+	@echo "dev channel now serves $(TAG)"
 
 .PHONY: release
-release: ## Release the version in VERSION
+release: ## Release the version in VERSION, then start the next patch version
+	git push origin HEAD
 	@$(MAKE) --no-print-directory tag TAG=$(BASE)
+	@next=$$(echo $(BASE) | awk -F. -v OFS=. '{$$NF += 1; print}'); \
+		echo "$$next" > VERSION; \
+		git commit -q -m "Start $$next" VERSION; \
+		echo "VERSION is now $$next (committed, not pushed)"
 
 .PHONY: tag
 tag:
-	@test -n "$(TAG)" || { echo "usage: make release, make release-dev, or make tag TAG=0.4.2"; exit 1; }
+	@test -n "$(TAG)" || { echo "usage: make release, make release-dev, make release-dev-local, or make tag TAG=0.4.2"; exit 1; }
 	@test -z "$$(git status --porcelain)" || { echo "the working tree is dirty"; exit 1; }
 	@git rev-parse -q --verify "refs/tags/$(TAG)" >/dev/null && { echo "$(TAG) already exists"; exit 1; } || true
 	git tag -a "$(TAG)" -m "EchoLocal $(TAG)"
