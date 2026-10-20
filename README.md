@@ -19,13 +19,23 @@ discovers it the way it discovers any ESPHome device.
 
 ## Devices
 
-| Device                | Codename | Screen          | Camera |
-| --------------------- | -------- | --------------- | ------ |
-| Echo Dot (2nd gen)    | biscuit  | LED ring        | No     |
-| Echo Show 5 (1st gen) | checkers | 5.5", 960 × 480 | Yes    |
-| Echo Show 5 (2nd gen) | cronos   | 5.5", 960 × 480 | Yes    |
-| Echo Show 8 (1st gen) | crown    | 8", 1280 × 800  | Yes    |
-| Echo Show 8 (2nd gen) | athena   | 8", 1280 × 800  | Yes    |
+| Device                | Codename | OS          | Status    |
+| --------------------- | -------- | ----------- | --------- |
+| Echo Dot (2nd gen)    | biscuit  | Fire OS 6.x | Supported |
+| Echo Show 5 (1st gen) | checkers | Fire OS 6.x | Supported |
+| Echo Show 5 (2nd gen) | cronos   | Fire OS 6.x | Supported |
+| Echo Show 8 (1st gen) | crown    | Fire OS 6.x | Supported |
+| Echo Show 8 (2nd gen) | athena   | Fire OS 7.x | Supported |
+
+## Additional devices supported by our sister project [LANovo](https://github.com/ygelfand/LANovo)
+
+| Device                  | Codename  | OS                 | Status    |
+| ----------------------- | --------- | ------------------ | --------- |
+| Lenovo Smart Display 10 | blueberry | Android Things 8.x | Supported |
+| Lenovo Smart Display 8  | amber     | Android Things 8.x | Supported |
+| Lenovo Smart Display 7  | ivy       | Android Things 8.x | Supported |
+| JBL Link View           | opal      | Android Things 8.x | Supported |
+| Lenovo ThinkSmart View  | penghu    | Android 8.x        | Supported |
 
 ## Features
 
