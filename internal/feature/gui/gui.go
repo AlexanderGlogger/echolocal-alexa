@@ -117,6 +117,7 @@ var Get = sync.OnceValue(func() *screens.App {
 		},
 		Redraws: []screens.Watch{
 			screens.On(&firmware.Get().Offered),
+			screens.On(&firmware.Get().Listed),
 			screens.On(&privacy.Get().Changed),
 			screens.On(&web.Get().Offered),
 		},

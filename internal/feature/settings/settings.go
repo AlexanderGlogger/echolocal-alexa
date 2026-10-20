@@ -15,6 +15,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
+	"github.com/ygelfand/echolocal/internal/feature/lock"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
 
@@ -44,7 +45,7 @@ func Get() *Settings {
 			Name:  func() string { return say.T("settings.title") },
 			Order: shareddrawer.OrderSettings,
 			Icon:  "mdi:cog",
-			Open:  Open,
+			Open:  func() { lock.Get().Gate().Open(Open) },
 		})
 	})
 	return shared
