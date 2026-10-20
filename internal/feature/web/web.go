@@ -23,7 +23,10 @@ func init() {
 	)
 }
 
-const Port = 80
+const (
+	Port       = 80
+	SecurePort = 8443
+)
 
 var get = sync.OnceValue(func() *libweb.Server {
 	return libweb.New(
@@ -36,12 +39,14 @@ func Get() *libweb.Server { return get() }
 type server struct{ *libweb.Server }
 
 func (s *server) Run(ctx context.Context) error {
-	if err := firewall.Open(firewall.Web, Port); err != nil {
-		slog.Error("opening the web port failed", "port", Port, "err", err)
+	if err := firewall.Open(firewall.Web, Port, SecurePort); err != nil {
+		slog.Error("opening the web ports failed", "ports", []int{Port, SecurePort}, "err", err)
 	}
 	return s.Server.Run(ctx)
 }
 
 func Handle(pattern string, h http.Handler) { Get().Handle(pattern, h) }
+
+func HandlePeer(pattern string, h http.Handler) { Get().HandlePeer(pattern, h) }
 
 func Adopted() bool { return config.Get().API.Adopted }

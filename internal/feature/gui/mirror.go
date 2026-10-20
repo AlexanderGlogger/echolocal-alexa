@@ -9,6 +9,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/feature/apps"
+	"github.com/ygelfand/echolocal/internal/feature/commands"
 	"github.com/ygelfand/echolocal/internal/feature/settings"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
@@ -20,6 +21,7 @@ func init() {
 		}
 		m := mirror.New(mirror.Options{Shell: shell.Get(), Camera: settings.Preview()})
 		apps.Get().Add(m.App())
+		commands.Get().Listen(m.Command())
 		o.Views = append(o.Views, m.Screen)
 	})
 }
