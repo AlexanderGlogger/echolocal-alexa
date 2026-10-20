@@ -29,7 +29,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/tfriedel6/canvas v0.12.1 // indirect
 	github.com/tphakala/go-aac v0.7.0 // indirect
-	github.com/ygelfand/libcountertop v0.1.1-0.20261020021230-f1cf6287726c
+	github.com/ygelfand/libcountertop v0.1.1-0.20261020040153-2ead8c25a223
 	github.com/zserge/microwakeword v0.0.0-20260330234603-bfaf3840114e
 	golang.org/x/exp/shiny v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/image v0.46.0 // indirect
@@ -40,6 +40,7 @@ require (
 
 require (
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
+	github.com/antzucaro/matchr v0.0.0-20221106193745-7bed6ef61ef9 // indirect
 	github.com/asticode/go-astikit v0.30.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
