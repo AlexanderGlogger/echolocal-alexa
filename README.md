@@ -50,7 +50,8 @@ discovers it the way it discovers any ESPHome device.
   crickets and wind.
 - **Intercom**: calls between devices on your network. Audio on the Dot, audio and video on the Shows.
   Broadcasts to every device at once, and "call the kitchen" or "broadcast dinner is ready" by
-  voice with the EchoLocal integration. A home key keeps calls and broadcasts to your own devices.
+  voice with the EchoLocal integration, which also calls an Echo Show from a Home Assistant
+  dashboard. A home key keeps calls and broadcasts to your own devices.
 - **Timers and alerts**, with custom tones for chimes, timers and wake sounds.
 - **Bluetooth proxy** for Home Assistant, so the device extends your Bluetooth for integrations
   like [Bermuda](https://github.com/agittins/bermuda). While the proxy is on, the device also
@@ -60,6 +61,10 @@ discovers it the way it discovers any ESPHome device.
 - **Light sensor**, reported to Home Assistant.
 - **Updates** from Home Assistant, stable or development channel, or any recent version by name to
   roll back.
+- **A web page** on every device over HTTPS: every setting with search, alarms, calls and
+  broadcasts, logs, and on an Echo Show a live view of the screen. Behind it is an HTTP API for
+  scripts. The certificate is self-signed, or comes from [Cert Warden](https://www.certwarden.com)
+  if you run one. See [In a browser](https://www.echolocal.link/use/web/).
 
 ### Echo Dot
 
@@ -82,7 +87,8 @@ on the action button.
 - A Chromecast receiver for YouTube, YouTube TV and Prime Video and more
 - A Bluetooth speaker
 - An RTSP camera on port 8554 with ONVIF discovery, and a snapshot camera in Home Assistant.
-- A Cameras app for your Home Assistant cameras
+- A Cameras app for your Home Assistant cameras, with live video and audio through the
+  integration, and full-screen Lights and Switches apps
 - Settings on the screen or from Home Assistant, a PIN to lock them, and config sync between
   devices
 
@@ -90,8 +96,11 @@ on the action button.
 
 Everything above works with stock Home Assistant. The
 [EchoLocal integration](https://github.com/ygelfand/echolocal-hacs) (HACS) adds a dashboard and
-cards for these devices, turn history with recordings, a wake word library, custom tones, groups
-and a health view.
+cards for these devices, Fleet to compare settings across devices and copy them from one to the
+others, calls to an Echo Show from a dashboard, turn history with recordings, a wake word library,
+custom tones, groups and a health view. It works with
+[LANovo](https://github.com/ygelfand/LANovo) displays too, side by side on the same dashboard. See
+[The EchoLocal integration](https://www.echolocal.link/start/integration/).
 
 ![The EchoLocal dashboard with Echo Dots and Echo Shows](docs/images/dashboard.png)
 
