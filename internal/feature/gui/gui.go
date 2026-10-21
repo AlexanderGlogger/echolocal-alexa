@@ -16,6 +16,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
+	"github.com/ygelfand/echolocal/internal/feature/cameras"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
@@ -100,6 +101,7 @@ var Get = sync.OnceValue(func() *screens.App {
 		Warnings: nws.Get(),
 
 		WeatherEntities: func() shell.View { return settings.WeatherEntities() },
+		CamerasPage:     func() shell.View { return cameras.Get().Page() },
 		Player:          media.Get(),
 		PlayerPage:      media.Page,
 		MediaVolume:     sharedvolume.For(volume.Get(), config.StreamMedia),

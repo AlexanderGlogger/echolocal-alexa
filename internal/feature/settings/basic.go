@@ -14,6 +14,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/lock"
+	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/network"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
@@ -45,6 +46,7 @@ func basicPages() *sharedsettings.BasicPages {
 			Updates:     firmware.Get(),
 			Lock:        lock.Get().Gate(),
 			HomeKey:     network.Get(),
+			Media:       media.Get(),
 			Previews:    previewKit(),
 			PowerPage:   func() sharedshell.View { return powerPage() },
 			SyncPage:    func() sharedshell.View { return &syncview.Directory{} },
