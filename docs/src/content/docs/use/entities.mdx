@@ -163,6 +163,8 @@ Call these as `esphome.<device>_<action>`, for example `esphome.kitchen_show_mes
 | `alarm_list`, `alarm_set`, `alarm_enable`, `alarm_delete`, `alarm_stop`, `alarm_snooze` | [Alarms](/features/messages/#alarms) |
 | `tone_write`, `tone_rename`, `tone_remove` | [Custom tones](/features/tones/) |
 | `recordings`, `turn_audio` | The kept recordings of recent requests |
+| `settings_export` | Every setting that can be copied to another device, with its section, title and value |
+| `settings_import` | Apply settings from another device: `settings` is JSON of domain → setting → value, the shape `settings_export` lists. Answers how many changed and which were skipped |
 | `logs` | The device's recent log |
 | `<orientation>_show_page`, `_show_alert`, `_show_alert_choice`, `_dismiss_alert`, `_screen_message` | [Tessera](/use/dashboards/#tessera) pages and alerts |
 

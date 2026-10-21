@@ -18,6 +18,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
@@ -51,7 +52,9 @@ var Get = sync.OnceValue(func() *cameraview.Cameras {
 		Settings: config.CamerasSection,
 		Client:   fetch.Client(fetchWait),
 		Picker:   picker,
+		Tabs:     dashboard.Tabs(),
 	})
+	dashboard.Tabs().Add(20, c.DashboardTabs)
 	component.Settings.Add(c.Controls())
 	return c
 })

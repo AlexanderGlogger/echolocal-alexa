@@ -48,6 +48,7 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 
 | Setting | What it does | Default | Entity |
 |---|---|---|---|
+| Web access → | The address of the [web page](/use/web/), the admin password, and the certificate in use | | `text.<device>_frontend_admin_password`, `sensor.<device>_frontend_certificate` |
 | Verify certificates | Check TLS certificates on downloads: updates, wake words, photos, radar | On | `switch.<device>_verify_certificates` |
 
 ## Connected services
@@ -62,6 +63,15 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 | Intercom → | Calls with other devices ([below](#intercom)) | | |
 | Bluetooth proxy | A Bluetooth LE proxy for Home Assistant | Off | `switch.<device>_bluetooth_proxy` |
 | Bluetooth speaker | Play from a phone over Bluetooth | Off | `switch.<device>_bluetooth_speaker` |
+| Camera stream → | RTSP and ONVIF, with a username and password ([below](#camera-stream)) | Off | `switch.<device>_camera_rtsp_server` |
+
+### Camera stream
+
+| Setting | What it does | Default | Entity |
+|---|---|---|---|
+| RTSP server | Serve the camera over RTSP and ONVIF ([Camera](/features/camera/#rtsp)) | Off | `switch.<device>_camera_rtsp_server` |
+| Username | Asked for along with the password | admin | `text.<device>_camera_rtsp_username` |
+| Password | Empty means no password. Shows **Set** once there is one | | `text.<device>_camera_rtsp_password` |
 
 ### Cast receiver
 
@@ -90,6 +100,7 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 | Answer from | Auto-answer **Everyone** or only the **Selected** devices | Everyone | `select.<device>_auto_answer_from` |
 | Panels | The devices auto-answer accepts, when Answer from is Selected | | `text.<device>_auto_answer_panels` |
 | Users | The Home Assistant users auto-answer accepts, when Answer from is Selected | | `text.<device>_auto_answer_users` |
+| Auto-answer API calls | Auto-answer calls from the [web page](/use/web/#call), when Answer from is Selected | Off | `switch.<device>_auto_answer_api_calls` |
 | Auto-answer with camera on | Start auto-answered calls with video | Off | `switch.<device>_auto_answer_with_camera_on` |
 | Ring, Video ring, Ringback | The sounds for an audio call, a video call, and while you wait | Ring, Ring, Ringback | `select.<device>_ring_tone`, `select.<device>_video_ring_tone`, `select.<device>_ringback_tone` |
 | Pause wake word during calls | Don't listen for the wake word on a call | On | `switch.<device>_pause_wake_word_during_calls` |
@@ -217,7 +228,7 @@ entities.
 | Weather | The Home Assistant weather entity for the weather card and alerts | None |
 | Shopping list | A Home Assistant to-do list, and **Show completed items** | None, Off |
 | Calendar | Calendars to show, and **Days to show**: 3, 7 or 14 | None, 7 |
-| Cameras | The [Cameras app](/features/apps/#cameras): which cameras, **Thumbnail size** (`number.<device>_thumbnail_size`), **Refresh** (`number.<device>_refresh`), **Auto paginate** (`number.<device>_auto_paginate`) and **Home Assistant URL** (`text.<device>_home_assistant_url`) | All cameras, 3, 5 s, Off, empty |
+| Cameras | The [Cameras app](/features/apps/#cameras): **Dashboard tab** (`switch.<device>_dashboard_tab`), which cameras, **Thumbnail size** (`number.<device>_thumbnail_size`), **Refresh** (`number.<device>_refresh`), **Auto paginate** (`number.<device>_auto_paginate`) and **Home Assistant URL** (`text.<device>_home_assistant_url`) | Off, all cameras, 3, 5 s, Off, empty |
 
 ## Sound
 
@@ -227,6 +238,7 @@ entities.
 |---|---|---|---|
 | Main volume | The speaker's volume, in 30 steps | 50 % | `number.<device>_playback_main_volume` |
 | Media volume, Assistant volume, Alarm volume, System sounds | Each sound's level within the main volume | 100 % | `number.<device>_playback_media_volume`, `number.<device>_playback_voice_volume`, `number.<device>_playback_alerts_volume`, `number.<device>_playback_feedback_volume` |
+| Volume buttons | What the volume buttons change: **What's playing**, or **Main volume** ([Volume buttons](/use/getting-around/#volume-buttons)) | What's playing | `select.<device>_playback_volume_buttons` |
 | Device chime | The sound for wake and confirmations. **None** silences the failure and cancellation sounds too | Chirp | `select.<device>_playback_device_chime` |
 | Failure sound | When a request fails | Trouble | `select.<device>_playback_failure_sound` |
 | Cancellation sound | When a request is cancelled | Cancel | `select.<device>_playback_cancellation_sound` |
@@ -304,7 +316,6 @@ device; [config sync](/use/configuration/#config-sync) doesn't copy them.
 | Streams | Sub stream, Sub resolution (Show 8 2nd gen) | 960, 768, 640, 480, 320 px wide | On, 640 | `switch.<device>_camera_sub_stream`, `select.<device>_camera_sub_resolution` |
 | Streams | Keyframe interval | 1–10 s | 2 s | `number.<device>_camera_keyframe_interval` |
 | Streams | Quality | Low, Standard, High | Standard | `select.<device>_camera_quality` |
-| | Camera stream | The RTSP server on port 8554 ([Camera](/features/camera/)) | Off | `switch.<device>_camera_rtsp_server` |
 | | Reset to defaults | Tap twice | | `button.<device>_camera_reset_camera_settings` (button) |
 
 ## System

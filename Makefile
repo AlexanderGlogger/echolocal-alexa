@@ -316,7 +316,7 @@ BOOT_TAG := boot-images
 BOOT_DIR := internal/host/assets/boot
 
 LOGO_SRC := assets
-LOGO_OUT := internal/ui
+LOGO_OUT := internal/brand
 
 .PHONY: logos
 logos: ## Rescale the committed artwork into what echod embeds

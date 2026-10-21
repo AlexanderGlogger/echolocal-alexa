@@ -88,6 +88,10 @@ export default defineConfig({
 							"slug": "use/entities"
 						},
 						{
+							"label": "In a browser",
+							"slug": "use/web"
+						},
+						{
 							"label": "All settings and defaults",
 							"slug": "use/reference"
 						}

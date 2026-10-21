@@ -19,6 +19,11 @@ talks back, and everything about it is set in Home Assistant or on the
 
 While an intercom call is ringing, **Action** answers it and **Volume down** declines it.
 
+The volume buttons change the volume of what you're hearing: a ringing alarm or timer, then the
+assistant or a call, then music, and the main volume when nothing is playing. The ring shows the
+volume they change. Set **Volume buttons** (`volume_buttons`) to **Main volume** in Home Assistant
+to have them change the main volume only.
+
 A tap on **Action** takes effect 300 ms after you let go, in case a second tap follows. Double and
 triple taps do nothing on their own; use them in automations.
 

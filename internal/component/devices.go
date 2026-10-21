@@ -19,4 +19,6 @@ const DeviceDashboard uint32 = 102
 
 const DeviceVoice uint32 = 103
 
+const DeviceFrontend uint32 = 104
+
 func AssistantDevice(slot int) uint32 { return DeviceAssistant + uint32(slot) }

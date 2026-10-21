@@ -93,9 +93,12 @@ device, so pick a name you'll keep.
 ## Changing Wi‑Fi later
 
 ```sh
-./echolocal wifi
+./echolocal wifi --force
 ```
 
-It takes the same `--ssid`, `--password`, `--wps` and `--serial` options.
+`--force` lists the networks even when the Echo is already connected; without it, a connected Echo
+just reports where it is. It takes the same `--ssid`, `--password`, `--wps` and `--serial` options.
+Once the new network connects, the Echo forgets every other network; if it does not connect, the
+Echo goes back to the one it was on.
 
 Next: [add it to Home Assistant](/start/home-assistant/).

@@ -26,11 +26,12 @@ func init() {
 const (
 	Port       = 80
 	SecurePort = 8443
+	PublicPort = 443
 )
 
 var get = sync.OnceValue(func() *libweb.Server {
 	return libweb.New(
-		libweb.Options{Port: Port, APIPort: layout.Port, Adopted: Adopted, Page: page},
+		libweb.Options{Port: Port, APIPort: layout.Port, Adopted: Adopted},
 	)
 })
 
@@ -39,8 +40,14 @@ func Get() *libweb.Server { return get() }
 type server struct{ *libweb.Server }
 
 func (s *server) Run(ctx context.Context) error {
-	if err := firewall.Open(firewall.Web, Port, SecurePort); err != nil {
-		slog.Error("opening the web ports failed", "ports", []int{Port, SecurePort}, "err", err)
+	if err := firewall.Open(firewall.Web, Port, SecurePort, PublicPort); err != nil {
+		slog.Error(
+			"opening the web ports failed",
+			"ports",
+			[]int{Port, SecurePort, PublicPort},
+			"err",
+			err,
+		)
 	}
 	return s.Server.Run(ctx)
 }
