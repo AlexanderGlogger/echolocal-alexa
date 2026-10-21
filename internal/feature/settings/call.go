@@ -9,6 +9,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/call"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
+	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/shell"
 )
 
@@ -28,6 +29,7 @@ func callPages() *sharedsettings.CallPages {
 			Shell:      shell.Get(),
 			Controller: call.Get(),
 			Peers:      discovery.Get().Peers,
+			Home:       homeassistant.Get(),
 		},
 	)
 }

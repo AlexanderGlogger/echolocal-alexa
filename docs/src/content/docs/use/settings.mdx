@@ -85,9 +85,11 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 | Setting | What it does | Default | Entity |
 |---|---|---|---|
 | Incoming calls | Accept calls at all | On | `switch.<device>_incoming_calls` |
+| Receive broadcasts | Play [broadcasts](/features/intercom/#broadcasts) from other devices | On | `switch.<device>_receive_broadcasts` |
 | Auto-answer | Answer calls without a tap | Off | `switch.<device>_auto_answer_calls` |
 | Answer from | Auto-answer **Everyone** or only the **Selected** devices | Everyone | `select.<device>_auto_answer_from` |
 | Panels | The devices auto-answer accepts, when Answer from is Selected | | `text.<device>_auto_answer_panels` |
+| Users | The Home Assistant users auto-answer accepts, when Answer from is Selected | | `text.<device>_auto_answer_users` |
 | Auto-answer with camera on | Start auto-answered calls with video | Off | `switch.<device>_auto_answer_with_camera_on` |
 | Ring, Video ring, Ringback | The sounds for an audio call, a video call, and while you wait | Ring, Ring, Ringback | `select.<device>_ring_tone`, `select.<device>_video_ring_tone`, `select.<device>_ringback_tone` |
 | Pause wake word during calls | Don't listen for the wake word on a call | On | `switch.<device>_pause_wake_word_during_calls` |
@@ -203,7 +205,8 @@ Where the photos come from is set in Home Assistant; see [Photos and wallpaper](
 	<Image src={sub_native} alt="Home control, Native: Lights and Switches" class="screen" />
 </div>
 
-Apart from Screen saver (`idle_saver`), none of these are Home Assistant entities.
+Apart from Screen saver (`idle_saver`) and the Cameras settings, none of these are Home Assistant
+entities.
 
 | Setting | What it does | Default |
 |---|---|---|
@@ -214,6 +217,7 @@ Apart from Screen saver (`idle_saver`), none of these are Home Assistant entitie
 | Weather | The Home Assistant weather entity for the weather card and alerts | None |
 | Shopping list | A Home Assistant to-do list, and **Show completed items** | None, Off |
 | Calendar | Calendars to show, and **Days to show**: 3, 7 or 14 | None, 7 |
+| Cameras | The [Cameras app](/features/apps/#cameras): which cameras, **Thumbnail size** (`number.<device>_thumbnail_size`), **Refresh** (`number.<device>_refresh`), **Auto paginate** (`number.<device>_auto_paginate`) and **Home Assistant URL** (`text.<device>_home_assistant_url`) | All cameras, 3, 5 s, Off, empty |
 
 ## Sound
 
@@ -266,6 +270,20 @@ A page per assistant ([Voice assistants](/features/voice/)):
 
 Timing, follow-up and recordings are in [Home Assistant](/use/entities/#voice-assistants).
 
+## Voice triggers
+
+What you can say besides talking to the assistant ([Voice triggers](/features/voice/#voice-triggers)).
+When the EchoLocal integration is missing or needs an update, a row at the top says so and shows a
+code to scan.
+
+| Setting | What it does | Default | Entity |
+|---|---|---|---|
+| All actions | Actions said to an assistant | On | `switch.<device>_voice_triggers_all_actions` |
+| Call a device | "Call the kitchen" | On | `switch.<device>_voice_triggers_call_a_device` |
+| Broadcast a message | "Broadcast dinner is ready" | On | `switch.<device>_voice_triggers_broadcast_a_message` |
+| All commands | Commands heard without a wake word | On | `switch.<device>_voice_triggers_all_commands` |
+| Radar, Mirror | "Radar", "mirror" | On | `switch.<device>_voice_triggers_radar`, `switch.<device>_voice_triggers_mirror` |
+
 ## Camera
 
 On the Echo Show 5, Show 5 (2nd gen), Show 8 and Show 8 (2nd gen). Camera settings stay on the
@@ -300,7 +318,18 @@ device; [config sync](/use/configuration/#config-sync) doesn't copy them.
 | Keyboard size | The on-screen keyboard | Compact | `select.<device>_screen_keyboard_size` |
 | Restart | Restart the app or the whole device | | `button.<device>_restart` (button) |
 | Config sync | Copy settings to or from another device ([Configuration](/use/configuration/#config-sync)) | | |
-| Software update | Version, channel (stable or development) and check for updates ([Updates](/features/updates/)) | Stable | `select.<device>_update_channel`, `update.<device>_firmware` |
+| Software update | Version, channel (stable or development), check for updates, and **Other versions** to install a particular one ([Updates](/features/updates/)) | Stable | `select.<device>_update_channel`, `update.<device>_firmware`, `select.<device>_install_version` |
+| Settings Lock | A PIN of 4 to 8 digits that opening Settings asks for ([below](#settings-lock)) | Off | `text.<device>_settings_lock` |
+| Home key | Devices with the same key are in one home, for calls and broadcasts ([Intercom](/features/intercom/#home-key)) | None | `text.<device>_home_key` |
+
+### Settings Lock
+
+**Set PIN** asks for a new PIN twice. Once it's set, the page offers **Change PIN** and **Remove
+PIN**. After five wrong tries, the next try has to wait 30 seconds, and the wait doubles with every
+wrong try after that, up to an hour.
+
+The PIN can also be set from Home Assistant with **Settings Lock**; clearing it there removes the
+lock.
 
 ## Developer options
 

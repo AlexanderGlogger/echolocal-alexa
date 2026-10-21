@@ -24,6 +24,7 @@ var registered = []string{
 	"cached_data",
 	"call_answer_from",
 	"call_answer_peers",
+	"call_answer_users",
 	"call_auto_answer",
 	"call_auto_video",
 	"call_broadcasts",

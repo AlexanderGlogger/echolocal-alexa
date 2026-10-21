@@ -18,6 +18,7 @@ reorder. **Media** and **Intercom** are in the dock to start with.
 | **Calendar** | Upcoming events from Home Assistant calendars |
 | **Shopping list** | A Home Assistant to-do list |
 | **Mirror** | The camera, full screen |
+| **Cameras** | Your Home Assistant cameras |
 
 ## Radio
 
@@ -32,7 +33,7 @@ An animated loop of rain and clouds around your home, with a short-range forecas
 - **Radar source**: **Auto**, **NWS** (US only) or **RainViewer**
 - **Radar starting range**: 50 to 800 miles, default 200
 
-With **Voice commands** on, saying "radar" opens it.
+Saying "radar" opens it, unless it's turned off in the [voice triggers](/features/voice/#voice-triggers).
 
 ## Calendar
 
@@ -45,4 +46,23 @@ keyboard, tap to check them off, and turn on **Show completed items** to see the
 
 ## Mirror
 
-The camera, full screen. It's on devices with a camera.
+The camera, full screen. It's on devices with a camera. Saying "mirror" opens it, unless it's
+turned off in the [voice triggers](/features/voice/#voice-triggers).
+
+## Cameras
+
+The cameras in Home Assistant, as pictures on a grid, sorted by area. Swipe for more pages. Tap one
+to watch it full screen: live video with a sound button when Home Assistant can stream that camera
+and the [EchoLocal integration](/start/integration/) is installed, otherwise a picture that keeps
+updating. Tap again to go back.
+
+It needs **Allow the device to perform Home Assistant actions** turned on for the device in the
+ESPHome integration. Set it up under **Settings → Home control → Cameras**:
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Select** | Which cameras to show | All cameras |
+| **Thumbnail size** | 1 (small) to 5 (one camera per row) | 3 |
+| **Refresh** | How often the pictures update, 1 to 60 s, or Off | 5 s |
+| **Auto paginate** | Move to the next page on its own, 5 to 120 s, or Off | Off |
+| **Home Assistant URL** | Where to fetch the pictures from. Leave it empty to use the address the device finds on your network | Empty |

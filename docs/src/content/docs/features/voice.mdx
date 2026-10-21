@@ -78,11 +78,26 @@ Say **"stop"**, no wake word needed, tap the screen on an Echo Show, or tap the 
 **Stop word sensitivity** in Home Assistant (0.5–1, default 0.7) sets how sure it has to be; 1 turns
 it off.
 
-## Voice commands
+## Voice triggers
 
-**Voice commands** (`voice_commands`, off by default, in Home Assistant) listens for commands
-without a wake word, on the device itself (Echo Show). So far there is one: say **"radar"** (or "show me the
-weather radar") to open the [Radar app](/features/apps/#radar).
+Two kinds of things you can say, each with its own switches under **Settings → Voice triggers** on
+an Echo Show and on the **voice triggers** device in Home Assistant. Everything is on to start
+with.
+
+**Actions** are said to an assistant, after the wake word. Assist hands them to the device:
+
+- **"Call the kitchen"**, **"video call the kitchen"**: [an intercom call](/features/intercom/#calling-by-voice)
+- **"Broadcast"**, **"broadcast dinner is ready"**: [a broadcast](/features/intercom/#broadcasts)
+
+Actions need the [EchoLocal integration](/start/integration/). When it's missing or out of date,
+the Voice triggers page says so, with a code to scan that opens it in HACS.
+
+**Commands** are heard on the device itself, without a wake word (Echo Show):
+
+- **"Radar"** (or "show me the weather radar") opens the [Radar app](/features/apps/#radar)
+- **"Mirror"** opens [Mirror](/features/apps/#mirror)
+
+**All actions** and **All commands** turn a whole kind off; each one has its own switch too.
 
 ## Timers
 

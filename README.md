@@ -49,6 +49,8 @@ discovers it the way it discovers any ESPHome device.
 - **White noise**: two layers from white, pink, brown, rain, ocean, fan, fire, brook, cabin,
   crickets and wind.
 - **Intercom**: calls between devices on your network. Audio on the Dot, audio and video on the Shows.
+  Broadcasts to every device at once, and "call the kitchen" or "broadcast dinner is ready" by
+  voice with the EchoLocal integration. A home key keeps calls and broadcasts to your own devices.
 - **Timers and alerts**, with custom tones for chimes, timers and wake sounds.
 - **Bluetooth proxy** for Home Assistant, so the device extends your Bluetooth for integrations
   like [Bermuda](https://github.com/agittins/bermuda). While the proxy is on, the device also
@@ -56,12 +58,16 @@ discovers it the way it discovers any ESPHome device.
   from the last two bytes of its factory MAC, for tools like
   [BLE Positioning System](https://github.com/Hogster/BPS).
 - **Light sensor**, reported to Home Assistant.
-- **Updates** from Home Assistant, stable or development channel.
+- **Updates** from Home Assistant, stable or development channel, or any recent version by name to
+  roll back.
 
 ### Echo Dot
 
 **LED ring.** Twelve individually addressable segments, effects for ambient, motion, alerts and
 room-reactive behavior, and a color per segment. The ring can follow the room's volume.
+
+**Buttons** as Home Assistant events: press and hold on every button, and double and triple taps
+on the action button.
 
 ### Echo Show
 
@@ -76,7 +82,9 @@ room-reactive behavior, and a color per segment. The ring can follow the room's 
 - A Chromecast receiver for YouTube, YouTube TV and Prime Video and more
 - A Bluetooth speaker
 - An RTSP camera on port 8554 with ONVIF discovery, and a snapshot camera in Home Assistant.
-- Settings on the screen or from Home Assistant, and config sync between devices
+- A Cameras app for your Home Assistant cameras
+- Settings on the screen or from Home Assistant, a PIN to lock them, and config sync between
+  devices
 
 ## The optional integration
 

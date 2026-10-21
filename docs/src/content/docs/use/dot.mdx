@@ -19,11 +19,15 @@ talks back, and everything about it is set in Home Assistant or on the
 
 While an intercom call is ringing, **Action** answers it and **Volume down** declines it.
 
+A tap on **Action** takes effect 300 ms after you let go, in case a second tap follows. Double and
+triple taps do nothing on their own; use them in automations.
+
 ### Buttons in automations
 
 Each button is an event entity, **Action button**, **Mute button**, **Volume up button** and
-**Volume down button**, that fires `press` or `hold`. The button still does its usual job; the
-event comes as well. For example, holding Volume up to toggle a lamp, on a Dot named Kitchen:
+**Volume down button**, that fires `press` or `hold`. **Action button** also fires `double` and
+`triple` (three or more taps). The button still does its usual job; the event comes as well. For
+example, holding Volume up to toggle a lamp, on a Dot named Kitchen:
 
 ```yaml
 triggers:

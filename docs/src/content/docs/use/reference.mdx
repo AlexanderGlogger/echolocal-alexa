@@ -161,6 +161,17 @@ On the Echo Shows only.
 | dock | player,calls | Text | On the screen only |
 | order | — (Echo Show 5 (2nd gen)), — (Echo Show 8), — (Echo Show 8 (2nd gen)) | Text | On the screen only |
 
+## Cameras
+
+On the Echo Shows only.
+
+| Setting | Default | Choices | Entity |
+|---|---|---|---|
+| Thumbnail size | 3 | 1 to 5 | `number.<device>_thumbnail_size` |
+| Refresh | 5 s | 0 to 60 s | `number.<device>_refresh` |
+| Auto paginate | 0 s | 0 to 120 s | `number.<device>_auto_paginate` |
+| Home Assistant URL | — | Text | `text.<device>_home_assistant_url` |
+
 ## Media
 
 | Setting | Default | Choices | Entity |
@@ -209,6 +220,7 @@ On the Echo Shows only.
 | Auto-answer calls | Off | On, Off | `switch.<device>_auto_answer_calls` |
 | Auto-answer with camera on | Off | On, Off | `switch.<device>_auto_answer_with_camera_on` |
 | Incoming calls | On | On, Off | `switch.<device>_incoming_calls` |
+| Receive broadcasts | On | On, Off | `switch.<device>_receive_broadcasts` |
 | Pause wake word during calls | On | On, Off | `switch.<device>_pause_wake_word_during_calls` |
 | Ring tone | Ring | None, Chirp, Ding, Rise, Timer, Trouble, Ring, Ringback | `select.<device>_ring_tone` |
 | Ringback tone | Ringback | None, Chirp, Ding, Rise, Timer, Trouble, Ring, Ringback | `select.<device>_ringback_tone` |
@@ -250,13 +262,16 @@ On the Echo Shows only.
 | Mute sound | Mute tones | None, Chirp, Ding, Rise, Mute tones | `select.<device>_microphone_mute_sound` |
 | Stop word sensitivity | 0.7 | 0.5 to 1 | `number.<device>_microphone_stop_word_sensitivity` |
 
-## Voice
-
-On the Echo Shows only.
+## Voice triggers
 
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
-| Voice commands | Off | On, Off | `switch.<device>_microphone_voice_commands` |
+| All actions | On | On, Off | `switch.<device>_voice_triggers_all_actions` |
+| Call a device | On | On, Off | `switch.<device>_voice_triggers_call_a_device` |
+| Broadcast a message | On | On, Off | `switch.<device>_voice_triggers_broadcast_a_message` |
+| All commands (Echo Shows) | On | On, Off | `switch.<device>_voice_triggers_all_commands` |
+| Radar (Echo Shows) | On | On, Off | `switch.<device>_voice_triggers_radar` |
+| Mirror (Echo Shows) | On | On, Off | `switch.<device>_voice_triggers_mirror` |
 
 ## Voice assistants
 
@@ -341,6 +356,7 @@ On the Echo Dot only.
 | Setting | Default | Choices | Entity |
 |---|---|---|---|
 | Verify certificates | On | On, Off | `switch.<device>_verify_certificates` |
+| Home key | None | Text, up to 256 characters | `text.<device>_home_key` |
 
 ## System
 
@@ -351,4 +367,6 @@ On the Echo Dot only.
 | Remote adb | Off | On, Off | `switch.<device>_remote_adb` |
 | Time zone | Home Assistant | Home Assistant, UTC, Europe/London, Europe/Lisbon, Europe/Paris, Europe/Berlin and 34 more | `select.<device>_time_zone` |
 | Update channel | stable | stable, dev | `select.<device>_update_channel` |
+| Install version | Select for rollback | The available versions | `select.<device>_install_version` |
+| Settings Lock (Echo Shows) | None | 4 to 8 digits | `text.<device>_settings_lock` |
 
