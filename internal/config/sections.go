@@ -10,7 +10,9 @@ func sharedOf(c *Config) *schema.Shared { return &c.Shared }
 var sections = schema.NewSections(func() *storage.Store[Config] { return store().Store }, sharedOf)
 
 var (
+	AccessSection    = sections.Access
 	AlertsSection    = sections.Alerts
+	DiagSection      = sections.Diag
 	FeedbackSection  = sections.Feedback
 	APISection       = sections.API
 	AppsSection      = sections.Apps

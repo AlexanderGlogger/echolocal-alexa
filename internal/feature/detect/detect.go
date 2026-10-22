@@ -79,6 +79,7 @@ func newDetect() *Detect {
 		Read: func() float64 { return config.Get().Wake.Stop.Threshold },
 		Save: func(v float64) error { return config.Set().Stop().Threshold(v) },
 	})
+	component.Settings.Add(d.stop.Controls())
 	e.OnReady = d.busy.scored
 
 	// Home Assistant pushes a wake word selection only when the user changes one.

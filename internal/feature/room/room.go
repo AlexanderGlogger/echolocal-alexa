@@ -66,6 +66,8 @@ func build() *Reaction {
 		names = slices.DeleteFunc(names, func(n string) bool { return n == led.EffectBeamCompass })
 	}
 	component.BindEffect(r.sel, names, r.show, config.Set().Ring().Reaction)
+	component.Settings.Add(component.Rows("ring", component.RingGroup,
+		component.Picked{Name: "reaction", Select: r.sel}))
 
 	light.Get().OnColor(r.recolour)
 	return r

@@ -144,6 +144,10 @@ func build() *Player {
 		}
 		slog.Info("setting changed", "setting", p.asp.ObjectID, "using", settled, "asked", want)
 	}
+	component.Settings.Add(component.Rows("speaker", component.SpeakerGroup,
+		component.Picked{Name: "eq", Switch: p.asp},
+		component.Picked{Name: "resampling", Select: p.resampling},
+	))
 
 	for _, sel := range p.layers {
 		sel.OnCommand = func(chosen string) {

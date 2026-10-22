@@ -103,6 +103,12 @@ const VoiceHelper = StateDir + "/bin/echolocal-voice"
 
 const AirPlayHelper = StateDir + "/bin/echolocal-airplay"
 
+const TesseraHelper = StateDir + "/bin/echolocal-tessera"
+
+const TesseraFirmwareDir = StateDir + "/tessera"
+
+const TesseraPort = 6054
+
 const AirPlayKey = StateDir + "/airplay.pem"
 
 const TileDir = StateDir + "/tiles"

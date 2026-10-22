@@ -12,6 +12,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/media/castreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/system/clock"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/board"
@@ -72,7 +73,7 @@ func build() *castreceiver.Receiver {
 			AuthorityPath:   layout.CastAuthorityPath,
 			AppDir:          layout.CastAppDir,
 			Synced: func(do func()) func() {
-				return timesync.Get().Synced.Listen(func(timesync.Sync) { do() })
+				return timesync.Get().Synced.Listen(func(clock.Sync) { do() })
 			},
 			Volume: mediaVolume{},
 			Video:  pictures(),

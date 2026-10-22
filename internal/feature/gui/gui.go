@@ -89,6 +89,7 @@ var Get = sync.OnceValue(func() *screens.App {
 		Home:      homecontrol.Get(),
 		HomeHA:    homeassistant.Get(),
 		Saver:     idle.Get(),
+		Visuals:   settings.Visuals(),
 		Tessera: tesseraview.New(tesseraview.Dependencies{
 			UI:      look,
 			Screens: tessera.Get(),
@@ -97,6 +98,7 @@ var Get = sync.OnceValue(func() *screens.App {
 			HomeAfterIdle: homecontrol.Get().ReturnHome,
 			Logo:          echoui.Logo(),
 		}),
+		Firmware: tessera.Firmware(),
 		Forecast: weather.Get(),
 		Warnings: nws.Get(),
 

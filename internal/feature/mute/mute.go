@@ -110,6 +110,15 @@ func build() *Mute {
 		Options: []string{dim, bright},
 	}
 	m.brightness.OnCommand = m.setBrightness
+	component.Settings.Add(
+		component.Rows(
+			"ring",
+			component.RingGroup,
+			component.Picked{Name: "muted", Select: m.ring},
+		),
+		component.Rows("microphone", component.MuteGroup,
+			component.Picked{Name: "mute_led", Select: m.brightness}),
+	)
 
 	var err error
 	if m.line, err = privacy.Microphone(); err != nil {

@@ -58,6 +58,8 @@ func Get() *Feedback {
 		component.Settings.Add(shared.Controls)
 		tones.Get().Changed.Listen(func(struct{}) { shared.Refresh() })
 		component.BindEffect(shared.failure, led.EffectNames(), nil, config.Set().Ring().Trouble)
+		component.Settings.Add(component.Rows("ring", component.RingGroup,
+			component.Picked{Name: "trouble", Select: shared.failure}))
 	})
 	return shared
 }

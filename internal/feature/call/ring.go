@@ -92,6 +92,10 @@ func buildRing() *ring {
 	}
 	component.BindEffect(r.incoming, led.EffectNames(), r.changed, config.Set().Ring().Incoming)
 	component.BindEffect(r.talking, led.EffectNames(), r.changed, config.Set().Ring().Talking)
+	component.Settings.Add(component.Rows("ring", component.RingGroup,
+		component.Picked{Name: "incoming", Select: r.incoming},
+		component.Picked{Name: "talking", Select: r.talking},
+	))
 	return r
 }
 

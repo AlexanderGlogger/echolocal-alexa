@@ -30,6 +30,7 @@ func TestSavedKeysKeepTheirLayout(t *testing.T) {
 	}
 
 	want := []string{
+		"access",
 		"airplay",
 		"alerts",
 		"api",

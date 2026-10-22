@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"sync"
+	"time"
 
 	sharedlib "github.com/ygelfand/libcountertop/pkg/display/dashboard"
 	"github.com/ygelfand/libcountertop/pkg/display/idleview"
@@ -50,11 +51,7 @@ func Get() *Dashboard {
 		screen.Get().Themed.Listen(func(theme.Theme) { shared.Redraw() })
 		screen.Get().Restyled.Listen(func(schema.Screen) { shared.Redraw() })
 		poster.Get().Changed.Listen(func(int) { shared.Redraw() })
-		timesync.Get().Synced.Listen(func(s timesync.Sync) {
-			if s.Stepped() {
-				shared.Redraw()
-			}
-		})
+		timesync.Get().WatchSteps(func(time.Duration) { shared.Redraw() })
 		shell.Get().Changed.Listen(func(c sharedshell.Change) {
 			if _, ok := c.To.(*idleview.View); ok {
 				strip.Clock()

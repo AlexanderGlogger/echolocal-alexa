@@ -7,9 +7,9 @@ import (
 	sharedshell "github.com/ygelfand/libcountertop/pkg/display/shell"
 	"github.com/ygelfand/libcountertop/pkg/display/syncview"
 
+	"github.com/ygelfand/echolocal/internal/feature/access"
 	"github.com/ygelfand/echolocal/internal/feature/alerts"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
-	"github.com/ygelfand/echolocal/internal/feature/diag"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
@@ -24,6 +24,8 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/visuals"
 )
 
+func Visuals() *sharedsettings.BasicPages { return basicPages() }
+
 func basicPages() *sharedsettings.BasicPages {
 	return sharedsettings.NewBasicPages(
 		sharedsettings.BasicDependencies{
@@ -33,7 +35,7 @@ func basicPages() *sharedsettings.BasicPages {
 			Poster:      poster.Get(),
 			Visuals:     visuals.Get(),
 			Privacy:     privacy.Get(),
-			Access:      diag.Get(),
+			Access:      access.Get(),
 			Zone:        timesync.Get(),
 			Dashboard:   dashboard.Get(),
 			Clocks:      clocks,
