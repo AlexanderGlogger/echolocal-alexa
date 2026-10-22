@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
@@ -108,6 +109,8 @@ var Late = []Action{
 		"shblemeshd",
 		"BLE mesh daemon left with nothing to talk to once its service package is hidden",
 	),
+	stop("sntpd", "Amazon's time client; echod keeps the clock"),
+	stop("ace_messaging", "Amazon's push channel and the device's to-do queue"),
 	{
 		Name: "put the firewall jumps back",
 		Reason: "the boot completing is what starts firewall.sh, which flushes INPUT: our chains keep " +
@@ -120,6 +123,11 @@ const (
 	bootProp = "sys.boot_completed"
 	bootWait = 3 * time.Minute
 	bootPoll = 5 * time.Second
+
+	// wifisvc powers the radio and starts the supplicant; started again, it resets wifi.
+	wifiService = "wifisvc"
+	wifiDriver  = "wlan.driver.status"
+	wifiLink    = "/sys/class/net/wlan0/operstate"
 )
 
 func Apply() { apply("boot setup", Actions) }
@@ -147,10 +155,25 @@ func (Setup) Run(ctx context.Context) error {
 }
 
 func ApplyLate(ctx context.Context) {
-	if component.Board().SignalsBoot && !bootCompleted(ctx) {
+	if component.Board().SignalsBoot && !waitFor(ctx, "the boot to finish", bootCompleted) {
 		return
 	}
 	apply("late setup", Late)
+	releaseWifi(ctx)
+}
+
+func releaseWifi(ctx context.Context) {
+	if state, err := prop.Get("init.svc." + wifiService); err != nil || state != "running" {
+		return
+	}
+	if !waitFor(ctx, "wifi before stopping "+wifiService, wifiUp) {
+		return
+	}
+	if err := prop.Stop(wifiService); err != nil {
+		slog.Error("late setup failed", "action", "stop "+wifiService, "err", err)
+		return
+	}
+	slog.Info("stopped once wifi was up", "service", wifiService)
 }
 
 func apply(what string, actions []Action) {
@@ -164,26 +187,34 @@ func apply(what string, actions []Action) {
 	slog.Info(what+" applied", "actions", len(actions), "failed", failed)
 }
 
-func bootCompleted(ctx context.Context) bool {
+func bootCompleted() bool {
+	v, err := prop.Get(bootProp)
+	return err == nil && v == "1"
+}
+
+func wifiUp() bool {
+	driver, err := prop.Get(wifiDriver)
+	if err != nil || driver != "ok" {
+		return false
+	}
+	link, err := os.ReadFile(wifiLink)
+	return err == nil && strings.TrimSpace(string(link)) == "up"
+}
+
+func waitFor(ctx context.Context, what string, ready func() bool) bool {
 	tick := time.NewTicker(bootPoll)
 	defer tick.Stop()
 	giveUp := time.After(bootWait)
 
 	for {
-		if v, err := prop.Get(bootProp); err == nil && v == "1" {
+		if ready() {
 			return true
 		}
 		select {
 		case <-ctx.Done():
 			return false
 		case <-giveUp:
-			slog.Warn(
-				"gave up waiting for the boot to finish",
-				"after",
-				bootWait,
-				"skipped",
-				len(Late),
-			)
+			slog.Warn("gave up waiting for "+what, "after", bootWait)
 			return false
 		case <-tick.C:
 		}
