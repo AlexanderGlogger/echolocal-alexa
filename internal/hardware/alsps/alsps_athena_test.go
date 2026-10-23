@@ -12,7 +12,7 @@ func TestLuxMatchesTheVendorHAL(t *testing.T) {
 		factors: [4]float64{1.07039, 1.09634, 1.08034, 1.03962},
 		itime:   700,
 		gain:    64,
-		stack:   stack1,
+		stack:   stacks[1],
 	}
 	for _, c := range []struct {
 		rgbc [4]float64

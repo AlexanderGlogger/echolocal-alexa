@@ -36,13 +36,22 @@ const (
 	period = 700 * time.Millisecond
 )
 
-// sensors.athena.so's calibrateData2Point table for stackIndex 1, matched to its output on athena.
-var stack1 = stack{
-	low:    [4]float64{-0.802149, -0.773151, -0.819355, 0.812086},
-	high:   [4]float64{-0.247696, -0.251481, -0.282065, 0.267532},
-	lowIR:  0.506,
-	highIR: 0.701,
-	irDiv:  2.01,
+// sensors.athena.so's calibrateData2Point tables by stackIndex; 1 is matched to its output on athena.
+var stacks = map[int]stack{
+	0: {
+		low:    [4]float64{-2.3364, -2.3009, -2.3511, 2.3463},
+		high:   [4]float64{-0.186064, -0.163034, -0.16598, 0.19432},
+		lowIR:  0.268,
+		highIR: 0.414,
+		irDiv:  2.01,
+	},
+	1: {
+		low:    [4]float64{-0.802149, -0.773151, -0.819355, 0.812086},
+		high:   [4]float64{-0.247696, -0.251481, -0.282065, 0.267532},
+		lowIR:  0.506,
+		highIR: 0.701,
+		irDiv:  2.01,
+	},
 }
 
 type stack struct {
@@ -196,7 +205,8 @@ func loadCalibration() (calibration, error) {
 		return calibration{}, fmt.Errorf("alsps: %s has no sensor", calPath)
 	}
 	d := file.SensorCalData[0]
-	if d.StackIndex != 1 {
+	st, ok := stacks[d.StackIndex]
+	if !ok {
 		return calibration{}, fmt.Errorf("alsps: stackIndex %d has no table", d.StackIndex)
 	}
 	if len(d.CalData.LowIRCF) < 4 || len(d.CalRawData.LowIR) < 6 {
@@ -206,6 +216,6 @@ func loadCalibration() (calibration, error) {
 		factors: [4]float64(d.CalData.LowIRCF[:4]),
 		itime:   d.CalRawData.LowIR[4],
 		gain:    d.CalRawData.LowIR[5],
-		stack:   stack1,
+		stack:   st,
 	}, nil
 }
