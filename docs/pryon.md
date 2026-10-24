@@ -100,7 +100,7 @@ workflow builds every echod and the manifest:
 
 ```sh
 git push origin HEAD:main
-git tag 0.11.2 && git push origin 0.11.2
+make tag TAG=0.11.2   # refuses a dirty tree or an existing tag, then pushes the tag to origin
 ```
 
 ## Architecture and security boundary
