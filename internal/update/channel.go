@@ -15,7 +15,7 @@ const (
 	Dev
 )
 
-const repo = "https://github.com/ygelfand/echolocal"
+const repo = forkRepo
 
 func (c Channel) Label() string {
 	switch c {
