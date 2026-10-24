@@ -84,7 +84,8 @@ on the action button.
 - Nine styles and eighteen color themes
 - Messages from Home Assistant, timers on screen
 - An Immich photo screen saver
-- A Chromecast receiver for YouTube, YouTube TV and Prime Video and more
+- A Chromecast receiver that runs each app's own receiver page on the Echo Shows, and plays YouTube
+  and YouTube Music on the Echo Dot
 - A Bluetooth speaker
 - An RTSP camera on port 8554 with ONVIF discovery, and a snapshot camera in Home Assistant.
 - A Cameras app for your Home Assistant cameras, with live video and audio through the

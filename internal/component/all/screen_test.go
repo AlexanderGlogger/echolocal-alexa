@@ -43,18 +43,23 @@ var screenOnly = []string{
 
 var castAudio = []string{
 	"github.com/ygelfand/echolocal/internal/feature/chromecast",
+	"github.com/ygelfand/echolocal/internal/feature/playout",
+	"github.com/ygelfand/libcountertop/pkg/media/cast",
+	"github.com/ygelfand/libcountertop/pkg/media/playout",
+}
+
+const dotYouTube = "github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
+
+var dotCast = []string{
+	dotYouTube,
 	"github.com/ygelfand/libcountertop/pkg/media/webm",
 	"github.com/ygelfand/libcountertop/pkg/media/hls",
-	"github.com/ygelfand/libcountertop/pkg/media/cast",
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube",
-	"github.com/ygelfand/libcountertop/pkg/media/castoutput",
 }
 
 var castOnly = []string{
 	"github.com/ygelfand/libcountertop/pkg/display/video",
-	"github.com/ygelfand/libcountertop/pkg/display/castscreen",
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/primevideo",
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube/unplugged",
+	"github.com/ygelfand/libcountertop/pkg/display/playoutscreen",
+	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/webreceiver",
 	"github.com/ygelfand/libcountertop/pkg/media/sealed",
 	"github.com/ygelfand/libcountertop/pkg/media/videostream",
 }
@@ -128,7 +133,7 @@ func TestBiscuitLinksNoShowFeatures(t *testing.T) {
 				t.Errorf("%q links Show package %s", tag, pkg)
 			}
 		}
-		for _, pkg := range castAudio {
+		for _, pkg := range slices.Concat(castAudio, dotCast) {
 			if !slices.Contains(deps, pkg) {
 				t.Errorf("%q does not link %s", tag, pkg)
 			}
@@ -164,6 +169,9 @@ func TestShowsLinkCastAndCamera(t *testing.T) {
 			if !slices.Contains(deps, pkg) {
 				t.Errorf("%s does not link %s", tag, pkg)
 			}
+		}
+		if slices.Contains(deps, dotYouTube) {
+			t.Errorf("%s links the Echo Dot's YouTube receiver", tag)
 		}
 	}
 }

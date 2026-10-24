@@ -20,6 +20,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dhcp"
 	"github.com/ygelfand/echolocal/internal/feature/media"
+	"github.com/ygelfand/echolocal/internal/feature/playout"
 	"github.com/ygelfand/echolocal/internal/feature/timesync"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -58,7 +59,6 @@ func build() *castreceiver.Receiver {
 		Settings: config.CastSection,
 		DeviceID: component.DevicePlayback,
 		Network:  network,
-		Want:     wants,
 		Server: castreceiver.Config{
 			Name:            deviceName,
 			Model:           component.Board().Model,
@@ -78,7 +78,7 @@ func build() *castreceiver.Receiver {
 			Volume: mediaVolume{},
 			Video:  pictures(),
 			Output: func(ended func()) playback.Output {
-				o := NewOutput()
+				o := playout.New()
 				o.SetEnded(ended)
 				return o
 			},

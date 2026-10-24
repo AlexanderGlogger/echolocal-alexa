@@ -28,6 +28,7 @@ var get = sync.OnceValue(func() *firmware.Firmware[update.Manifest] {
 		Busy:      busy{},
 		OnFailure: feedback.Failure,
 		Reconnect: func() { component.Reconnect.Emit(struct{}{}) },
+		ListPath:  layout.ReleasesPath,
 	})
 	component.Subscribed.Listen(func(struct{}) {
 		safe.Go("update announce", f.Announce)

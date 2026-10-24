@@ -23,7 +23,9 @@ const (
 	CastAuthorityPath   = StateDir + "/cast-authority.json"
 	TesseraDir          = StateDir
 
-	CastAppDir = StateDir + "/cast"
+	CastAppDir      = StateDir + "/cast"
+	CastEngineDir   = StateDir + "/engine"
+	CastEngineState = StateDir + "/engine-state"
 
 	FBDevice = "/dev/graphics/fb0"
 
@@ -96,6 +98,8 @@ const MACPath = "/proc/idme/mac_addr"
 const StatePath = StateDir + "/state.json"
 
 const RuntimePath = StateDir + "/runtime.json"
+
+const ReleasesPath = StateDir + "/releases.json"
 
 const ModelDir = StateDir + "/models"
 

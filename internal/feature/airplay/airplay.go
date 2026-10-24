@@ -13,7 +13,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
-	"github.com/ygelfand/echolocal/internal/feature/chromecast"
+	"github.com/ygelfand/echolocal/internal/feature/playout"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/hardware/speaker"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -49,7 +49,7 @@ var get = sync.OnceValue(func() *Receiver {
 		},
 		Largest: image.Pt(b.DecodeWidth, b.DecodeHeight),
 		Output: func(ended func()) playback.Output {
-			o := chromecast.NewOutput()
+			o := playout.New()
 			o.SetEnded(ended)
 			return o
 		},

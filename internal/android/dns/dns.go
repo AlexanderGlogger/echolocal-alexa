@@ -26,11 +26,11 @@ const (
 
 func Use() {
 	net.DefaultResolver = &net.Resolver{PreferGo: true, Dial: dial}
-	slog.Info("resolver configured", "nameservers", nameservers())
+	slog.Info("resolver configured", "nameservers", Nameservers())
 }
 
 func dial(ctx context.Context, network, _ string) (net.Conn, error) {
-	servers := nameservers()
+	servers := Nameservers()
 	if len(servers) == 0 {
 		return nil, fmt.Errorf("dns: the device reports no nameservers")
 	}
@@ -53,7 +53,7 @@ var (
 	read   time.Time
 )
 
-func nameservers() []string {
+func Nameservers() []string {
 	mu.Lock()
 	defer mu.Unlock()
 

@@ -3,34 +3,31 @@
 package chromecast
 
 import (
-	"context"
+	"sync"
 
-	"github.com/ygelfand/libcountertop/pkg/display/castscreen"
-	"github.com/ygelfand/libcountertop/pkg/display/geometry"
 	"github.com/ygelfand/libcountertop/pkg/display/surface"
 	"github.com/ygelfand/libcountertop/pkg/display/video"
 	"github.com/ygelfand/libcountertop/pkg/media/cast"
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/primevideo"
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/unsupported"
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube"
-	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/youtube/unplugged"
-	"github.com/ygelfand/libcountertop/pkg/media/castoutput"
+	"github.com/ygelfand/libcountertop/pkg/media/cast/engine"
+	"github.com/ygelfand/libcountertop/pkg/media/cast/protocols/webreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/castreceiver"
 	"github.com/ygelfand/libcountertop/pkg/media/playback"
-	"github.com/ygelfand/libcountertop/pkg/media/videostream"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
-	setting "github.com/ygelfand/libcountertop/pkg/settings"
+	"github.com/ygelfand/libcountertop/pkg/runtime/control/castcmd"
 
+	"github.com/ygelfand/echolocal/internal/android/dns"
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
-	"github.com/ygelfand/echolocal/internal/feature/videoplayer"
+	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/dhcp"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
+	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/ui"
 )
 
-func configureSettings(r *castreceiver.Receiver) {}
-
-func wants(setting.Group) bool { return true }
+func configureSettings(r *castreceiver.Receiver) {
+	r.Settings().Table = r.Settings().Table.Without("youtube.lounge")
+}
 
 func needs() []sharedcomponent.Option {
 	return []sharedcomponent.Option{component.Needs(board.Panel)}
@@ -38,12 +35,54 @@ func needs() []sharedcomponent.Option {
 
 func helper() *surface.Client { return display.Get().Helper() }
 
+var tuning = sync.OnceValue(func() *engine.Tuning {
+	t := engine.NewTuning(config.DiagSection)
+	component.Settings.Add(t.Controls())
+	return t
+})
+
+func Tuning() *engine.Tuning { return tuning() }
+
+var page castPage
+
+type castPage struct {
+	mu sync.Mutex
+	r  *webreceiver.Receiver
+}
+
+func (p *castPage) keep(r *webreceiver.Receiver) {
+	p.mu.Lock()
+	p.r = r
+	p.mu.Unlock()
+}
+
+func Page() castcmd.Page {
+	page.mu.Lock()
+	defer page.mu.Unlock()
+	if page.r == nil {
+		return nil
+	}
+	return page.r
+}
+
 func apps() []cast.Maker {
 	return []cast.Maker{
-		primevideo.Maker(helper),
-		unsupported.Maker,
-		youtube.Maker(unplugged.TV(helper)),
+		webreceiver.Maker(webreceiver.Options{
+			Dir:         layout.CastEngineDir,
+			State:       layout.CastEngineState,
+			Nameservers: nameservers,
+			Helper:      helper,
+			Built:       page.keep,
+			Tuning:      Tuning(),
+		}),
 	}
+}
+
+func nameservers() []string {
+	if l := dhcp.Get().Lease(); l != nil && len(l.DNS) > 0 {
+		return l.Nameservers()
+	}
+	return dns.Nameservers()
 }
 
 func pictures() func() playback.Target {
@@ -53,22 +92,3 @@ func pictures() func() playback.Target {
 }
 
 func logo() func() []byte { return ui.Logo().PNG }
-
-func screen() castoutput.Screen {
-	return castscreen.New(castscreen.Options{
-		NewPage: videoplayer.NewPage,
-		NewUnder: func() *videostream.Beneath {
-			return &videostream.Beneath{
-				Rotation: func() geometry.Orientation { return display.Get().Orientation() },
-				Size:     func() (int, int) { return display.Get().Native() },
-			}
-		},
-		Video: func(ctx context.Context, b *videostream.Beneath, s videostream.Stream) (videostream.Report, error) {
-			player := video.Player{
-				Helper:         display.Get().Helper(),
-				SecureDecoders: component.Board().SecureDecoders,
-			}
-			return player.On(ctx, b, s)
-		},
-	})
-}

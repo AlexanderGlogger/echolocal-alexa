@@ -9,6 +9,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/feature/access"
 	"github.com/ygelfand/echolocal/internal/feature/alerts"
+	"github.com/ygelfand/echolocal/internal/feature/chromecast"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
@@ -34,6 +35,7 @@ func basicPages() *sharedsettings.BasicPages {
 			Screen:      screen.Get(),
 			Poster:      poster.Get(),
 			Visuals:     visuals.Get(),
+			Engine:      chromecast.Tuning(),
 			Privacy:     privacy.Get(),
 			Access:      access.Get(),
 			Zone:        timesync.Get(),

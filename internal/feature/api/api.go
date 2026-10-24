@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	"github.com/ygelfand/libcountertop/pkg/homeassistant/nativeapi"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 
 	"github.com/ygelfand/echolocal/internal/android/firewall"
 	"github.com/ygelfand/echolocal/internal/component"
@@ -22,7 +24,8 @@ import (
 )
 
 func init() {
-	component.Register(sharedcomponent.Network, Get, sharedcomponent.Order(99))
+	component.Register(sharedcomponent.Network, Get, sharedcomponent.Order(99),
+		sharedcomponent.Supervise(service.Restart(2*time.Second, time.Minute)))
 }
 
 type API struct{ *nativeapi.Server }
