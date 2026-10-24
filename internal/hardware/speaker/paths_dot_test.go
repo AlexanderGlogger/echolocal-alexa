@@ -10,7 +10,8 @@ import (
 func TestEveryDotPathRoutesTheDAC(t *testing.T) {
 	for out, seq := range pathSequence {
 		for _, name := range []string{"HPL Output Mixer L_DAC Switch", "HPR Output Mixer R_DAC Switch"} {
-			if !slices.ContainsFunc(seq, func(k kctl) bool { return k.name == name && k.level == 1 }) {
+			on := func(k kctl) bool { return k.name == name && k.level == 1 }
+			if !slices.ContainsFunc(seq, on) {
 				t.Errorf("the %s path leaves %q off", out, name)
 			}
 		}
