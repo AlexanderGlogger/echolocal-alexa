@@ -81,9 +81,27 @@ that may differ by firmware and locale.
 
 ### Firmware updates
 
-Home Assistant's update entity follows upstream's release channel, whose builds carry no Android
-media bridge. On a Pryon device echod refuses that install, and the card reports the failure. Update
-with `echolocal pryon install --echod` (or the provisioning script) instead.
+Home Assistant's update entity follows this fork's releases at
+[AlexanderGlogger/echolocal-alexa](https://github.com/AlexanderGlogger/echolocal-alexa), so an
+Alexa Dot updates echod from the Update card like any upstream device: download, hash check, swap,
+restart, and a rollback on the next boot if the new binary never settles. On a Pryon device echod
+installs only manifests whose binaries all come from those releases. Anything else, such as an
+upstream build, has no Android media bridge and is refused, and the card reports the failure.
+
+The update covers echod only. The companion APK and the media helper still go on with
+`echolocal pryon install` (or the provisioning script), and a Dot still on an older build needs that
+once to reach a release that can update itself.
+
+Releases are tagged `0.<upstream patch>.<n>`: `0.11.1` is the first Alexa build on upstream 0.0.11,
+`0.11.2` the next, and `0.12.1` the first on upstream 0.0.12. Both the Dot and Home Assistant rank
+these correctly. A `+alexa.N` suffix is ignored by Home Assistant's comparison, and a `-alexa.N` one
+makes GitHub and the stable channel treat the release as a prerelease. Push the tag and the release
+workflow builds every echod and the manifest:
+
+```sh
+git push origin HEAD:main
+git tag 0.11.2 && git push origin 0.11.2
+```
 
 ## Architecture and security boundary
 
@@ -131,7 +149,7 @@ files upstream does not have:
 | Alexa routing | `internal/feature/pryon/`, `internal/lib/wake/pryon.go`, `internal/feature/detect/pryon.go`, `internal/component/all/all_pryon.go` | `lib/wake/wake.go` (`Lib` returns the Pryon-aware library), `feature/detect/detect.go` (one call: `choose` keeps Pryon out of the PCM engine), `feature/voice/conversation.go` (one call: Alexa as first-run default) |
 | Startup ring | — | `hardware/led/splash.go` (startup walk gives up after 60 s) |
 | Installer | `internal/host/installer/pryon.go`, `internal/cli/echolocal/pryon.go`, `provision-echo-dot.ps1` | one line in `echolocal/root.go` |
-| Update guard | `internal/update/pryon.go` | one check in `update/install.go` |
+| Updates from the fork | `internal/update/pryon.go` | one check in `update/install.go`, `repo` in `update/channel.go`, `REPO` in the `Makefile` |
 
 Upstream keeps its wake-word library, detector and voice turn in a separate module,
 [`libcountertop`](https://github.com/ygelfand/libcountertop). The fork does not patch it: Pryon is
