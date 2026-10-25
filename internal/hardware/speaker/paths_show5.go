@@ -11,6 +11,7 @@ type showAmp struct {
 	init   []kctl
 	on     []kctl
 	off    []kctl
+	path   map[Output][]kctl
 }
 
 var showAmps = []showAmp{
@@ -52,6 +53,10 @@ var showAmps = []showAmp{
 			{name: "LOUT MIX OUTVOL L Switch", level: 0},
 			{name: "LOUT MIX OUTVOL R Switch", level: 0},
 			{name: "OUT Playback Switch", level: 0},
+		},
+		path: map[Output][]kctl{
+			OutputSpeaker:   {{name: "HPVOL Playback Switch", level: 0}},
+			OutputHeadphone: {{name: "HPVOL Playback Switch", level: 1}},
 		},
 	},
 	{
@@ -103,5 +108,5 @@ func sequencesFor(has func(control string) bool) sequences {
 		return sequences{}
 	}
 	slog.Info("speaker amplifier", "chip", a.name)
-	return sequences{init: a.init, on: a.on, off: a.off, close: a.off}
+	return sequences{init: a.init, on: a.on, off: a.off, path: a.path, close: a.off}
 }

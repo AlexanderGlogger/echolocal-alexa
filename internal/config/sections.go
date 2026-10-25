@@ -49,4 +49,9 @@ var (
 		func() *storage.Store[Config] { return store().Store },
 		func(c *Config) *Microphone { return &c.Microphone },
 	)
+
+	SpeakerSection = storage.Bind(
+		func() *storage.Store[Config] { return store().Store },
+		func(c *Config) *Speaker { return &c.Speaker },
+	)
 )

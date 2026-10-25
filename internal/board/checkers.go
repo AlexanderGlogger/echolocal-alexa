@@ -22,7 +22,7 @@ var Checkers = Board{
 	Codename:      "checkers",
 	Model:         "Echo Show 5 1st gen (checkers)",
 	DefaultName:   "Echo Show 5",
-	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera,
+	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera | HeadphoneJack,
 	PanelRotation: 270,
 	UISize:        "mini",
 	Diagonal:      5.5,

@@ -12,7 +12,7 @@ var Crown = Board{
 	Codename:      "crown",
 	Model:         "Echo Show 8 1st gen (crown)",
 	DefaultName:   "Echo Show 8",
-	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera,
+	Caps:          Panel | Wifi | Shutter | Camera | MicMutesCamera | HeadphoneJack,
 	PanelRotation: 270,
 	UISize:        "mini",
 	Diagonal:      8.0,

@@ -20,6 +20,10 @@ var (
 
 func page() *sharedshell.Page {
 	pageOnce.Do(func() {
+		var outputs sharedview.Rows
+		if c := media.Get().Outputs(); c != nil {
+			outputs = sharedview.Segments(c)
+		}
 		sound = sharedview.NewPage(sharedview.PageOptions{
 			Levels:    Get(),
 			Streams:   config.Streams(),
@@ -27,6 +31,7 @@ func page() *sharedshell.Page {
 			Chimes:    chimes{},
 			Feedback:  feedback.Get().Feedback,
 			Media:     media.Get().Settings(),
+			Outputs:   outputs,
 			Push:      shell.Get().Push,
 		})
 	})

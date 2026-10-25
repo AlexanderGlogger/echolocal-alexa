@@ -2,7 +2,6 @@ package media
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"math"
 	"sync"
@@ -11,10 +10,11 @@ import (
 
 	esphome "github.com/ygelfand/go-esphome-device"
 
-	"github.com/ygelfand/libcountertop/pkg/audio/noise"
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/media/mediaplayer"
+	"github.com/ygelfand/libcountertop/pkg/media/noiselayer"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
@@ -45,8 +45,9 @@ type Player struct {
 
 	asp *esphome.Switch
 
-	// The native API has no entity that holds more than one value.
-	layers []*esphome.Select
+	outputs *setting.Controls[config.Speaker]
+
+	layers *noiselayer.Layers
 
 	Volume hook.Hook[int]
 	Levels *sharedvolume.Volume
@@ -95,7 +96,6 @@ func build() *Player {
 			},
 		},
 	}
-	p.layers = noiseLayers()
 	component.Settings.Add(p.duck)
 	p.Levels = sharedvolume.NewVolume(sharedvolume.Options{
 		Mixer: sharedvolume.MixerOptions{
@@ -116,9 +116,6 @@ func build() *Player {
 		&p.jack.Base,
 		&p.asp.Base,
 	}
-	for _, sel := range p.layers {
-		bases = append(bases, &sel.Base)
-	}
 	for _, b := range bases {
 		b.DeviceID = component.DevicePlayback
 	}
@@ -133,6 +130,7 @@ func build() *Player {
 		Changed:  p.refresh,
 		Device:   component.DevicePlayback,
 	})
+	p.layers = noiselayer.New(p.Stream(), component.DevicePlayback)
 	component.Bind(p.resampling, speaker.Resamplings(), speaker.Get().SetResampling,
 		config.Set().Speaker().Resampling)
 
@@ -148,17 +146,8 @@ func build() *Player {
 		component.Picked{Name: "eq", Switch: p.asp},
 		component.Picked{Name: "resampling", Select: p.resampling},
 	))
-
-	for _, sel := range p.layers {
-		sel.OnCommand = func(chosen string) {
-			if chosen != noiseOff && !noise.Has(chosen) {
-				slog.Warn("unknown option", "setting", sel.ObjectID, "value", chosen)
-				return
-			}
-
-			sel.Set(chosen)
-			p.sound()
-		}
+	if p.outputs = outputControls(); p.outputs != nil {
+		component.Settings.Add(p.outputs)
 	}
 
 	buttons.Get().Events.Listen(func(e buttons.Event) {
@@ -176,10 +165,6 @@ func build() *Player {
 	spk := speaker.Get()
 	spk.OnOutput.Listen(func(out speaker.Output) { p.jack.Set(out == speaker.OutputHeadphone) })
 	p.jack.Set(spk.Output() == speaker.OutputHeadphone)
-
-	for _, sel := range p.layers {
-		sel.Set(noiseOff)
-	}
 	return p
 }
 
@@ -192,10 +177,10 @@ func (p *Player) Entities() []esphome.Entity {
 	out = append(out, p.Levels.Entities()...)
 	out = append(out, p.duck.Entities()...)
 	out = append(out, p.asp)
-	for _, sel := range p.layers {
-		out = append(out, sel)
+	if p.outputs != nil {
+		out = append(out, p.outputs.Entities()...)
 	}
-	return out
+	return append(out, p.layers.Entities()...)
 }
 
 func (p *Player) Restore(c config.Config) {
@@ -207,44 +192,13 @@ func (p *Player) Restore(c config.Config) {
 	component.Restore(p.resampling, c.Speaker.Resampling, speaker.Get().SetResampling)
 
 	p.duck.PublishFrom(c.Media)
+	if p.outputs != nil {
+		p.outputs.PublishFrom(c.Speaker)
+	}
 
 	settled := speaker.Get().SetASP(c.Speaker.ASP)
 	p.asp.Set(settled)
 	slog.Info("restored", "what", p.asp.ObjectID, "using", settled, "asked", c.Speaker.ASP)
-}
-
-const noiseOff = "None"
-
-func noiseLayers() []*esphome.Select {
-	const slots = 2
-
-	out := make([]*esphome.Select, 0, slots)
-	for i := 1; i <= slots; i++ {
-		out = append(out, &esphome.Select{
-			Base: esphome.Base{
-				ObjectID: fmt.Sprintf("noise_layer_%d", i),
-				Name:     fmt.Sprintf("White noise layer %d", i),
-				Icon:     "mdi:blur",
-			},
-			Options: append([]string{noiseOff}, noise.Names()...),
-		})
-	}
-	return out
-}
-
-func (p *Player) sound() {
-	var sounds []string
-	for _, sel := range p.layers {
-		if chosen := sel.Get(); chosen != noiseOff && chosen != "" {
-			sounds = append(sounds, chosen)
-		}
-	}
-
-	if len(sounds) == 0 {
-		p.Stream().Stop()
-		return
-	}
-	p.Stream().PlayNoise(sounds...)
 }
 
 type mediaVolume struct{ p *Player }
@@ -269,11 +223,7 @@ func (p *Player) SetIdle(v schema.Delay) {
 func (p *Player) refresh() {
 	p.Entity().SetVolume(float32(p.Levels.Level(config.StreamMedia)) / 100)
 	p.Entity().SetMuted(p.Levels.Muted(config.StreamMedia))
-	if len(p.Stream().Noise()) == 0 {
-		for _, sel := range p.layers {
-			sel.Set(noiseOff)
-		}
-	}
+	p.layers.Sync()
 }
 
 func (p *Player) Set(step int) {
@@ -301,6 +251,8 @@ func (p *Player) apply(step int, tell bool) int {
 func (p *Player) Step() int { return int(p.step.Load()) }
 
 func (p *Player) Settings() *sharedvolume.Ducking { return p.duck }
+
+func (p *Player) Outputs() *setting.Controls[config.Speaker] { return p.outputs }
 
 type Screen interface {
 	Selected() (config.Stream, bool)

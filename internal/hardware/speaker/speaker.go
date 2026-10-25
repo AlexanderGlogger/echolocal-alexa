@@ -60,9 +60,11 @@ type Player struct {
 	volume atomic.Uint32
 	step   atomic.Int32
 
-	pathMu sync.Mutex
-	out    Output
-	seq    sequences
+	pathMu        sync.Mutex
+	routing       route
+	speakerMode   config.OutputMode
+	headphoneMode config.OutputMode
+	seq           sequences
 
 	voiceMu    sync.Mutex
 	voice      upsample.Resampler
@@ -95,7 +97,13 @@ func (p *Player) Attach(s mix.Source) { p.bus.Attach(s) }
 func (p *Player) Written() uint64 { return p.written.Load() }
 
 func New() *Player {
-	p := &Player{out: DetectOutput(), stereo: component.Board().Stereo}
+	saved := config.Get().Speaker
+	p := &Player{
+		speakerMode:   saved.SpeakerOutput,
+		headphoneMode: saved.HeadphoneOutput,
+		stereo:        component.Board().Stereo,
+	}
+	p.routing = routeFor(pluggedIn(), p.speakerMode, p.headphoneMode)
 	p.voice, p.resampling = upsample.New(upsample.Sinc, Rate)
 	p.SetVolume(VolumeSteps)
 	p.on.Store(config.DefaultASP)
@@ -179,14 +187,14 @@ func (p *Player) device() (*alsa.Playback, *alsa.Mixer) {
 func (p *Player) route() {
 	p.pathMu.Lock()
 	defer p.pathMu.Unlock()
-	p.apply(p.seq.path[p.out])
+	p.apply(p.seq.path[p.routing.out])
 }
 
 func (p *Player) amp(on bool) {
 	p.pathMu.Lock()
 	defer p.pathMu.Unlock()
 
-	if p.out != OutputSpeaker {
+	if !p.routing.speaker {
 		return
 	}
 	if on {
@@ -199,28 +207,45 @@ func (p *Player) amp(on bool) {
 func (p *Player) Output() Output {
 	p.pathMu.Lock()
 	defer p.pathMu.Unlock()
-	return p.out
+	return p.routing.out
 }
 
-func (p *Player) setOutput(out Output) {
+func (p *Player) SetOutputs(speaker, headphone config.OutputMode) {
 	p.pathMu.Lock()
-	if p.out == out {
+	p.speakerMode, p.headphoneMode = speaker, headphone
+	p.pathMu.Unlock()
+	p.reroute(pluggedIn())
+}
+
+func (p *Player) reroute(plugged bool) {
+	p.pathMu.Lock()
+	was := p.routing
+	want := routeFor(plugged, p.speakerMode, p.headphoneMode)
+	if want == was {
 		p.pathMu.Unlock()
 		return
 	}
-	was := p.out
-	p.out = out
-	p.apply(p.seq.off)
-	p.apply(p.seq.leave[was])
-	p.apply(p.seq.path[out])
+	p.routing = want
+	if was.speaker {
+		p.apply(p.seq.off)
+	}
+	moved := want.out != was.out
+	if moved {
+		p.apply(p.seq.leave[was.out])
+		p.apply(p.seq.path[want.out])
+	}
 	p.pathMu.Unlock()
 
-	time.Sleep(codecSettle)
+	if moved {
+		time.Sleep(codecSettle)
+	}
 	p.amp(true)
 
 	p.SetVolume(int(p.step.Load()))
-	slog.Info("output changed", "output", out)
-	p.OnOutput.Emit(out)
+	slog.Info("output changed", "output", want.out, "speaker", want.speaker)
+	if moved {
+		p.OnOutput.Emit(want.out)
+	}
 }
 
 func (p *Player) watchJack(ctx context.Context) {
@@ -231,7 +256,7 @@ func (p *Player) watchJack(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			p.setOutput(DetectOutput())
+			p.reroute(pluggedIn())
 		}
 	}
 }

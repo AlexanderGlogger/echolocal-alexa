@@ -8,7 +8,7 @@ import (
 
 func TestOneDriverHearsBothChannels(t *testing.T) {
 	p := newTestPlayer()
-	p.out = OutputSpeaker
+	p.routing = route{out: OutputSpeaker, speaker: true}
 	p.bus.Push(config.StreamMedia, []int16{100, 300})
 
 	got := played(t, p)
@@ -19,7 +19,7 @@ func TestOneDriverHearsBothChannels(t *testing.T) {
 
 func TestTwoDriversKeepLeftAndRight(t *testing.T) {
 	p := newTestPlayer()
-	p.out, p.stereo = OutputSpeaker, true
+	p.routing, p.stereo = route{out: OutputSpeaker, speaker: true}, true
 	p.bus.Push(config.StreamMedia, []int16{100, 300})
 
 	got := played(t, p)

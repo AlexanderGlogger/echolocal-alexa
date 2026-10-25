@@ -22,6 +22,8 @@ const (
 	MuteLight
 
 	MicMutesCamera
+
+	HeadphoneJack
 )
 
 type Key string

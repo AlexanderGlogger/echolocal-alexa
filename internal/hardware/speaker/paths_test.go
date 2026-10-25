@@ -3,7 +3,31 @@ package speaker
 import (
 	"math"
 	"testing"
+
+	"github.com/ygelfand/echolocal/internal/config"
 )
+
+func TestRouteForEachModeAndPlug(t *testing.T) {
+	auto, on, off := config.OutputAuto, config.OutputOn, config.OutputOff
+	for _, c := range []struct {
+		plugged            bool
+		speaker, headphone config.OutputMode
+		want               route
+	}{
+		{false, auto, auto, route{out: OutputSpeaker, speaker: true}},
+		{true, auto, auto, route{out: OutputHeadphone, speaker: false}},
+		{true, on, auto, route{out: OutputHeadphone, speaker: true}},
+		{true, on, off, route{out: OutputSpeaker, speaker: true}},
+		{false, off, on, route{out: OutputHeadphone, speaker: false}},
+		{true, off, off, route{out: OutputSpeaker, speaker: false}},
+		{false, auto, off, route{out: OutputSpeaker, speaker: true}},
+	} {
+		if got := routeFor(c.plugged, c.speaker, c.headphone); got != c.want {
+			t.Errorf("plugged=%t speaker=%s headphone=%s: got %+v, want %+v",
+				c.plugged, c.speaker, c.headphone, got, c.want)
+		}
+	}
+}
 
 func TestGainForStep(t *testing.T) {
 	cases := []struct {

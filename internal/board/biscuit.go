@@ -17,7 +17,7 @@ var Biscuit = Board{
 	SignalsBoot:  true,
 	Model:        "Echo Dot 2 (biscuit)",
 	DefaultName:  "Echo Dot",
-	Caps:         Ring | MuteLight,
+	Caps:         Ring | MuteLight | HeadphoneJack,
 	Tuning: asp.Files{
 		EQ: []asp.Step{
 			{UpTo: 0.5, Name: "EQ_50.cfg"},

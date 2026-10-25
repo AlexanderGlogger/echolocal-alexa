@@ -37,12 +37,22 @@ const jackState = "/sys/class/switch/h2w/state"
 
 const jackPoll = 500 * time.Millisecond
 
-func DetectOutput() Output {
+func pluggedIn() bool {
 	b, err := os.ReadFile(jackState)
-	if err != nil || strings.TrimSpace(string(b)) == "0" {
-		return OutputSpeaker
+	return err == nil && strings.TrimSpace(string(b)) != "0"
+}
+
+type route struct {
+	out     Output
+	speaker bool
+}
+
+func routeFor(plugged bool, speaker, headphone config.OutputMode) route {
+	r := route{out: OutputSpeaker, speaker: speaker.Plays(!plugged)}
+	if headphone.Plays(plugged) {
+		r.out = OutputHeadphone
 	}
-	return OutputHeadphone
+	return r
 }
 
 const VolumeSteps = config.VolumeSteps

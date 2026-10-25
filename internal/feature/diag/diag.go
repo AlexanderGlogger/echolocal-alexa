@@ -72,6 +72,7 @@ func Get() *Diag {
 			Cores:    setup.Present(),
 			Hold:     setup.MinCores,
 			Sample:   shared.sample,
+			LogTag:   layout.LogTag,
 		})
 		component.Settings.Add(shared.Controls())
 		shared.hardware()
