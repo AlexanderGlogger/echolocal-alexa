@@ -10,6 +10,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/runtime/control/screencmd"
 
 	"github.com/ygelfand/echolocal/internal/feature/nws"
+	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/timer"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 )
@@ -37,6 +38,7 @@ func showing(t *harness.Tree) {
 		stack,
 		screencmd.Timer(timer.Get),
 		screencmd.Warning(nws.Get),
+		screencmd.Wallpaper(poster.Get),
 	)
 	t.Add(harness.DeviceTask, ready)
 }
