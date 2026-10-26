@@ -11,11 +11,11 @@ import (
 	esphome "github.com/ygelfand/go-esphome-device"
 
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
-	setting "github.com/ygelfand/libcountertop/pkg/settings"
 	"github.com/ygelfand/libcountertop/pkg/hook"
 	"github.com/ygelfand/libcountertop/pkg/media/mediaplayer"
 	"github.com/ygelfand/libcountertop/pkg/media/noiselayer"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	setting "github.com/ygelfand/libcountertop/pkg/settings"
 	"github.com/ygelfand/libcountertop/pkg/settings/schema"
 
 	"github.com/ygelfand/echolocal/internal/component"

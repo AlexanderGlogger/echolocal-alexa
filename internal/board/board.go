@@ -78,6 +78,8 @@ type Board struct {
 
 	Tessera Tessera
 
+	RadioZone string
+
 	SecureDecoders map[string]string
 
 	MaxFPS int

@@ -5,6 +5,8 @@ package gui
 import (
 	"sync"
 
+	"github.com/ygelfand/echolocal/internal/hardware/gpu"
+
 	sharedvolume "github.com/ygelfand/libcountertop/pkg/audio/volume"
 	"github.com/ygelfand/libcountertop/pkg/display/screens"
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
@@ -18,6 +20,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/assistant"
 	"github.com/ygelfand/echolocal/internal/feature/cameras"
 	"github.com/ygelfand/echolocal/internal/feature/dashboard"
+	"github.com/ygelfand/echolocal/internal/feature/doorbell"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
@@ -76,6 +79,7 @@ var Get = sync.OnceValue(func() *screens.App {
 		Offering: web.Get().Offering,
 
 		Display:   display.Get(),
+		GPU:       gpu.Get(),
 		Touch:     hwtouch.Get(),
 		Shell:     featureshell.Get(),
 		Screen:    screen.Get().Screen,
@@ -104,6 +108,7 @@ var Get = sync.OnceValue(func() *screens.App {
 
 		WeatherEntities: func() shell.View { return settings.WeatherEntities() },
 		CamerasPage:     func() shell.View { return cameras.Get().Page() },
+		DoorbellPage:    func() shell.View { return doorbell.View().Page() },
 		Player:          media.Get(),
 		PlayerPage:      media.Page,
 		MediaVolume:     sharedvolume.For(volume.Get(), config.StreamMedia),

@@ -20,4 +20,6 @@ func apps() []cast.Maker { return []cast.Maker{youtube.Maker} }
 
 func pictures() func() playback.Target { return nil }
 
+func notice() func(title, body string) { return nil }
+
 func logo() func() []byte { return nil }

@@ -17,6 +17,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/lock"
 	"github.com/ygelfand/echolocal/internal/feature/media"
 	"github.com/ygelfand/echolocal/internal/feature/network"
+	"github.com/ygelfand/echolocal/internal/feature/photos"
 	"github.com/ygelfand/echolocal/internal/feature/poster"
 	"github.com/ygelfand/echolocal/internal/feature/privacy"
 	"github.com/ygelfand/echolocal/internal/feature/screen"
@@ -34,6 +35,7 @@ func basicPages() *sharedsettings.BasicPages {
 			Shell:       shell.Get(),
 			Screen:      screen.Get(),
 			Poster:      poster.Get(),
+			Photos:      photos.Get(),
 			Visuals:     visuals.Get(),
 			Engine:      chromecast.Tuning(),
 			Privacy:     privacy.Get(),

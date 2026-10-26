@@ -9,6 +9,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/board"
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -21,6 +22,10 @@ var get = sync.OnceValue(func() *photos.Library {
 		Settings: config.PhotosSection,
 		Dir:      layout.PhotoDir,
 		DeviceID: component.DeviceScreen,
+		Most: func() int {
+			w, h := display.Get().Native()
+			return max(w, h)
+		},
 	})
 	component.Settings.Add(l.Settings())
 	return l

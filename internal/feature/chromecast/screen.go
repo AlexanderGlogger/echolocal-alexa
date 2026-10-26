@@ -20,6 +20,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
 	"github.com/ygelfand/echolocal/internal/feature/dhcp"
+	"github.com/ygelfand/echolocal/internal/feature/message"
 	"github.com/ygelfand/echolocal/internal/hardware/display"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/ui"
@@ -34,6 +35,10 @@ func needs() []sharedcomponent.Option {
 }
 
 func helper() *surface.Client { return display.Get().Helper() }
+
+func notice() func(title, body string) {
+	return func(title, body string) { message.Get().Quiet(title, body, castreceiver.NoticeFor) }
+}
 
 var tuning = sync.OnceValue(func() *engine.Tuning {
 	t := engine.NewTuning(config.DiagSection)

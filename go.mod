@@ -29,21 +29,24 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/tfriedel6/canvas v0.12.1 // indirect
 	github.com/tphakala/go-aac v0.7.0 // indirect
-	github.com/ygelfand/libcountertop v0.1.1-0.20261021223608-d51a3865a9e1
+	github.com/ygelfand/libcountertop v0.1.1-0.20261026133212-e3e52cfb91c7
 	github.com/zserge/microwakeword v0.0.0-20260330234603-bfaf3840114e
 	golang.org/x/exp/shiny v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/image v0.47.0 // indirect
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
 
 require (
 	filippo.io/cpace v0.0.0-20210101143347-24d601e2e469 // indirect
+	github.com/abema/go-mp4 v1.7.3 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/antzucaro/matchr v0.0.0-20221106193745-7bed6ef61ef9 // indirect
 	github.com/asticode/go-astikit v0.30.0 // indirect
+	github.com/at-wat/ebml-go v0.19.4 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/beevik/ntp v1.5.0 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
@@ -69,6 +72,7 @@ require (
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/icza/bitio v1.1.0 // indirect
+	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/mdlayher/packet v1.1.2 // indirect
 	github.com/mdlayher/socket v0.6.0 // indirect
@@ -96,7 +100,9 @@ require (
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/tphakala/simd v1.9.0 // indirect
 	github.com/u-root/uio v0.0.0-20230220225925-ffce2a382923 // indirect
+	github.com/ulikunitz/xz v0.5.17 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
+	github.com/ygelfand/reolinkproxy v0.0.0-20261026000641-3a2fddcfed4f // indirect
 	github.com/yuin/goldmark v1.8.5 // indirect
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
@@ -129,6 +135,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/ygelfand/go-esphome-device v0.0.17
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )

@@ -29,10 +29,23 @@ func init() {
 
 var Ambient func() metrics.Reading
 
-// mtktscpu is the CPU, mtktswmt the wifi and Bluetooth combo chip.
-var zones = []diag.Zone{
-	{ID: "cpu_temperature", Name: "CPU temperature", Zone: "mtktscpu"},
-	{ID: "radio_temperature", Name: "Radio temperature", Zone: "mtktswmt"},
+// mtktscpu is the CPU; mtktswmt, where present, the wifi and Bluetooth combo chip.
+func zones() []diag.Zone {
+	out := []diag.Zone{{
+		ID:        "cpu_temperature",
+		Name:      "CPU temperature",
+		Zones:     []string{"mtktscpu"},
+		PerDegree: diag.Millidegrees,
+	}}
+	if radio := component.Board().RadioZone; radio != "" {
+		out = append(out, diag.Zone{
+			ID:        "radio_temperature",
+			Name:      "Radio temperature",
+			Zones:     []string{radio},
+			PerDegree: diag.Millidegrees,
+		})
+	}
+	return out
 }
 
 type Diag struct {
@@ -67,7 +80,7 @@ func Get() *Diag {
 			Settings: config.DiagSection,
 			StateDir: layout.StateDir,
 			Version:  layout.VersionString(),
-			Zones:    zones,
+			Zones:    zones(),
 			Cache:    wake.Lib().CacheEntities(inUse),
 			Cores:    setup.Present(),
 			Hold:     setup.MinCores,

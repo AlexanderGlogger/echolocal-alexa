@@ -86,6 +86,7 @@ func build() *castreceiver.Receiver {
 				return resample.NewRational(from, speaker.Rate, speaker.Channels).Run
 			},
 			Apps:        apps(),
+			Notice:      notice(),
 			Preferences: castreceiver.Preferences("echolocal", config.CastSection),
 		},
 	})

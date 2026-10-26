@@ -148,7 +148,6 @@ var (
 		"github.com/ygelfand/libcountertop/pkg/input/touch",
 	}
 	biscuitDisplay = []string{
-		"github.com/ygelfand/libcountertop/pkg/display/clockkind",
 		"github.com/ygelfand/libcountertop/pkg/display/theme",
 	}
 )
