@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	httpfetch "github.com/ygelfand/libcountertop/pkg/fetch"
+
 	"github.com/ygelfand/echolocal/internal/layout"
 )
 
@@ -55,7 +57,7 @@ func download(ctx context.Context, b Binary, to string, progress func(float32)) 
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpfetch.Client(0).Do(req)
 	if err != nil {
 		return fmt.Errorf("update: fetching %s: %w", b.URL, err)
 	}

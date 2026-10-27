@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	httpfetch "github.com/ygelfand/libcountertop/pkg/fetch"
 )
 
 func At(ctx context.Context, src string) (Manifest, error) {
@@ -35,7 +37,7 @@ func At(ctx context.Context, src string) (Manifest, error) {
 		return m, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpfetch.Client(0).Do(req)
 	if err != nil {
 		return m, fmt.Errorf("update: fetching %s: %w", src, err)
 	}
@@ -84,7 +86,7 @@ func (b Binary) Resolve(ctx context.Context, progress func(float64)) ([]byte, st
 	if err != nil {
 		return nil, "", err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpfetch.Client(0).Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("update: fetching %s: %w", b.URL, err)
 	}

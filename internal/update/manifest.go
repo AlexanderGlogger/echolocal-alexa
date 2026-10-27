@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"time"
 
+	httpfetch "github.com/ygelfand/libcountertop/pkg/fetch"
 	"github.com/ygelfand/libcountertop/pkg/network/releases"
 )
 
@@ -65,7 +66,7 @@ func Fetch(ctx context.Context, c Channel) (Manifest, error) {
 		return m, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpfetch.Client(0).Do(req)
 	if err != nil {
 		return m, fmt.Errorf("update: fetching %s: %w", url, err)
 	}
