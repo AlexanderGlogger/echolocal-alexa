@@ -27,9 +27,12 @@ same settings grouped the same way, with a **?** next to each that explains it.
 | `select.<device>_playback_white_noise_layer_1`, `select.<device>_playback_white_noise_layer_2` | White noise layer 1, 2 | Two layers of steady sound, mixed, ducking under everything else | None, White, Pink, Brown, Rain, Ocean, Brook, Wind, Fire, Crickets, Fan, Cabin | None |
 | `switch.<device>_playback_speaker_eq` | Speaker EQ | Amazon's own EQ and limiter for this speaker, adjusted with the volume. Turn it off to hear the speaker flat | On, Off | On |
 | `select.<device>_playback_voice_resampling` | Voice resampling | How assistant replies are converted to the speaker's rate | Band limited, Linear, Repeat samples | Band limited |
+| `select.<device>_playback_speaker` | Speaker | Whether the built-in speaker plays. **Auto**: only while nothing is plugged into the headphone jack | Auto, On, Off | Auto |
+| `select.<device>_playback_headphone_jack` | Headphone jack | Whether the headphone jack plays. **Auto**: only while something is plugged in | Auto, On, Off | Auto |
 | `volume_*` | Volumes | The same sliders as Settings → Sound | 0–100 % | |
 
-The Echo Show 8 plays in stereo; the others play mono.
+The Echo Show 8 plays in stereo; the others play mono. **Speaker** and **Headphone jack** are on
+the devices with a headphone jack: the Echo Dot, Echo Show 5 (1st gen) and Echo Show 8 (1st gen).
 
 ## Microphones
 
@@ -92,7 +95,7 @@ On the Echo Dot. See [Echo Dot: buttons and light ring](/use/dot/) for the effec
 | `light.<device>_ring_led_ring` | LED ring | The ring as a light: color, brightness and an effect | Off |
 | `light.<device>_ring_led_ring_segment_1` … `light.<device>_ring_led_ring_segment_12` | LED ring segment N | Each segment as its own light (disabled in Home Assistant until you enable them) | |
 | `select.<device>_ring_ring_follows_the_room` | Ring follows the room | An effect that follows the room's sound | None |
-| `select.<device>_ring_ring_while_muted` | Ring while muted | The effect while the microphone is muted | None |
+| `null` | Ring while muted | The effect while the microphone is muted | None |
 | `select.<device>_ring_ring_on_failure` | Ring on failure | When a request fails | Alert |
 | `select.<device>_ring_ring_for_an_incoming_call`, `select.<device>_ring_ring_during_a_call` | Ring for an incoming call, Ring during a call | | Beacon, Pulse |
 | `select.<device>_assistant_N_wake_word_effect`, `select.<device>_assistant_N_thinking_effect`, `select.<device>_assistant_N_replying_effect` | Wake word, Thinking, Replying effect | Per assistant | Pulse, Default, Default |
@@ -120,7 +123,7 @@ On the Echo Dot. See [Echo Dot: buttons and light ring](/use/dot/) for the effec
 |---|---|---|---|---|
 | `number.<device>_metrics_interval` | Metrics interval | How often the diagnostic sensors update | 10–3600 s | 300 s |
 | `number.<device>_minimum_cpu_cores` | Minimum CPU cores | CPU cores kept online | 1 to all | 2 |
-| `switch.<device>_remote_adb` | Remote adb | An unauthenticated root shell on port 5555 | On, Off | Off |
+| `switch.<device>_adb_over_network` | Remote adb | An unauthenticated root shell on port 5555 | On, Off | Off |
 
 ## Buttons
 
@@ -131,7 +134,7 @@ On the Echo Dot. See [Echo Dot: buttons and light ring](/use/dot/) for the effec
 | `button.<device>_install_selected_version`, with select `select.<device>_install_version` | Install the version picked in **Install version**, older or newer ([Updates](/features/updates/#other-versions)) |
 | `button.<device>_purge_cache`, with sensor `sensor.<device>_cached_data` | Delete cached wake word models; they download again when needed |
 | `button.<device>_test_playback` | Play a test sound |
-| `button.<device>_screen_next_poster` | Show the next wallpaper photo (Echo Show) |
+| `button.<device>_screen_next_wallpaper` | Show the next wallpaper photo (Echo Show) |
 | `button.<device>_camera_reset_camera_settings` | Put every camera setting back to its default (Echo Show) |
 
 ## Sensors
