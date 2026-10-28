@@ -11,6 +11,7 @@ import (
 
 	"github.com/ygelfand/echolocal/internal/component"
 	"github.com/ygelfand/echolocal/internal/config"
+	"github.com/ygelfand/echolocal/internal/feature/alarm"
 	"github.com/ygelfand/echolocal/internal/feature/broadcast"
 	"github.com/ygelfand/echolocal/internal/feature/call"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
@@ -24,6 +25,10 @@ var get = sync.OnceValue(func() *Actions {
 	a := &Actions{}
 	a.reg.Add(call.Get().Action(discovery.Get().Peers, component.Board().CameraWidth > 0))
 	a.reg.Add(broadcast.Get().Action())
+	a.reg.Add(alarm.Get().VoiceAction())
+	for _, action := range call.Get().ControlActions() {
+		a.reg.Add(action)
+	}
 	component.Subscribed.Listen(func(struct{}) { a.Declare() })
 	a.followIntegration()
 	return a
