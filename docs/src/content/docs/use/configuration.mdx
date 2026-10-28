@@ -5,17 +5,18 @@ description: Where to change a setting, and how to copy settings between devices
 
 import { Steps } from '@astrojs/starlight/components';
 
-Every setting is saved on the device itself, and the places that show it stay in step: change
-it in one and the others follow.
+Settings are saved on the device. Changes made on the screen, in a browser or in Home Assistant
+are reflected in the other interfaces.
 
 | Where | What's there |
 |---|---|
 | **On an Echo Show**: the gear in the dock | Nearly everything, grouped the way a phone's settings are. [Settings on the screen](/use/settings/) |
 | **On the EchoLocal card** | The same settings, laid out by area, with a **?** beside each that explains it. [The EchoLocal integration](/start/integration/#the-card) |
 | **In a browser**: the device's own web page | Every setting, plus alarms, calls, broadcasts and troubleshooting. [In a browser](/use/web/) |
-| **In Home Assistant** | An entity for each setting, on the device page and usable in dashboards and automations, plus some that are only there. [Settings in Home Assistant](/use/entities/) |
+| **In Home Assistant** | An entity for each setting, on the device page and usable in dashboards and automations, including settings not on the screen. [Settings in Home Assistant](/use/entities/) |
 
-The Echo Dot has no screen, so its settings are in Home Assistant and on the card.
+The Echo Dot has no screen. Use its [web page](/use/web/), Home Assistant or the EchoLocal card
+to change its settings.
 
 ## Finding a setting
 
@@ -27,7 +28,7 @@ The Echo Dot has no screen, so its settings are in Home Assistant and on the car
 
 ## Settings that stay on one device
 
-Config sync leaves these alone, since they belong to the device and the room it's in:
+Config sync excludes these device-local settings:
 
 - Brightness, auto brightness and display size
 - Microphone tuning: gain, leveling, noise and echo cancellation, sensitivity
@@ -42,9 +43,11 @@ The device's name and Wi‑Fi aren't settings, so they aren't copied either.
 
 ## Config sync
 
-Copy settings from one device to another, so a second one starts out set up the same way.
+Copy shared settings from one device to another.
 It works between Echo Shows, and with Lenovo Smart Displays running LANovo, on the same network;
-settings the other device doesn't have are skipped. The Echo Dot doesn't take part.
+settings the other device doesn't have are skipped. The Echo Dot doesn't take part in this
+screen-to-screen flow; use the integration's [Fleet tab](/start/integration/#fleet) to copy settings
+to or from a Dot.
 
 <Steps>
 

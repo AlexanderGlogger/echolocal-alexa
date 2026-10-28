@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -138,22 +139,31 @@ func TestEmptyClaimShowsNothing(t *testing.T) {
 }
 
 func TestTimedClaimExpires(t *testing.T) {
-	d := running(t)
+	synctest.Test(t, func(t *testing.T) {
+		d := running(t)
 
-	base := d.Claim(PriorityBase)
-	base.Paint(solid(green))
+		base := d.Claim(PriorityBase)
+		base.Paint(solid(green))
 
-	notice := d.Claim(PriorityNotice)
-	notice.PaintFor(solid(blue), 80*time.Millisecond)
-	settle()
-	if got := shown(t, d.ring); got != blue {
-		t.Fatalf("the notice shows %+v, want blue", got)
-	}
+		notice := d.Claim(PriorityNotice)
+		notice.PaintFor(solid(blue), 80*time.Millisecond)
+		synctest.Wait()
+		if got := shown(t, d.ring); got != blue {
+			t.Fatalf("the notice shows %+v, want blue", got)
+		}
 
-	time.Sleep(140 * time.Millisecond)
-	if got := shown(t, d.ring); got != green {
-		t.Errorf("after the notice expired the ring shows %+v, want the base back", got)
-	}
+		time.Sleep(79 * time.Millisecond)
+		synctest.Wait()
+		if got := shown(t, d.ring); got != blue {
+			t.Fatalf("before expiry the ring shows %+v, want blue", got)
+		}
+
+		time.Sleep(time.Millisecond)
+		synctest.Wait()
+		if got := shown(t, d.ring); got != green {
+			t.Errorf("after the notice expired the ring shows %+v, want the base back", got)
+		}
+	})
 }
 
 func TestLatestOfEqualPriorityWins(t *testing.T) {

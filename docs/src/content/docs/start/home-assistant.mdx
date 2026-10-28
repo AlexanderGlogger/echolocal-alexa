@@ -3,13 +3,12 @@ title: Add it to Home Assistant
 description: Add the Echo through the ESPHome integration.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import discovery from '../../../assets/screens/echolocal_discovery.png';
 import add from '../../../assets/screens/echolocal_discovery_add.png';
 
-EchoLocal speaks the ESPHome native API, so Home Assistant finds it the way it finds any ESPHome
-device.
+Add the Echo through Home Assistant's ESPHome integration. EchoLocal uses the ESPHome native API.
 
 ## Add it
 
@@ -20,8 +19,8 @@ device.
 
    <Image src={discovery} alt="Home Assistant discovering the Echo as an ESPHome device" class="screen" />
 
-2. **Add** it, and confirm. No password or key; the Echo and Home Assistant set up the encryption
-   key themselves.
+2. Select **Add** and confirm. The Echo and Home Assistant set up encryption automatically; the
+   default installation does not require you to enter a password or key.
 
    <Image src={add} alt="The confirmation dialog for adding the discovered device" class="screen" />
 
@@ -31,10 +30,8 @@ device.
 
 </Steps>
 
-<Aside type="tip">
 If it isn't discovered, add it by hand: **Add integration → ESPHome**, with the Echo's IP address and
 port `6053`.
-</Aside>
 
 ## In Home Assistant
 

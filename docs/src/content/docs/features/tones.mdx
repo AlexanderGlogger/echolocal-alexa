@@ -3,7 +3,7 @@ title: Custom tones
 description: Upload your own sounds for chimes, timers, alarms, calls and the wake word.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
 
 A custom tone is a sound of up to 30 seconds stored on the device. Once uploaded, it shows up
 in every sound picker: the device chime, message chimes, timer sound, alarms, intercom rings, the
@@ -11,13 +11,14 @@ wake word tone and the mute sounds.
 
 ## With the EchoLocal integration
 
-The [EchoLocal integration](/start/integration/)'s **Tones** tab is the easy way.
+Upload and manage tones from the [EchoLocal integration](/start/integration/)'s **Tones** tab.
 
 <Steps>
 
 1. Open the **EchoLocal** dashboard and the **Tones** tab.
 
-2. **Upload** a sound file. **Trim silence** and **Even out loudness** tidy it up first.
+2. **Upload** a sound file. Use **Trim silence** to remove silence and **Even out loudness** to
+   normalize its level before uploading.
 
 3. Pick the devices to send it to. It's converted and uploaded to each.
 
@@ -51,8 +52,6 @@ ffmpeg -i doorbell.mp3 -ac 1 -ar 48000 -f s16le doorbell.raw
 ```
 
 Then split it into 32 KB pieces and call `tone_write` once per piece, with the same `key`, `name`
-and `pages`, or let the integration do it.
+and `pages`.
 
-<Aside>
-Tones are kept per device. Upload to each one that should have it.
-</Aside>
+Tones are stored separately on each device. Upload a tone to every device that needs it.

@@ -7,12 +7,26 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: "EchoLocal",
-			description: "Turn an Amazon Echo Dot or Echo Show into a local Home Assistant voice satellite, speaker and display.",
+			description: "Home Assistant on supported Echos: voice, media, intercom, Bluetooth proxying, light effects, dashboards, apps and casting.",
 			favicon: "/favicon.png",
 			customCss: ['./src/styles/custom.css', './src/styles/accent.css'],
 			head: [{ tag: 'script', attrs: { src: '/zoom.js', defer: true } }],
+			components: { Hero: './src/components/ProjectHero.astro' },
 			social: [{ icon: 'github', label: 'GitHub', href: "https://github.com/ygelfand/echolocal" }],
 			sidebar: [
+				{
+					"label": "Explore EchoLocal",
+					"items": [
+						{
+							"label": "Interface gallery",
+							"slug": "use/gallery"
+						},
+						{
+							"label": "Browser and remote control",
+							"slug": "use/web"
+						}
+					]
+				},
 				{
 					"label": "Get started",
 					"items": [
@@ -73,36 +87,15 @@ export default defineConfig({
 					]
 				},
 				{
-					"label": "Settings",
-					"items": [
-						{
-							"label": "Where to change settings",
-							"slug": "use/configuration"
-						},
-						{
-							"label": "On the screen",
-							"slug": "use/settings"
-						},
-						{
-							"label": "In Home Assistant",
-							"slug": "use/entities"
-						},
-						{
-							"label": "In a browser",
-							"slug": "use/web"
-						},
-						{
-							"label": "All settings and defaults",
-							"slug": "use/reference"
-						}
-					]
-				},
-				{
-					"label": "Features",
+					"label": "Features and apps",
 					"items": [
 						{
 							"label": "Music and casting",
 							"slug": "features/music"
+						},
+						{
+							"label": "Bluetooth LE proxy",
+							"slug": "features/bluetooth"
 						},
 						{
 							"label": "Voice assistants",
@@ -151,6 +144,28 @@ export default defineConfig({
 						{
 							"label": "Updates",
 							"slug": "features/updates"
+						}
+					]
+				},
+				{
+					"label": "Configuration and reference",
+					"collapsed": true,
+					"items": [
+						{
+							"label": "Where to change settings",
+							"slug": "use/configuration"
+						},
+						{
+							"label": "On the screen",
+							"slug": "use/settings"
+						},
+						{
+							"label": "In Home Assistant",
+							"slug": "use/entities"
+						},
+						{
+							"label": "All settings and defaults",
+							"slug": "use/reference"
 						}
 					]
 				},

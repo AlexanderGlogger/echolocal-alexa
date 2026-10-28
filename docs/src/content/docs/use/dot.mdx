@@ -3,11 +3,15 @@ title: "Echo Dot: buttons and light ring"
 description: What the Echo Dot's buttons do, and how to set up its light ring.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import card from '../../../assets/screens/dot-card.webp';
 
-The Echo Dot (2nd gen) has no screen. Its four buttons and its twelve-segment light ring are how it
-talks back, and everything about it is set in Home Assistant or on the
-[EchoLocal card](/start/integration/#the-card).
+The Echo Dot (2nd gen, biscuit) has four buttons, a twelve-segment light ring and no screen.
+Change its settings in [a browser](/use/web/), in Home Assistant or on the
+[EchoLocal card](/start/integration/#the-card). Its web page also manages alarms, calls and
+broadcasts; get the sign-in password from the **Admin password** entity in Home Assistant.
+
+<Image src={card} alt="Echo Dot device card with light-ring and device controls in Home Assistant" class="screen" />
 
 ## Buttons
 
@@ -24,7 +28,7 @@ assistant or a call, then music, and the main volume when nothing is playing. Th
 volume they change. Set **Volume buttons** (`volume_buttons`) to **Main volume** in Home Assistant
 to have them change the main volume only.
 
-A tap on **Action** takes effect 300 ms after you let go, in case a second tap follows. Double and
+A tap on **Action** takes effect 300 ms after release. Double and
 triple taps do nothing on their own; use them in automations.
 
 ### Buttons in automations
@@ -68,10 +72,8 @@ effects, and **Mute LED brightness** is Dim or Bright:
 | Always, following the room's sound | Ring follows the room | None | `select.<device>_ring_ring_follows_the_room` |
 | The red mute light | Mute LED brightness | Bright | `select.<device>_microphone_mute_led_brightness` |
 
-<Aside type="tip">
 Effects use the ring's color. Set the color on **LED ring** first, then pick the effect.
 Effects with their own palette, like Fireplace or Rainbow, ignore it.
-</Aside>
 
 ### Effects
 

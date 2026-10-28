@@ -3,7 +3,7 @@ title: The EchoLocal integration
 description: A card for every device, a dashboard for all of them, Fleet, wake words and custom tones.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import dashboard from '../../../assets/screens/dashboard.png';
 import card from '../../../assets/screens/hacs-card.png';
@@ -15,7 +15,7 @@ import health from '../../../assets/screens/hacs-health.png';
 import fleet from '../../../assets/screens/hacs-fleet.webp';
 import fleetSync from '../../../assets/screens/hacs-fleet-sync.webp';
 
-The Echo works in Home Assistant without this. The integration is an optional companion that
+The Echo works in Home Assistant without this optional integration. It
 adds:
 
 - **A card** for each Echo, with its settings and controls laid out by area
@@ -32,7 +32,7 @@ adds:
 
 ## Install
 
-Needs Home Assistant **2026.8** or newer.
+Requires Home Assistant **2026.8** or newer.
 
 <Steps>
 
@@ -88,8 +88,8 @@ help: true
 ### Home
 
 Every Echo's card on one page, or one section per group. Each group's bar has **Mute all**, **Ring**
-and **Stop**, which act on every device in it. If only some of them take it, the bar says how
-many did.
+and **Stop**, which act on every device in it. The bar reports how many devices
+accepted the action.
 
 ### Activity
 
@@ -140,7 +140,7 @@ is greyed out.
 
 ### Tones
 
-Upload a sound, tidy it up, and send it to devices. It then shows up in their sound pickers for
+Upload a sound, trim silence or normalize its loudness, and send it to devices. It appears in their sound pickers for
 chimes, timers, alarms, rings and the wake tone. See [Custom tones](/features/tones/).
 
 <Image src={tones} alt="The Tones tab: a custom chime sent to four devices" class="screen-wide" />
@@ -159,7 +159,5 @@ address.
 | `echolocal.assign_tone` | Send a tone from the library to devices (`tone`, `device_id`) |
 | `echolocal.unassign_tone` | Remove a tone from devices; it stays in the library |
 
-<Aside>
 Each Echo's own actions, such as messages, alarms and timers, come from the ESPHome
 integration. See [Messages, timers and alarms](/features/messages/).
-</Aside>

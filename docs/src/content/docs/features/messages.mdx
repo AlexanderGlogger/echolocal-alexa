@@ -3,18 +3,17 @@ title: Messages, timers and alarms
 description: Messages from Home Assistant, timers, and alarms with a wake light.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import OptionGallery from '../../../components/OptionGallery.astro';
+
 import { Image } from 'astro:assets';
+import alarmEditor from '../../../assets/screens/app-alarm-editor.webp';
 
 ## Messages
 
 On the Echo Shows.
-<div class="carousel">
-	<img src="/carousel/alerts-0.png" alt="A message as a banner, a card, a toast and full screen, 1 of 4" loading="lazy" />
-	<img src="/carousel/alerts-1.png" alt="A message as a banner, a card, a toast and full screen, 2 of 4" loading="lazy" />
-	<img src="/carousel/alerts-2.png" alt="A message as a banner, a card, a toast and full screen, 3 of 4" loading="lazy" />
-	<img src="/carousel/alerts-3.png" alt="A message as a banner, a card, a toast and full screen, 4 of 4" loading="lazy" />
-</div>
+
+
+<OptionGallery items={[{"src":"/carousel/alerts-0.png","label":"Banner","alt":"Message displayed in the Banner alert style"},{"src":"/carousel/alerts-1.png","label":"Card","alt":"Message displayed in the Card alert style"},{"src":"/carousel/alerts-2.png","label":"Toast","alt":"Message displayed in the Toast alert style"},{"src":"/carousel/alerts-3.png","label":"Full screen","alt":"Message displayed in the Full screen alert style"}]} layout="strip" label={"A message as a banner, a card, a toast and full screen"} width={420} height={672} />
 
 Use the device's **show message** action:
 
@@ -48,15 +47,12 @@ action name comes from the device's name: a device named Kitchen has
 
 ## Timers
 
-Timers set by voice ring on every device, and on an Echo Show they show on screen. **Settings → Alerts & Alarms → Timer style**:
-<div class="carousel">
-	<img src="/carousel/timers-0.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 1 of 6" loading="lazy" />
-	<img src="/carousel/timers-1.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 2 of 6" loading="lazy" />
-	<img src="/carousel/timers-2.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 3 of 6" loading="lazy" />
-	<img src="/carousel/timers-3.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 4 of 6" loading="lazy" />
-	<img src="/carousel/timers-4.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 5 of 6" loading="lazy" />
-	<img src="/carousel/timers-5.png" alt="A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen, 6 of 6" loading="lazy" />
-</div>
+
+Timers set by voice appear on the Echo Shows. The Echo Dot also supports
+voice timers, with sound when they finish.
+Choose their layout under **Settings → Alerts & Alarms → Timer style**:
+
+<OptionGallery items={[{"src":"/carousel/timers-0.png","label":"Bar","alt":"Running timer displayed in the Bar style"},{"src":"/carousel/timers-1.png","label":"Banner","alt":"Running timer displayed in the Banner style"},{"src":"/carousel/timers-2.png","label":"Corner","alt":"Running timer displayed in the Corner style"},{"src":"/carousel/timers-3.png","label":"Dial","alt":"Running timer displayed in the Dial style"},{"src":"/carousel/timers-4.png","label":"Clock face","alt":"Running timer displayed in the Clock face style"},{"src":"/carousel/timers-5.png","label":"Full screen","alt":"Running timer displayed in the Full screen style"}]} layout="strip" label={"A timer as a bar, a banner, a corner badge, a dial, the clock face and full screen"} width={420} height={672} />
 
 | Style | |
 |---|---|
@@ -88,6 +84,13 @@ Dot, set them from Home Assistant with the actions below. Each alarm has:
 
 The wake light's color is **Settings → Alerts & Alarms → Wake light**: **Sunrise**, **White** or
 **Ember**. An alarm rings for **Timer rings for**.
+
+<Image src={alarmEditor} alt="Saved alarm editor with schedule, sound, snooze, volume and wake-light controls" />
+
+The [browser alarm page](/use/web/#alarms) is available on every device, including the Echo Dot.
+[Voice controls](/features/voice/#alarm-and-call-controls) can create, list, enable, disable and
+delete saved alarms, or report the next alarm. Give alarms distinct names to select them by voice,
+including alarms scheduled for the same time.
 
 To stop a ringing alarm, tap **Stop** on an Echo Show, tap the action button on an Echo Dot, or say
 "stop". To snooze, tap **Snooze** on the screen or hold the Echo Dot's action button.

@@ -3,7 +3,7 @@ title: Install EchoLocal
 description: Put EchoLocal on your Echo with one command.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import install from '../../../assets/screens/install.gif';
 
@@ -62,9 +62,11 @@ it finishes.
 The name is what Home Assistant calls the device. Renaming it later makes Home Assistant see a new
 device, so pick a name you'll keep.
 
-<Aside type="tip" title="More than one Echo">
-`./echolocal install --name bedroom --ssid MyWiFi --password 'your-password' --yes --reboot`
-</Aside>
+To supply the name, network and confirmations on the command line:
+
+```sh
+./echolocal install --name bedroom --ssid MyWiFi --password 'your-password' --yes --reboot
+```
 
 ## Options
 

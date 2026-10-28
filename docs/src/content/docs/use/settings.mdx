@@ -5,8 +5,9 @@ description: Every page of the Settings menu, what each setting does, its choice
 
 import { Aside } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
-import settings from '../../../assets/screens/show-settings.png';
-import theme from '../../../assets/screens/show-theme.png';
+import nativePhotos from '../../../assets/screens/native-photos.webp';
+import settings from '../../../assets/screens/native-settings.webp';
+import theme from '../../../assets/screens/themes.webp';
 import sub_cast from '../../../assets/screens/show-sub-cast.png';
 import sub_intercom from '../../../assets/screens/show-sub-intercom.png';
 import sub_style from '../../../assets/screens/show-sub-style.png';
@@ -63,7 +64,7 @@ not grant screen control or admin access. If the field changes elsewhere, reload
 if access ends, open the keyboard's QR code again and pair with the current field.
 
 The phone opens the device's local HTTPS address. See
-[Signing in](/use/web/#signing-in) for browser certificate warnings; no admin password is needed
+[The certificate](/use/web/#the-certificate) for browser certificate warnings; no admin password is needed
 for this paired field.
 
 ## Network & internet
@@ -125,7 +126,8 @@ The Wi‑Fi network, IP and MAC address, router and DHCP lease, all read-only. C
 | Pause wake word during calls | Don't listen for the wake word on a call | On | `switch.<device>_pause_wake_word_during_calls` |
 | Video stream | Send the camera's main or sub stream | Main | `select.<device>_call_video_stream` |
 
-Video stream isn't on the Echos; calls send the main stream.
+The Echo Show 8 (2nd gen) can send the main or sub stream. Other Echo Shows send the main stream,
+even when Sub is selected.
 
 ## Display
 
@@ -152,6 +154,8 @@ Video stream isn't on the Echos; calls send the main stream.
 </div>
 
 ### Photos
+
+<Image src={nativePhotos} alt="The on-screen Photos settings page" />
 
 | Setting | What it does | Choices | Default | Entity |
 |---|---|---|---|---|
@@ -357,7 +361,7 @@ device; [config sync](/use/configuration/#config-sync) doesn't copy them.
 
 | Setting | What it does | Default | Entity |
 |---|---|---|---|
-| Language | English for now | English | `select.<device>_screen_language` |
+| Language | Interface language | English | `select.<device>_screen_language` |
 | Date & time | Time zone (or follow Home Assistant) and 24-hour format | 24-hour | `select.<device>_time_zone`, `select.<device>_screen_clock_format` |
 | Keyboard size | The on-screen keyboard | Compact | `select.<device>_screen_keyboard_size` |
 | Restart | Restart the app or the whole device | | `button.<device>_restart` (button) |

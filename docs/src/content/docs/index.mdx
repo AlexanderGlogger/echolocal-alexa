@@ -1,129 +1,179 @@
 ---
 title: EchoLocal
-description: Turn an Amazon Echo Dot or Echo Show into a local Home Assistant device.
+description: Local wake words, media, intercom, Bluetooth proxying and configurable light effects, with dashboards, apps, casting and cameras on Echo Shows.
 template: splash
 hero:
   title: EchoLocal
-  tagline: Turn an Amazon Echo Dot or Echo Show into a local Home Assistant voice assistant, speaker and display. One program in place of Amazon's, no cloud, no account.
+  tagline: An open-source replacement for Alexa on supported Echos, with Home Assistant Assist, music, intercom and Bluetooth proxying. Echo Shows also support dashboards, touchscreen apps, casting and video calls.
   image:
-    html: '<img src="/hero.png" alt="EchoLocal" width="1536" height="1024" />'
+    file: ../../assets/screens/apps.webp
   actions:
-    - text: Install EchoLocal
-      link: /start/devices/
+    - text: Interface gallery
+      link: /use/gallery/
+      icon: open-book
+    - text: Supported hardware
+      link: '#supported-hardware'
       icon: right-arrow
-    - text: Find a setting
-      link: /use/configuration/
-      icon: setting
       variant: minimal
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
-import shows from '../../assets/screens/shows.png';
-import dashboard from '../../assets/screens/dashboard.png';
-import showDash from '../../assets/screens/show-dash.png';
-import dots from '../../assets/screens/echolocal_dash_lit.png';
+import tessera from '../../assets/screens/tessera.webp';
+import apps from '../../assets/screens/apps.webp';
+import alarm from '../../assets/screens/app-home-alarm.webp';
+import intercom from '../../assets/screens/app-intercom.webp';
+import browser from '../../assets/screens/web-overview.webp';
+import fleet from '../../assets/screens/hacs-fleet.webp';
+import dot from '../../assets/screens/dot-card.webp';
 
-<div class="stats">
-	<div><strong>4</strong><span>Echo models</span></div>
-	<div><strong>2</strong><span>wake words at once</span></div>
-	<div><strong>33</strong><span>visualizers</span></div>
-	<div><strong>37</strong><span>light ring effects</span></div>
-	<div><strong>0</strong><span>cloud accounts</span></div>
-</div>
+EchoLocal uses the Echo's existing microphones, speaker and buttons, plus the screen and camera on
+Shows. It connects to Home Assistant through ESPHome and shares its software with
+[LANovo](https://www.lanovo.link).
 
-<Image src={shows} alt="An Echo Show 8 with the Digital VU visual behind the clock, and two Echo Show 5s running Matrix and Orb" class="screen-wide" />
+## Supported hardware
 
-## What EchoLocal is
+| Model | Generation | Codename |
+|---|---|---|
+| Echo Dot | 2nd gen | **biscuit** |
+| Echo Show 5 | 1st gen | **checkers** |
+| Echo Show 5 | 2nd gen | **cronos** |
+| Echo Show 8 | 1st gen | **crown** |
+| Echo Show 8 | 2nd gen | **athena** |
 
-EchoLocal replaces Amazon's services on the Echo with a single program that drives its speaker,
-microphones, buttons, light ring, screen and camera directly, and talks only to your Home Assistant.
-It speaks the ESPHome native API, so Home Assistant finds it like any ESPHome device.
+Other models aren't supported. Unlocking differs by model and generation.
+[Hardware details and unlock guides →](/start/devices/)
 
-## Every Echo
+## Voice, audio and intercom on Dot and Show
 
-<CardGrid>
-	<Card title="Voice assistants" icon="comment">
-		Two wake words on the device, each with its own Assist pipeline. "Stop" works without one.
-		[Voice →](/features/voice/)
-	</Card>
-	<Card title="Speaker" icon="seti:audio">
-		A Home Assistant media player, Sendspin for Music Assistant, and Chromecast.
-		[Music →](/features/music/)
-	</Card>
-	<Card title="Timers, alarms, messages" icon="information">
-		From Home Assistant or by voice, with your own sounds.
-		[Messages →](/features/messages/)
-	</Card>
-	<Card title="Intercom" icon="phone">
-		Calls between Echos and LANovo displays on your network.
-		[Intercom →](/features/intercom/)
-	</Card>
-	<Card title="Bluetooth proxy" icon="random">
-		Extends Home Assistant's Bluetooth, with an iBeacon for room presence.
-	</Card>
-	<Card title="Updates" icon="rocket">
-		From Home Assistant's Updates page. [Updates →](/features/updates/)
-	</Card>
-</CardGrid>
+- **[Assist](/features/voice/):** on-device wake-word detection, independent Home Assistant
+  pipelines, custom wake words and feedback, and a stop word without a wake word. Pipelines can be
+  local or cloud-based.
+- **[Music](/features/music/):** Home Assistant media playback, Music Assistant through Sendspin,
+  custom tones and background sounds. Shows also have a Bluetooth speaker mode and AirPlay
+  mirroring; Chromecast is experimental. Dot casting supports YouTube and YouTube Music audio.
+- **[Calls and broadcasts](/features/intercom/):** audio intercom across EchoLocal and LANovo,
+  browser calling, configurable auto-answer and recorded household announcements.
+- **[Timers and alarms](/features/messages/):** saved schedules, voice management, custom sounds
+  and snooze. Shows also offer wake light and on-screen layouts.
+- **[Bluetooth LE proxy and iBeacon](/features/bluetooth/):** relay BLE devices to Home Assistant and support room
+  presence.
 
-## Echo Dot
-
-Twelve light ring segments, 37 effects plus 11 that react to the room, and four buttons you can use
-in automations.
-
-<Image src={dots} alt="Three Echo Dots on the EchoLocal dashboard, each ring lit a different color" class="screen-wide" />
-
-[Echo Dot: buttons and light ring →](/use/dot/)
-
-## Echo Show
+## Echo Dot: light-ring effects and physical controls
 
 <div class="showcase">
-	<div>
-		### Dashboards
+<div>
 
-		A clock, the weather and your Home Assistant lights and switches, or pages laid out in
-		[Tessera](https://github.com/MaxGramser/homeassistant_espscreen).
+The [light ring](/use/dot/#the-light-ring) is a Home Assistant light with individually controllable
+segments. Choose effects for listening, thinking, replies and calls; use room-reactive effects or
+control the ring in automations.
 
-		[Dashboards →](/use/dashboards/)
-	</div>
-	<Image src={showDash} alt="The native dashboard on an Echo Show 8" class="screen" />
+[Buttons](/use/dot/#buttons) handle volume, mute, assistant activation, calls and alarm controls.
+Their events are also available to Home Assistant automations.
+
+The Dot has the same [browser settings, alarms, calls and broadcasts](/use/web/) as screened
+devices, without the screen preview. The optional integration adds a device card and shared Fleet
+management.
+
+[Dot controls and the complete effect list →](/use/dot/)
+
+</div>
+<figure>
+<Image src={dot} alt="The Echo Dot device card in Home Assistant" />
+<figcaption>Dot controls in Home Assistant.</figcaption>
+</figure>
 </div>
 
-<img src="/anim/visual-wall.webp" alt="Six visuals: Synthwave, LCARS, Classic VU, Aurora, a Pip-Boy and a koi pond" class="screen-wide" width="978" height="412" />
+## Echo Show: native dashboards and Tessera
 
-<CardGrid>
-	<Card title="Visuals and screen saver" icon="star">
-		33 audio visuals on the GPU, a clock in 21 faces, and photos from Immich and Google Photos.
-		[Screen saver →](/use/screen-saver/)
-	</Card>
-	<Card title="Styles and themes" icon="seti:pipeline">
-		Nine styles and eighteen color themes. [Styles →](/use/styles/)
-	</Card>
-	<Card title="Casting" icon="laptop">
-		Chromecast that runs each app's own receiver, AirPlay mirroring, and a Bluetooth
-		speaker. [Music and casting →](/features/music/)
-	</Card>
-	<Card title="Camera" icon="seti:video">
-		RTSP with ONVIF discovery, and a snapshot camera in Home Assistant.
-		[Camera →](/features/camera/)
-	</Card>
-</CardGrid>
+<div class="showcase flip">
+<div>
 
-## The EchoLocal integration
+The [native dashboard](/use/dashboards/) combines a clock and weather with tabs for lights,
+switches, cameras, doorbells and your home alarm. Add photo wallpaper and choose the controls to
+show.
 
-Optional, from HACS: a card for every Echo, a dashboard with all of them, Fleet to compare and copy
-settings between them, turn history with recordings, a wake word library, custom tones, groups and
-health. It works with [LANovo](https://www.lanovo.link) displays too.
+[Tessera](/use/dashboards/#tessera) runs custom pages designed in Home Assistant, with climate,
+energy, sensors, media and home-control tiles. Choose the native renderer or embedded firmware.
 
-<Image src={dashboard} alt="The EchoLocal dashboard with Echo Dots and Echo Shows" class="screen-wide" />
+Pick [UI styles and themes](/use/styles/), [clock faces](/use/gallery/#clock-faces) and
+[screen savers](/use/screen-saver/) with photos, clocks and audio-reactive visuals.
 
-[The integration →](/start/integration/)
+</div>
+<figure>
+<Image src={tessera} alt="A Tessera dashboard with climate, weather, energy, clock and home-control tiles" />
+<figcaption>Tessera is shared with LANovo; private entity names are blurred.</figcaption>
+</figure>
+</div>
 
-## Get started
+## Echo Show apps
 
-<CardGrid>
-	<LinkCard title="Supported devices" description="Which Echos EchoLocal runs on." href="/start/devices/" />
-	<LinkCard title="Install" description="Unlock the Echo, then one command." href="/start/before/" />
-	<LinkCard title="Find a setting" description="Where every setting lives, on the screen and in Home Assistant." href="/use/configuration/" />
-</CardGrid>
+<Image src={apps} alt="All Echo Show apps: Media, Alarms, Calendar, Intercom, Cameras, Doorbell, Photos, Home alarm, Lights, Switches, Mirror, Radar, Radio and Shopping list" />
+
+[Apps](/features/apps/) include a calendar, shopping list, internet radio, animated weather radar,
+lights and switches. Keep favourites in the dock. View Home Assistant cameras, open a photo
+library, or use the built-in camera as a mirror.
+
+The [Home alarm](/features/home-alarm/) app shows zones, a keypad and panel controls, with a choice
+of designs and entry-delay alerts. [Doorbells](/features/doorbell/) have event history and
+on-screen notifications. [Photos](/features/photos/) can come from Immich or Google Photos.
+
+## Video calls, cameras and screen control
+
+<div class="showcase">
+<div>
+
+Shows add [video intercom](/features/intercom/) and [camera streaming](/features/camera/): RTSP,
+ONVIF discovery and Home Assistant snapshots. Physical microphone mute also cuts the camera.
+
+Use the [browser interface](/use/web/) for live screen control, QR pairing and phone keyboard
+input, as well as settings, calls, broadcasts and logs. Export or import portable settings from
+the Developer page.
+
+Automations can show [messages, timers and alarms](/features/messages/), open camera feeds and
+display [doorbell events](/features/doorbell/).
+
+</div>
+<figure>
+<Image src={intercom} alt="The intercom directory with audio and video controls for EchoLocal and LANovo devices" />
+<figcaption>Calls across EchoLocal and LANovo.</figcaption>
+</figure>
+</div>
+
+## Home Assistant integration and Fleet
+
+ESPHome exposes settings, sensors, button events and playback. The optional
+[EchoLocal integration](/start/integration/) adds device cards, a shared dashboard, Fleet comparison
+and settings sync, wake-word and tone management, activity recordings, and voice actions for
+calls, broadcasts and alarms. It supports [LANovo displays](https://www.lanovo.link) too.
+
+<div class="home-screenshots">
+<figure><Image src={alarm} alt="Home-alarm keypad and zone status on an Echo Show" /><figcaption>[Home alarm](/features/home-alarm/)</figcaption></figure>
+<figure><Image src={browser} alt="Device overview and screen preview in a browser" /><figcaption>[Browser controls](/use/web/)</figcaption></figure>
+<figure><Image src={fleet} alt="Fleet management for EchoLocal and LANovo devices" /><figcaption>[Fleet management](/start/integration/#fleet)</figcaption></figure>
+</div>
+
+## Interface gallery
+
+The [interface gallery](/use/gallery/) groups dashboards, apps, media, photo settings, saved alarms,
+home-alarm designs, calls, browser controls and Fleet. It includes clock faces, UI styles, themes,
+message layouts, timer layouts and audio visuals, with names and links to their guides.
+
+## Installation
+
+You need Home Assistant, a supported Echo and USB access. Unlock the Echo first. Keep Fire OS
+installed; EchoLocal uses its vendor hardware support.
+
+1. [Identify the Echo and follow its unlock guide](/start/devices/).
+2. [Prepare the device](/start/before/), then [install EchoLocal](/start/install/).
+3. [Connect it to Home Assistant](/start/home-assistant/).
+
+Updates and installation of older releases are available through Home Assistant and the
+[control harness](/features/updates/), or from Settings on a Show.
+
+## Source and community
+
+[Source and issues](https://github.com/ygelfand/echolocal) · [Releases](https://github.com/ygelfand/echolocal/releases) ·
+[Discord](https://discord.gg/efWnv89pg2)
+
+EchoLocal and [LANovo](https://www.lanovo.link) use the shared
+[libcountertop](https://github.com/ygelfand/libcountertop) library.

@@ -9,18 +9,20 @@ import intercom from '../../../assets/screens/show-intercom.png';
 import call from '../../../assets/screens/hacs-call.png';
 
 **Intercom** lists every EchoLocal device and every [LANovo](https://www.lanovo.link) device on
-your network, found automatically. Open it from the dock or the Apps screen.
+your network, found automatically. Open it from the dock or the Apps screen on an Echo Show. On the Echo Dot, use [voice](#calling-by-voice) or its [web page](/use/web/#call).
 
 <Image src={intercom} alt="The Intercom directory, listing devices on the network" class="screen" />
 
 ## Calls
 
 Tap the phone button for audio or the camera button for video. Video needs a camera on both ends.
-During a call: mute, camera off, hang up.
+During a call, use the microphone, camera and hang-up buttons to mute audio, turn off video or end
+the call.
 
-The Echo Dot takes audio calls: **tap the action button to answer**, tap **volume down** to
-decline. It places them [by voice](#calling-by-voice). The ring shows **Ring for an incoming call**
-and **Ring during a call**.
+The Echo Dot (2nd gen, biscuit) supports audio calls: **tap the action button to answer**, or tap
+**volume down** to decline. Place calls [by voice](#calling-by-voice) or from its
+[web page](/use/web/#call). Set the light-ring effects with **Ring for an incoming call** and
+**Ring during a call**.
 
 Tap a device's info button to see its model, address, version, whether it's in this home, and what
 it can do: calls, video calls, broadcasts, settings sync.
@@ -51,8 +53,8 @@ video go straight between the browser and the Show, so the browser has to be on 
 
 During a video call, the button beside hang-up, or a double-click on the picture, goes full screen.
 
-The Show sees who is calling by their Home Assistant user. To have it answer some of them on its
-own, set **Answer from** to **Selected** and pick them under **Users**. The list shows the people in
+Calls identify the caller by their Home Assistant user. To auto-answer selected users, enable
+**Auto-answer**, set **Answer from** to **Selected** and pick them under **Users**. The list shows the people in
 Home Assistant that are linked to a user, under **Settings → People**.
 
 ## Broadcasts
@@ -91,7 +93,7 @@ Assistant:
 | **Answer from** | Auto-answer **Everyone**, or **Selected**: the devices you pick under **Panels**, the Home Assistant users you pick under **Users**, and calls from the [web page](/use/web/#call) when **Auto-answer API calls** is on | Everyone |
 | **Auto-answer with camera on** | Send video when auto-answering | Off |
 | **Pause wake word during calls** | | On |
-| **Video stream** | Main or sub stream (not on the Echos, which send the main stream) | Main |
+| **Video stream** | Main or sub stream (sub stream on the Echo Show 8 2nd gen only; other Shows send the main stream) | Main |
 | **Ring**, **Video ring**, **Ringback** | Tones, including [custom ones](/features/tones/) | Ring, Ring, Ringback |
 
 The **Call** and **Call with** sensors in Home Assistant show the call in progress.

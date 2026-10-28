@@ -1,19 +1,20 @@
 ---
 title: Settings in Home Assistant
-description: The settings that are only in Home Assistant, and the sensors, buttons, events and actions every device has.
+description: Settings in Home Assistant, including those not on the screen, plus sensors, buttons, events and actions.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
-Everything on [Settings on the screen](/use/settings/) is also a Home Assistant entity. This page
-covers what is **only** in Home Assistant: the microphones, the assistants' timing, ducking, photos
-and more, plus the sensors, buttons, events and actions.
+Most settings on [Settings on the screen](/use/settings/) are also Home Assistant entities; that
+page marks screen-only controls. This page
+covers additional settings, including the microphones, the assistants' timing and ducking, plus
+the sensors, buttons, events and actions. It also points to [photo settings](/features/photos/),
+which are available on the screen too. Settings are also available in the device's
+[web page](/use/web/).
 
 Find them on the device's page under **Settings → Devices & services → ESPHome**. The
 **Entity** column is the entity id Home Assistant gives each one by default, with `<device>` standing
 for your device's name.
 
-The entities are split across sub-devices so the device page stays readable: **ring**,
+The entities are grouped into sub-devices: **ring**,
 **microphone**, **playback**, **screen**, **camera**, **dashboard**, **voice triggers**,
 **assistant 1** and **assistant 2**, each named after your device. The [EchoLocal card](/start/integration/) shows the
 same settings grouped the same way, with a **?** next to each that explains it.
@@ -31,8 +32,10 @@ same settings grouped the same way, with a **?** next to each that explains it.
 | `select.<device>_playback_headphone_jack` | Headphone jack | Whether the headphone jack plays. **Auto**: only while something is plugged in | Auto, On, Off | Auto |
 | `volume_*` | Volumes | The same sliders as Settings → Sound | 0–100 % | |
 
-The Echo Show 8 plays in stereo; the others play mono. **Speaker** and **Headphone jack** are on
-the devices with a headphone jack: the Echo Dot, Echo Show 5 (1st gen) and Echo Show 8 (1st gen).
+The Echo Show 8 (1st gen, crown) and Echo Show 8 (2nd gen, athena) play in stereo; the other
+supported Echos play mono. **Speaker** and **Headphone jack** are available on devices with a
+headphone jack: the Echo Dot (2nd gen, biscuit), Echo Show 5 (1st gen, checkers) and Echo Show 8
+(1st gen, crown).
 
 ## Microphones
 
@@ -171,7 +174,5 @@ Call these as `esphome.<device>_<action>`, for example `esphome.kitchen_show_mes
 | `logs` | The device's recent log |
 | `<orientation>_show_page`, `_show_alert`, `_show_alert_choice`, `_dismiss_alert`, `_screen_message` | [Tessera](/use/dashboards/#tessera) pages and alerts |
 
-<Aside>
-Some actions, such as picking a wake word on the screen, need **Allow the device to perform Home
-Assistant actions** turned on in the ESPHome integration's options for the device.
-</Aside>
+Picking a wake word on the screen requires **Allow the device to perform Home Assistant actions**
+in the device's ESPHome integration options.
