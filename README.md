@@ -8,14 +8,30 @@
 <a href="https://discord.gg/efWnv89pg2"><img src="https://img.shields.io/badge/Join_the_community-5865f2?style=for-the-badge&logo=discord&logoColor=fff" alt="Join the community on Discord"></a>
 <a href="https://www.echolocal.link"><img src="https://img.shields.io/badge/Docs-www.echolocal.link-ff8a2a?style=for-the-badge" alt="Documentation"></a>
 
-Turn an Amazon Echo Dot or Echo Show into a local Home Assistant voice satellite, speaker and display.
+An open-source replacement for Alexa on supported Echo Dots and Echo Shows, with Home Assistant
+Assist, music, intercom and Bluetooth proxying.
 
-A pure-Go replacement for Amazon's services. It speaks the ESPHome native API, so Home Assistant
-discovers it the way it discovers any ESPHome device.
+Uses the Echo's existing microphones, speaker and buttons. Shows also have dashboards, touchscreen
+apps, cameras and video calls. Home Assistant discovers it through the ESPHome native API.
 
 <p align="center">
-  <img src="docs/images/shows.png" alt="An Echo Show 8 with the Digital VU visual behind the clock, and two Echo Show 5s running Matrix and Orb" width="720">
+  <a href="https://www.echolocal.link/use/visuals/"><img src="docs/public/visuals/digital-vu.webp" alt="Animated Digital VU audio visual on Echo Shows" width="230"></a>
+  <a href="https://www.echolocal.link/use/visuals/"><img src="docs/public/visuals/matrix.webp" alt="Animated Matrix audio visual on Echo Shows" width="230"></a>
+  <a href="https://www.echolocal.link/use/visuals/"><img src="docs/public/visuals/lava-lamp.webp" alt="Animated lava lamp audio visual on Echo Shows" width="230"></a>
 </p>
+
+The screen examples below are Echo Show features; Echo Dot controls use its light ring, buttons,
+Home Assistant and browser interface.
+
+| Math clock | Matrix alarm panel |
+|:---:|:---:|
+| <img src="docs/public/carousel/faces-14.png" alt="Math clock in the Graphite theme, in landscape" width="350"> | <img src="docs/public/carousel/homealarm-11.webp" alt="Matrix alarm-panel design with rehearsal data" width="350"> |
+
+| Tessera in Material You | Photo wallpaper and clock placement |
+|:---:|:---:|
+| <img src="docs/public/carousel/styles-1.png" alt="Landscape Tessera dashboard in the Material You style" width="350"> | <img src="docs/public/carousel/placements-0.png" alt="Small clock in the bottom-right corner over Google Photos wallpaper" width="350"> |
+
+[Interface gallery](https://www.echolocal.link/use/gallery/) · [Setup guide](https://www.echolocal.link/start/devices/) · [Releases](https://github.com/ygelfand/echolocal/releases)
 
 ## Devices
 
@@ -62,7 +78,8 @@ discovers it the way it discovers any ESPHome device.
 - **Updates** from Home Assistant, stable or development channel, or any recent version by name to
   roll back.
 - **A web page** on every device over HTTPS: every setting with search, alarms, calls and
-  broadcasts, logs, and on an Echo Show a live view of the screen. Behind it is an HTTP API for
+  broadcasts, logs, and on an Echo Show live screen control with QR pairing and remote keyboard
+  input. Portable settings can be exported and imported. Behind it is an HTTP API for
   scripts. The certificate is self-signed, or comes from [Cert Warden](https://www.certwarden.com)
   if you run one. See [In a browser](https://www.echolocal.link/use/web/).
 
@@ -76,14 +93,17 @@ on the action button.
 
 ### Echo Show
 
-- A native dashboard with a clock in one of eight faces, the weather, and your Home Assistant
-  lights and switches control
-- [Tessera](https://github.com/MaxGramser/homeassistant_espscreen) dashboards
+- A native dashboard with 21 clock faces, photo wallpaper, weather, lights, switches, cameras,
+  doorbells and your Home Assistant alarm panel
+- [Tessera](https://github.com/MaxGramser/homeassistant_espscreen) dashboards, using the native
+  renderer or embedded Tessera firmware
 - 33 audio visuals on the GPU, for the screen saver or for each assistant while it listens and
   answers
 - Nine styles and eighteen color themes
 - Messages from Home Assistant, timers on screen
-- An Immich photo screen saver
+- Photos from Immich and Google Photos, as wallpaper, a screen saver or a full-screen app
+- Home Assistant alarm-panel controls with zones, keypad and 14 designs
+- Doorbell video, two-way audio, ring notifications and detection history
 - A Chromecast receiver that runs each app's own receiver page on the Echo Shows, and plays YouTube
   and YouTube Music on the Echo Dot
 - A Bluetooth speaker
