@@ -33,6 +33,7 @@ func showing(t *harness.Tree) {
 	t.Add(
 		harness.DisplayTask,
 		shot,
+		screencmd.Record(display.Get),
 		thumbsCommand(),
 		open,
 		stack,

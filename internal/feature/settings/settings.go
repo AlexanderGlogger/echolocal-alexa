@@ -28,7 +28,7 @@ func init() {
 	)
 }
 
-type Settings struct{}
+type Settings struct{ SearchQuery string }
 
 var (
 	once   sync.Once

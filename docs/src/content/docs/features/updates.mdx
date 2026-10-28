@@ -41,3 +41,23 @@ device.
   and confirm.
 
 EchoLocal restarts on the version you picked.
+
+## From ADB
+
+With ADB connected, list releases for the device or install a particular release tag:
+
+```sh
+adb -s <serial> shell echod ctl firmware list
+adb -s <serial> shell echod ctl firmware install <version>
+```
+
+Use the exact version tag. Older releases can be installed without changing the update channel.
+Installing restarts the device; the control connection may close during restart. Check the
+running version after it returns:
+
+```sh
+adb -s <serial> shell echod ctl device version
+```
+
+These commands need a running echod and network access to download the release. They do not
+need the screen or Home Assistant. If the daemon cannot start, reinstall through the host CLI.

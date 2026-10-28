@@ -86,6 +86,17 @@ func TestAnUnknownCommandIsAnError(t *testing.T) {
 	}
 }
 
+func TestFirmwareCommandsAreTopLevel(t *testing.T) {
+	conn := connect(t)
+	in := bufio.NewScanner(conn)
+	for _, command := range []string{"firmware --help", "firmware list --help", "firmware install --help"} {
+		out, ok := say(t, conn, in, command)
+		if !ok || !strings.Contains(out, "firmware") {
+			t.Fatalf("%s: %q", command, out)
+		}
+	}
+}
+
 func TestABlankLineIsAnswered(t *testing.T) {
 	conn := connect(t)
 	in := bufio.NewScanner(conn)

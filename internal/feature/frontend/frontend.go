@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/ygelfand/libcountertop/pkg/input/textentry"
+
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
 	"github.com/ygelfand/libcountertop/pkg/runtime/webapi"
 	"github.com/ygelfand/libcountertop/pkg/runtime/webui"
@@ -16,6 +18,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/api"
 	"github.com/ygelfand/echolocal/internal/feature/broadcast"
 	"github.com/ygelfand/echolocal/internal/feature/call"
+	"github.com/ygelfand/echolocal/internal/feature/dhcp"
 	"github.com/ygelfand/echolocal/internal/feature/discovery"
 	"github.com/ygelfand/echolocal/internal/feature/web"
 	"github.com/ygelfand/echolocal/internal/layout"
@@ -26,6 +29,13 @@ type componentFrontend struct{ *webapi.API }
 func (c componentFrontend) Restore(cfg config.Config) { c.API.Restore(cfg.Frontend) }
 
 var get = sync.OnceValue(func() *webapi.API {
+	pages := map[string]http.Handler{
+		"alarms":    alarm.Get().Handler(alerts.Get().Tones),
+		"call":      call.Get().Handler(discovery.Get().Peers),
+		"broadcast": broadcast.Get().WebHandler(),
+	}
+	input := &textentry.Controller{}
+	addDesktop(pages, input)
 	a := webapi.New(webapi.Options{
 		Settings: config.FrontendSection,
 		Registry: &component.Settings,
@@ -33,13 +43,16 @@ var get = sync.OnceValue(func() *webapi.API {
 		Device:   device,
 		DeviceID: component.DeviceFrontend,
 		Logo:     webapi.Logo{Light: brand.LogoLight, Dark: brand.LogoDark},
-		Pages: map[string]http.Handler{
-			"alarms":    alarm.Get().Handler(alerts.Get().Tones),
-			"call":      call.Get().Handler(discovery.Get().Peers),
-			"broadcast": broadcast.Get().WebHandler(),
+		Pages:    pages,
+		LogTag:   layout.LogTag,
+		Screen:   shot,
+		Input:    input,
+		Address: func() string {
+			if lease := dhcp.Get().Lease(); lease != nil {
+				return lease.Address.IP.String()
+			}
+			return ""
 		},
-		LogTag: layout.LogTag,
-		Screen: shot,
 	})
 	component.Settings.Add(a.Controls())
 	return a

@@ -8,9 +8,11 @@ import (
 
 	harness "github.com/ygelfand/libcountertop/pkg/runtime/control"
 	"github.com/ygelfand/libcountertop/pkg/runtime/control/alarmcmd"
+	"github.com/ygelfand/libcountertop/pkg/runtime/control/firmwarecmd"
 
 	"github.com/ygelfand/echolocal/internal/android/prop"
 	"github.com/ygelfand/echolocal/internal/feature/alarm"
+	"github.com/ygelfand/echolocal/internal/feature/firmware"
 	"github.com/ygelfand/echolocal/internal/layout"
 	"github.com/ygelfand/echolocal/internal/logging"
 )
@@ -24,6 +26,7 @@ func (c *Control) tree() *cobra.Command {
 	t.Add(harness.AudioTask, hearing()...)
 	t.Add(harness.AudioTask, cancelling()...)
 	t.Top(setCommand())
+	t.Top(firmwarecmd.Command(firmware.Get))
 	showing(t)
 	for _, more := range boardCommands {
 		more(t)

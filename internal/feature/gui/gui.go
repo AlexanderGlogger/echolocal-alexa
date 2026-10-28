@@ -4,6 +4,7 @@ package gui
 
 import (
 	"sync"
+	"time"
 
 	"github.com/ygelfand/echolocal/internal/hardware/gpu"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/ygelfand/libcountertop/pkg/display/shell"
 	"github.com/ygelfand/libcountertop/pkg/display/widgets"
 	sharedcomponent "github.com/ygelfand/libcountertop/pkg/runtime/component"
+	"github.com/ygelfand/libcountertop/pkg/runtime/service"
 	tesseraview "github.com/ygelfand/libcountertop/pkg/tessera/widgets"
 
 	"github.com/ygelfand/echolocal/internal/board"
@@ -23,6 +25,7 @@ import (
 	"github.com/ygelfand/echolocal/internal/feature/doorbell"
 	"github.com/ygelfand/echolocal/internal/feature/drawer"
 	"github.com/ygelfand/echolocal/internal/feature/firmware"
+	"github.com/ygelfand/echolocal/internal/feature/frontend"
 	"github.com/ygelfand/echolocal/internal/feature/homeassistant"
 	"github.com/ygelfand/echolocal/internal/feature/homecontrol"
 	"github.com/ygelfand/echolocal/internal/feature/idle"
@@ -50,6 +53,7 @@ func init() {
 		sharedcomponent.Device,
 		Get,
 		sharedcomponent.Order(36),
+		sharedcomponent.Supervise(service.Restart(time.Second, time.Minute)),
 		component.Needs(board.Panel),
 	)
 }
@@ -71,12 +75,14 @@ var Get = sync.OnceValue(func() *screens.App {
 				Weather: c.Weather,
 			}
 		},
-		UI:       look,
-		Weather:  config.WeatherSection,
-		Brand:    theme.Brand,
-		Logo:     echoui.Logo().Light,
-		Night:    echoui.Logo().Dark,
-		Offering: web.Get().Offering,
+		UI:           look,
+		Weather:      config.WeatherSection,
+		Brand:        theme.Brand,
+		Logo:         echoui.Logo().Light,
+		Night:        echoui.Logo().Dark,
+		Offering:     web.Get().Offering,
+		Input:        frontend.Get().Input(),
+		KeyboardPair: frontend.Get().KeyboardPair,
 
 		Display:   display.Get(),
 		GPU:       gpu.Get(),
