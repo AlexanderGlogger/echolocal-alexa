@@ -10,6 +10,6 @@ const (
 	PryonUIDPath    = StateDir + "/pryon.uid"
 
 	PryonPackage = "com.echolocal.pryon"
-	PryonDir     = "/system/priv-app/EchoLocalPryon"
-	PryonAPK     = PryonDir + "/EchoLocalPryon.apk"
+	PryonAppDir  = "/system/priv-app/EchoLocalPryon"
+	PryonAPK     = PryonAppDir + "/EchoLocalPryon.apk"
 )
