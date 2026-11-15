@@ -348,7 +348,7 @@ func (p *pryonRun) installAPK(r *run) (string, bool, error) {
 	if _, err := r.d.Shell("am force-stop " + layout.PryonPackage); err != nil {
 		return "", false, fmt.Errorf("stopping the existing Pryon companion: %w", err)
 	}
-	if _, err := r.d.Shell("mkdir -p " + layout.PryonDir); err != nil {
+	if _, err := r.d.Shell("mkdir -p " + layout.PryonAppDir); err != nil {
 		return "", false, err
 	}
 	if err := r.d.WriteFile(layout.PryonAPK, p.pcfg.APK, 0o644); err != nil {
@@ -402,12 +402,12 @@ func stopPryon(r *run) (string, bool, error) {
 }
 
 func removePryonAPK(r *run) (string, bool, error) {
-	have, err := r.d.Exists(layout.PryonDir)
+	have, err := r.d.Exists(layout.PryonAppDir)
 	if err != nil || !have {
 		return "not installed", true, err
 	}
-	_, err = r.d.Shell("rm -rf " + layout.PryonDir)
-	return layout.PryonDir + " (package removal settles after reboot)", false, err
+	_, err = r.d.Shell("rm -rf " + layout.PryonAppDir)
+	return layout.PryonAppDir + " (package removal settles after reboot)", false, err
 }
 
 func removeAndroidMedia(r *run) (string, bool, error) {

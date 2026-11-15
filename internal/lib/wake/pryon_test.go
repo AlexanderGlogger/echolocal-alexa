@@ -1,6 +1,7 @@
 package wake
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"slices"
@@ -97,10 +98,60 @@ func TestAnswerIsUpstreamsWithoutPryon(t *testing.T) {
 }
 
 func TestDefaultPrefersPryon(t *testing.T) {
-	if got := Default([]string{sharedwake.DefaultModel, PryonID}); got != PryonID {
-		t.Errorf("with Pryon installed the default is %q, want %q", got, PryonID)
+	nabu := sharedwake.Model{ID: sharedwake.DefaultModel}
+	if got := Default([]sharedwake.Model{nabu, PryonModel()}); got != PryonID {
+		t.Errorf("with the companion installed the default is %q, want %q", got, PryonID)
 	}
-	if got := Default([]string{sharedwake.DefaultModel}); got != sharedwake.DefaultModel {
+	if got := Default([]sharedwake.Model{nabu}); got != sharedwake.DefaultModel {
 		t.Errorf("without Pryon the default is %q, want %q", got, sharedwake.DefaultModel)
+	}
+	if got := Default([]sharedwake.Model{nabu, upstreams()}); got != sharedwake.DefaultModel {
+		t.Errorf("with upstream's Alexa the default is %q, want %q", got, sharedwake.DefaultModel)
+	}
+}
+
+// upstreams is en-US Alexa as upstream's own Pryon catalog lists it: the same id and kind as the
+// companion's, plus the model its engine loads.
+func upstreams() sharedwake.Model {
+	return sharedwake.Model{
+		ID:      PryonID,
+		Phrase:  "Pryon: Alexa",
+		Kind:    sharedwake.KindPryon,
+		Path:    "/data/misc/echolocal/models/pryon/models/en-US/pryon.manifest",
+		Keyword: "ALEXA",
+	}
+}
+
+type theirs struct{}
+
+func (theirs) Models() []sharedwake.Model { return []sharedwake.Model{upstreams()} }
+
+func (theirs) Ensure(context.Context, string, func(float32)) error { return nil }
+
+func installs(t *testing.T, on bool) {
+	t.Helper()
+	was := companion
+	companion = func() bool { return on }
+	t.Cleanup(func() { companion = was })
+}
+
+// Both detectors call en-US Alexa pryon_alexa. A Dot's saved choice of it must keep meaning the
+// detector the Dot was installed with, so only one of them is ever on offer.
+func TestOnlyOnePryonAlexaIsOffered(t *testing.T) {
+	for _, on := range []bool{false, true} {
+		installs(t, on)
+		l := withPryon(sharedwake.NewLibrary(t.TempDir(), native(theirs{})))
+
+		ours := l.Ensure([]string{PryonID})
+		if got := ids(ours, modelID); !slices.Equal(got, []string{PryonID}) {
+			t.Fatalf("companion=%v: ours %v, want one %q", on, got, PryonID)
+		}
+		if got := External(ours[0]); got != on {
+			t.Errorf("companion=%v: the offered Alexa is the companion's: %v", on, got)
+		}
+		words := l.Answer(nil)
+		if len(words) != 1 || words[0].ID != PryonID {
+			t.Errorf("companion=%v: advertised %v, want one %q", on, words, PryonID)
+		}
 	}
 }

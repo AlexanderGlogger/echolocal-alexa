@@ -57,6 +57,8 @@ Use `-Serial G090XXXXXXXXXXXX` when more than one device is attached. The script
 Elsewhere, build the pieces and run the echolocal CLI directly:
 
 ```sh
+# build-echod compiles upstream's AirPlay and Pryon helpers, so it needs an Android NDK:
+# ANDROID_NDK_HOME, or NDK=<path> on the command line.
 make build-echod DOT_ARCH=arm64      # Fire OS 5 runs an arm64 kernel
 make build-echolocal                 # the host CLI, bin/echolocal
 # android/pryon/build.ps1 and android/amazon-helper/build.ps1 build the APK and the JAR
@@ -78,6 +80,16 @@ Only **Alexa** is exposed by this integration. Some Amazon firmware images also 
 models for `Amazon`, `Computer` or `Echo`, but changing Pryon models requires restarting its Android
 process. Those words should be added as a separate, tested change rather than inferred from files
 that may differ by firmware and locale.
+
+### Upstream's own Amazon wake words
+
+Since 0.0.13 upstream has a Pryon engine of its own for Fire OS 6: a helper that loads Amazon's
+library and models from a download, behind the **Amazon wake words** switch. It names en-US Alexa
+`pryon_alexa`, the id this fork already uses and the Dots have saved. So the two are never offered
+together. On a Dot with the companion installed, upstream's catalog is left out and `pryon_alexa`
+stays the firmware's detector; the **Amazon wake words** switch has nothing to offer there. Without
+the companion, the build behaves as upstream's does. This fork's releases are built without
+upstream's file host, so they could not download that library or its models anyway.
 
 ### Firmware updates
 
@@ -146,7 +158,7 @@ files upstream does not have:
 | Area | Fork-owned files | Hooks in upstream files |
 | --- | --- | --- |
 | Android media bridge | `internal/android/amazon/`, `internal/hardware/{mic,speaker}/android.go`, `internal/layout/pryon.go` | `mic.go` (Start/Run/Close, and `deliver` split out of `broadcast`), `acquire.go` (Start), `speaker.go` (Run/Close, `available`, and `New` skipping the driver tuning), `startup.go` in both (startup progress) |
-| Alexa routing | `internal/feature/pryon/`, `internal/lib/wake/pryon.go`, `internal/feature/detect/pryon.go`, `internal/component/all/all_pryon.go` | `lib/wake/wake.go` (`Lib` returns the Pryon-aware library), `feature/detect/detect.go` (one call: `choose` keeps Pryon out of the PCM engine), `feature/voice/conversation.go` (one call: Alexa as first-run default) |
+| Alexa routing | `internal/feature/pryon/`, `internal/lib/wake/pryon.go`, `internal/feature/detect/pryon.go`, `internal/component/all/all_pryon.go` | `lib/wake/wake.go` (`Lib` returns the Pryon-aware library, built with `native(catalog())` so upstream's Pryon catalog is left out where the companion is installed), `feature/detect/detect.go` (one call: `choose` keeps the companion's word out of the engine), `feature/voice/conversation.go` (one call: Alexa as first-run default) |
 | Startup ring | — | `hardware/led/splash.go` (startup walk gives up after 60 s) |
 | Installer | `internal/host/installer/pryon.go`, `internal/cli/echolocal/pryon.go`, `provision-echo-dot.ps1` | one line in `echolocal/root.go` |
 | Updates from the fork | `internal/update/pryon.go` | one check in `update/install.go`, `repo` in `update/channel.go`, `REPO` in the `Makefile` |
@@ -155,6 +167,10 @@ Upstream keeps its wake-word library, detector and voice turn in a separate modu
 [`libcountertop`](https://github.com/ygelfand/libcountertop). The fork does not patch it: Pryon is
 wrapped around it in the files above, so a change there shows up as a build error in
 `internal/lib/wake/pryon.go` or `internal/feature/detect/pryon.go` rather than as a conflict.
+
+Upstream's own Pryon engine shares this fork's model kind (`pryon`) and its en-US Alexa id. The
+companion's word is told apart by carrying no model path (`wake.External`), and
+`TestOnlyOnePryonAlexaIsOffered` fails if both are ever offered at once.
 
 To take upstream's changes:
 
