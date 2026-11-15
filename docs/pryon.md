@@ -91,6 +91,16 @@ stays the firmware's detector; the **Amazon wake words** switch has nothing to o
 the companion, the build behaves as upstream's does. This fork's releases are built without
 upstream's file host, so they could not download that library or its models anyway.
 
+### Several Dots hearing one wake
+
+Upstream's wake arbitration applies to Alexa too. A Dot that hears it sends its score to the other
+Dots, waits **Arbitration wait** (100 ms unless changed, 0 turns it off), and answers only if none
+heard it better; the others flash and stay quiet. The score is how far the speech rose over the
+room's noise floor in the last second, measured here on the firmware's capture stream.
+**Arbitration offset** adds or subtracts decibels on one Dot that wins too often or too rarely. Dots
+compare only the same phrase, so one listening for upstream's `Pryon: Alexa (de-DE)` does not
+compete with one listening for this fork's `Alexa`.
+
 ### Firmware updates
 
 Home Assistant's update entity follows this fork's releases at
@@ -170,7 +180,8 @@ wrapped around it in the files above, so a change there shows up as a build erro
 
 Upstream's own Pryon engine shares this fork's model kind (`pryon`) and its en-US Alexa id. The
 companion's word is told apart by carrying no model path (`wake.External`), and
-`TestOnlyOnePryonAlexaIsOffered` fails if both are ever offered at once.
+`TestOnlyOnePryonAlexaIsOffered` fails if both are ever offered at once. The companion's wakes enter
+the turn through `Heard`, as the engine's do, which is what puts them through arbitration.
 
 To take upstream's changes:
 

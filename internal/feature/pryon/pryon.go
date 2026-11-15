@@ -29,7 +29,8 @@ func deliver(event amazon.Wake) {
 
 	slog.Info("Pryon wake", "phrase", event.Phrase, "slot", slot+1,
 		"confidence", event.Confidence)
-	v.Start(slot)
+	// Heard, as the engine's own detections are, so the Dot that heard Alexa best answers.
+	v.Heard(slot)
 }
 
 func selectedSlot(active []string) int {
