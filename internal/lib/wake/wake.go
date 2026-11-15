@@ -19,7 +19,7 @@ var (
 		return gemini.NewCatalog(layout.GeminiDir, func() bool { return config.Get().Wake.Gemini })
 	})
 	get = sync.OnceValue(func() *Library {
-		return withPryon(sharedwake.NewLibrary(layout.ModelDir, catalog(), google()))
+		return withPryon(sharedwake.NewLibrary(layout.ModelDir, native(catalog()), google()))
 	})
 )
 

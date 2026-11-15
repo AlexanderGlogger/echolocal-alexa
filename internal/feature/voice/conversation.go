@@ -71,5 +71,5 @@ func wanted(models []sharedwake.Model, count int) []string {
 	for i, m := range models {
 		installed[i] = m.ID
 	}
-	return wakeslots.Initial(ids, installed, wake.Default(installed), count)
+	return wakeslots.Initial(ids, installed, wake.Default(models), count)
 }

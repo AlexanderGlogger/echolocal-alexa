@@ -29,3 +29,17 @@ func TestChooseAcceptsPryonWithoutLoadingIt(t *testing.T) {
 		t.Error("Pryon was loaded into the PCM engine")
 	}
 }
+
+// Upstream's own Pryon words are scored by the engine, so they must reach it. This engine has no
+// Pryon helper, and its refusal is the proof it was asked.
+func TestChooseLeavesUpstreamsPryonToTheEngine(t *testing.T) {
+	e := detect.New(1, nil)
+	theirs := wake.PryonModel()
+	theirs.Path = "/data/misc/echolocal/models/pryon/models/en-US/pryon.manifest"
+
+	accepted, loaded := choose(e, []sharedwake.Model{theirs}, []string{wake.PryonID}, 1)
+
+	if accepted[0] != "" || len(loaded) != 0 {
+		t.Errorf("accepted %v and waiting on %v, want the engine's refusal", accepted, loaded)
+	}
+}
